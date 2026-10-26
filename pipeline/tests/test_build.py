@@ -32,3 +32,25 @@ def test_build_is_idempotent_and_keeps_latest_fetch(tmp_path):
     assert df1.equals(df2)
     assert df1.height == 1
     assert df1["value"][0] == 320.2  # the later fetch wins
+
+
+def test_all_null_columns_keep_their_real_type(tmp_path):
+    # Current vintage only (realtime_end -> None) and only "greater" markets (cap_strike None)
+    paths = Paths(tmp_path)
+    save_raw(paths.raw, "alfred.observations", "u", {}, _alfred("320.1"),
+             {"series_id": "CPIAUCSL"})
+    markets = json.dumps({"markets": [{
+        "ticker": "KXCPI-26OCT-T1.0", "strike_type": "greater", "floor_strike": 1,
+        "cap_strike": None, "result": "", "expiration_value": "",
+        "open_time": "2026-09-18T16:00:00Z", "close_time": "2026-11-10T13:29:00Z",
+    }]}).encode()
+    save_raw(paths.raw, "kalshi.markets", "u", {}, markets, {"series_ticker": "KXCPI"})
+
+    build_silver(paths)
+    obs = pl.read_parquet(paths.silver / "alfred_observations.parquet")
+    mkt = pl.read_parquet(paths.silver / "kalshi_markets.parquet")
+
+    assert obs.schema["realtime_end"] == pl.Date
+    assert mkt.schema["cap_strike"] == pl.Float64
+    assert mkt.schema["settlement_ts"] == pl.Datetime("us", "UTC")
+    assert mkt.schema["result"] == pl.String

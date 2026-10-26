@@ -63,6 +63,16 @@ def test_market_strikes():
     assert row["close_time"] == datetime(2026, 9, 4, 12, 29, tzinfo=UTC)
 
 
+def test_unsettled_market_result_is_null_not_empty_string():
+    # Live Kalshi markets carry result="" and expiration_value="" until settlement
+    payload = {"markets": [{
+        "ticker": "KXCPI-26OCT-T1.0", "status": "active", "result": "", "expiration_value": "",
+    }]}
+    row = parse_markets("KXCPI", payload)[0]
+    assert row["result"] is None
+    assert row["expiration_value"] is None
+
+
 @given(
     start=st.integers(min_value=0, max_value=2_000_000_000),
     length=st.integers(min_value=0, max_value=200 * 24 * 3600),
