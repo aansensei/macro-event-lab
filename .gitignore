@@ -1,0 +1,31 @@
+# Python
+venv/
+.venv/
+env/
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+.hypothesis/
+
+# Secrets
+.env
+
+# Data: raw API responses stay private (terms of use); only derived gold tables get published later
+data/
+
+# Notebooks
+.ipynb_checkpoints/
+
+# Web build
+web/node_modules/
+web/dist/
+
+# OS
+.DS_Store
+Thumbs.db
+ehthumbs.db
+
+# Local archives (old project snapshots)
+*.zip

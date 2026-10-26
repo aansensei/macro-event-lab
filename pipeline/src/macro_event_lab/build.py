@@ -1,0 +1,77 @@
+"""Silver layer: rebuild clean Parquet tables from the raw store.
+
+`build` always re-parses everything from raw, so it is deterministic and idempotent:
+running it twice gives the same tables, and a parser fix only needs a rebuild, not a re-download.
+"""
+
+from __future__ import annotations
+
+from pathlib import Path
+
+import polars as pl
+
+from macro_event_lab.config import Paths
+from macro_event_lab.raw_store import iter_manifest, load_raw
+from macro_event_lab.sources import alfred, kalshi
+
+
+def _latest_first(records):
+    return sorted(records, key=lambda r: r.fetched_at_utc, reverse=True)
+
+
+def build_silver(paths: Paths) -> dict[str, int]:
+    alfred_rows: list[dict] = []
+    market_rows: list[dict] = []
+    candle_rows: list[dict] = []
+
+    # Newest fetch first, so `unique(keep="first")` keeps the latest copy of each key.
+    for record in _latest_first(iter_manifest(paths.raw)):
+        payload = load_raw(paths.raw, record)
+        fetched = record.fetched_at_utc
+        if record.kind == alfred.KIND:
+            rows = alfred.parse_observations(record.meta["series_id"], payload)
+        elif record.kind in {"kalshi.markets", "kalshi.historical_markets"}:
+            rows = kalshi.parse_markets(record.meta["series_ticker"], payload)
+            market_rows += [{**r, "fetched_at_utc": fetched} for r in rows]
+            continue
+        elif record.kind in {"kalshi.candles", "kalshi.historical_candles"}:
+            rows = kalshi.parse_candles(payload)
+            candle_rows += [{**r, "fetched_at_utc": fetched} for r in rows]
+            continue
+        else:
+            continue
+        alfred_rows += [{**r, "fetched_at_utc": fetched} for r in rows]
+
+    paths.silver.mkdir(parents=True, exist_ok=True)
+    counts = {}
+    counts["alfred_observations"] = _write(
+        alfred_rows,
+        keys=["series_id", "observation_date", "realtime_start"],
+        sort=["series_id", "observation_date", "realtime_start"],
+        out=paths.silver / "alfred_observations.parquet",
+    )
+    counts["kalshi_markets"] = _write(
+        market_rows,
+        keys=["ticker"],
+        sort=["series_ticker", "event_ticker", "ticker"],
+        out=paths.silver / "kalshi_markets.parquet",
+    )
+    counts["kalshi_candles"] = _write(
+        candle_rows,
+        keys=["ticker", "end_period_ts"],
+        sort=["ticker", "end_period_ts"],
+        out=paths.silver / "kalshi_candles.parquet",
+    )
+    return counts
+
+
+def _write(rows: list[dict], keys: list[str], sort: list[str], out: Path) -> int:
+    if not rows:
+        return 0
+    df = (
+        pl.DataFrame(rows, infer_schema_length=None)
+        .unique(subset=keys, keep="first", maintain_order=True)
+        .sort(sort)
+    )
+    df.write_parquet(out, compression="zstd")
+    return df.height
