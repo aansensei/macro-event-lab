@@ -15,11 +15,13 @@ percentiles), and implied_bins carries the T-168h probability of each bin for co
 
 from __future__ import annotations
 
-from datetime import datetime
+import calendar
+import re
+from datetime import date, datetime
 
 import polars as pl
 
-from macro_event_lab.config import Paths
+from macro_event_lab.config import RELEASE_TZ, Paths
 
 # In the 7 days before a market closes, 96 to 99.7% of candles have a spread of at most
 # 10 cents (median 1 to 2 cents), so a wider book no longer says where the price is.
@@ -33,6 +35,24 @@ SNAPSHOT_KEYS = ["series_ticker", "event_ticker", "ts", "hours_before_close"]
 # payrolls are published in thousands of jobs.
 RESOLUTION = {"KXCPI": 0.1, "KXGDP": 0.1, "KXFED": 0.25, "KXPAYROLLS": 1000.0}
 QUANTILES = (0.05, 0.25, 0.50, 0.75, 0.95)
+# The ALFRED series behind each Kalshi series and the months between observations. The Fed
+# target rate is not in ALFRED here, so FOMC events use Kalshi's settled value instead.
+FIRST_PRINT_SERIES = {
+    "KXCPI": ("CPIAUCSL", 1),
+    "KXPAYROLLS": ("PAYEMS", 1),
+    "KXGDP": ("GDPC1", 3),
+}
+# Fallback for events whose ticker names no period: the release is the series' first new
+# observation within this many days after the markets close, shorter than one monthly cycle.
+RELEASE_MATCH_DAYS = 14
+MONTHS = {m: i for i, m in enumerate(
+    ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"], start=1
+)}
+# -25SEP, -21JUN30, -25OCT30, -23DECB (a second event for the same month)
+TICKER_PERIOD = re.compile(r"-(\d{2})([A-Z]{3})(\d{2})?[A-Z]?$")
+# the one legacy GDP ticker spelled with its quarter: GDP-232022 Q4
+TICKER_QUARTER = re.compile(r"-\d{2}(\d{4}) Q([1-4])$")
+PUBLISHED_VALUE = r"(?:^|[^0-9.])(-?[0-9]*\.?[0-9]+)%?\s*$"
 BIN_TYPE = pl.Struct({"bin_lower": pl.Float64, "bin_upper": pl.Float64, "prob": pl.Float64})
 
 
@@ -187,6 +207,195 @@ def with_week_ago(bins: pl.DataFrame) -> pl.DataFrame:
     )
 
 
+def in_kalshi_units(series_ticker: str, value: float, previous: float) -> float:
+    """The published number Kalshi settles on, from two consecutive ALFRED levels.
+
+    CPI: month-over-month % change to 0.1; payrolls: jobs added (PAYEMS is in thousands),
+    to the nearest thousand; GDP: quarter-over-quarter growth at an annual rate, % to 0.1.
+    """
+    if series_ticker == "KXCPI":
+        return round((value / previous - 1) * 100, 1)
+    if series_ticker == "KXPAYROLLS":
+        return round((value - previous) * 1000, -3)
+    if series_ticker == "KXGDP":
+        return round(((value / previous) ** 4 - 1) * 100, 1)
+    raise ValueError(f"no first-print rule for {series_ticker}")
+
+
+def reference_period_from_event(series_ticker: str, event_ticker: str) -> date | None:
+    """First day of the month (CPI, payrolls) or quarter (GDP) an event's number describes.
+
+    CPI and payroll tickers name the month (KXCPI-25SEP). GDP tickers name a date: older ones
+    the last day of the quarter itself (GDP-21JUN30 is Q2 2021), newer ones the release day,
+    which falls in the following quarter (KXGDP-25OCT30 is Q3 2025). None when the ticker
+    names no period.
+    """
+    if series_ticker == "KXGDP" and (q := TICKER_QUARTER.search(event_ticker)):
+        return date(int(q.group(1)), 3 * int(q.group(2)) - 2, 1)
+    m = TICKER_PERIOD.search(event_ticker)
+    if not m or m.group(2) not in MONTHS:
+        return None
+    year, month = 2000 + int(m.group(1)), MONTHS[m.group(2)]
+    if series_ticker in ("KXCPI", "KXPAYROLLS"):
+        return date(year, month, 1)
+    if series_ticker != "KXGDP" or m.group(3) is None:
+        return None
+    quarter_end = month % 3 == 0 and int(m.group(3)) == calendar.monthrange(year, month)[1]
+    if not quarter_end:
+        month -= 3  # a release day: the number describes the previous quarter
+        if month < 1:
+            month, year = month + 12, year - 1
+    return date(year, 3 * ((month - 1) // 3) + 1, 1)
+
+
+def first_prints(observations: pl.DataFrame) -> pl.DataFrame:
+    """One row per (series_ticker, reference_period): its first release and first print.
+
+    Both levels come from the vintage of the release day, so the change is the one actually
+    announced, not one mixing a later revision of the previous period.
+    """
+    frames = []
+    for series_ticker, (series_id, lag_months) in FIRST_PRINT_SERIES.items():
+        obs = observations.filter(pl.col("series_id") == series_id)
+        first = (
+            obs.group_by("observation_date")
+            .agg(release_date=pl.col("realtime_start").min())
+            .join(obs, left_on=["observation_date", "release_date"],
+                  right_on=["observation_date", "realtime_start"])
+            .select("observation_date", "release_date", "value")
+            .with_columns(
+                previous_date=pl.col("observation_date").dt.offset_by(f"-{lag_months}mo")
+            )
+        )
+        previous = obs.select(
+            previous_date="observation_date", previous_value="value",
+            prev_start="realtime_start", prev_end="realtime_end",
+        )
+        # the previous period's value as it stood on the release day
+        in_vintage = (pl.col("prev_start") <= pl.col("release_date")) & (
+            pl.col("prev_end").is_null() | (pl.col("prev_end") >= pl.col("release_date"))
+        )
+        paired = first.join(previous, on="previous_date", how="left").filter(
+            pl.col("prev_start").is_null() | in_vintage
+        )
+        frames.append(
+            paired.with_columns(
+                series_ticker=pl.lit(series_ticker),
+                first_print=pl.struct("value", "previous_value").map_elements(
+                    lambda r, s=series_ticker: None
+                    if r["value"] is None or r["previous_value"] is None
+                    else in_kalshi_units(s, r["value"], r["previous_value"]),
+                    return_dtype=pl.Float64,
+                ),
+            ).select(
+                "series_ticker", "release_date", reference_period="observation_date",
+                first_print="first_print",
+            )
+        )
+    return pl.concat(frames).sort("series_ticker", "reference_period")
+
+
+def latest_per_release(prints: pl.DataFrame) -> pl.DataFrame:
+    """One row per (series_ticker, release_date): the latest period first published that day.
+
+    A release that first publishes several periods (a skipped month) is about the latest one.
+    """
+    return (
+        prints.sort("series_ticker", "release_date", "reference_period")
+        .group_by("series_ticker", "release_date", maintain_order=True)
+        .last()
+    )
+
+
+def event_surprises(
+    markets: pl.DataFrame, observations: pl.DataFrame, stats: pl.DataFrame
+) -> pl.DataFrame:
+    """Per event: the first print, Kalshi's settled value, the T-1h mean and SD, and the surprise.
+
+    surprise = first print minus the T-1h mean, in the published unit; surprise_sd divides it
+    by the T-1h standard deviation. CPI, payrolls and GDP take the first print from ALFRED,
+    matched on the period the ticker names (match_method "reference_period"), so a release a
+    shutdown pushed back weeks still finds its event; a ticker that names no period falls back
+    to the first release within RELEASE_MATCH_DAYS of the close ("release_window"). FOMC
+    events, with no ALFRED series here, take Kalshi's settled value.
+    """
+    events = (
+        markets.with_columns(
+            # descriptive values such as "Above 3.50%" are not read as numbers
+            settled=pl.when(pl.col("expiration_value").str.contains(r"^[0-9.,%+ -]+$"))
+            .then(
+                pl.col("expiration_value").str.replace_all(",", "")
+                .str.extract(PUBLISHED_VALUE, 1).cast(pl.Float64, strict=False)
+            )
+            .otherwise(None)
+        )
+        .group_by("series_ticker", "event_ticker")
+        .agg(
+            close=pl.col("close_time").mode().max(),
+            settled_value=pl.col("settled").drop_nulls().mode().max(),
+        )
+        .with_columns(
+            close_date=pl.col("close").dt.convert_time_zone(RELEASE_TZ).dt.date(),
+            reference_period=pl.struct("series_ticker", "event_ticker").map_elements(
+                lambda r: reference_period_from_event(r["series_ticker"], r["event_ticker"]),
+                return_dtype=pl.Date,
+            ),
+        )
+        .sort("close_date")
+    )
+    prints = first_prints(observations)
+    by_period = events.join(prints, on=["series_ticker", "reference_period"], how="left")
+    by_window = (
+        events.drop("reference_period")
+        .join_asof(
+            latest_per_release(prints).sort("release_date"), left_on="close_date",
+            right_on="release_date", by="series_ticker", strategy="forward",
+            tolerance=f"{RELEASE_MATCH_DAYS}d", check_sortedness=False,
+        )
+        .select("event_ticker", w_release="release_date", w_period="reference_period",
+                w_print="first_print")
+    )
+    use_window = pl.col("reference_period").is_null()
+    matched = (
+        by_period.join(by_window, on="event_ticker", how="left")
+        .with_columns(
+            match_method=pl.when(~pl.col("series_ticker").is_in(list(FIRST_PRINT_SERIES)))
+            .then(None)
+            .when(use_window).then(pl.lit("release_window"))
+            .otherwise(pl.lit("reference_period")),
+            release_date=pl.when(use_window).then("w_release").otherwise("release_date"),
+            first_print=pl.when(use_window).then("w_print").otherwise("first_print"),
+            reference_period=pl.when(use_window).then("w_period")
+            .otherwise("reference_period"),
+        )
+    )
+    at_t1h = stats.filter(pl.col("hours_before_close") == 1).select(
+        "event_ticker", mean_t1h="mean", sd_t1h="sd"
+    )
+    return (
+        matched.join(at_t1h, on="event_ticker", how="left")
+        .with_columns(
+            first_print_source=pl.when(pl.col("series_ticker").is_in(list(FIRST_PRINT_SERIES)))
+            .then(pl.lit("alfred")).otherwise(pl.lit("kalshi")),
+        )
+        .with_columns(
+            first_print=pl.when(pl.col("first_print_source") == "alfred")
+            .then(pl.col("first_print")).otherwise(pl.col("settled_value")),
+        )
+        .with_columns(surprise=pl.col("first_print") - pl.col("mean_t1h"))
+        .with_columns(
+            surprise_sd=pl.when(pl.col("sd_t1h") > 0)
+            .then(pl.col("surprise") / pl.col("sd_t1h")).otherwise(None)
+        )
+        .select(
+            "series_ticker", "event_ticker", "close", "release_date", "reference_period",
+            "match_method", "first_print", "first_print_source", "settled_value",
+            "mean_t1h", "sd_t1h", "surprise", "surprise_sd",
+        )
+        .sort("series_ticker", "close")
+    )
+
+
 def snapshot_grid(markets: pl.DataFrame, data_end: datetime) -> pl.DataFrame:
     """One row per (event, hour) for the WINDOW_HOURS before the event closes.
 
@@ -275,13 +484,16 @@ def build_gold(paths: Paths) -> dict[str, int]:
     candles = pl.read_parquet(paths.silver / "kalshi_candles.parquet")
     markets = pl.read_parquet(paths.silver / "kalshi_markets.parquet")
     paths.gold.mkdir(parents=True, exist_ok=True)
+    observations = pl.read_parquet(paths.silver / "alfred_observations.parquet")
     prices = contract_prices(candles)
     survival, bins = implied_distributions(markets, prices)
+    stats = implied_stats(bins)
     tables = {
         "contract_prices": prices,
         "implied_survival": survival,
         "implied_bins": with_week_ago(bins),
-        "implied_stats": implied_stats(bins),
+        "implied_stats": stats,
+        "event_surprise": event_surprises(markets, observations, stats),
     }
     for name, df in tables.items():
         df.write_parquet(paths.gold / f"{name}.parquet", compression="zstd")

@@ -1,4 +1,4 @@
-from datetime import UTC, datetime, timedelta
+from datetime import UTC, date, datetime, timedelta
 
 import polars as pl
 import pytest
@@ -12,9 +12,14 @@ from macro_event_lab.gold import (
     build_gold,
     contract_prices,
     distribution_stats,
+    event_surprises,
+    first_prints,
     implied_distributions,
     implied_stats,
+    in_kalshi_units,
     isotonic_decreasing,
+    latest_per_release,
+    reference_period_from_event,
     with_week_ago,
 )
 
@@ -54,6 +59,7 @@ CLOSE = datetime(2026, 10, 14, 12, 29, tzinfo=UTC)
 MARKET_SCHEMA = {
     "series_ticker": pl.String, "event_ticker": pl.String, "ticker": pl.String,
     "strike_type": pl.String, "floor_strike": pl.Float64, "close_time": pl.Datetime("us", "UTC"),
+    "expiration_value": pl.String,
 }
 PRICE_SCHEMA = {
     "ticker": pl.String, "end_period_ts": pl.Datetime("us", "UTC"), "price": pl.Float64,
@@ -62,7 +68,7 @@ PRICE_SCHEMA = {
 
 
 def _markets(strikes: dict[str, float]) -> pl.DataFrame:
-    rows = [("KXCPI", "E", t, "greater", k, CLOSE) for t, k in strikes.items()]
+    rows = [("KXCPI", "E", t, "greater", k, CLOSE, None) for t, k in strikes.items()]
     return pl.DataFrame(rows, schema=MARKET_SCHEMA, orient="row")
 
 
@@ -80,6 +86,7 @@ def test_build_gold_writes_all_tables(tmp_path):
         paths.silver / "kalshi_candles.parquet"
     )
     _markets({"T": 0.3}).write_parquet(paths.silver / "kalshi_markets.parquet")
+    _observations([]).write_parquet(paths.silver / "alfred_observations.parquet")
 
     counts = build_gold(paths)
 
@@ -87,6 +94,7 @@ def test_build_gold_writes_all_tables(tmp_path):
     out = pl.read_parquet(paths.gold / "contract_prices.parquet")
     assert out["price_source"].to_list() == ["mid", None]
     assert (paths.gold / "implied_bins.parquet").exists()
+    assert (paths.gold / "event_surprise.parquet").exists()
 
 
 @pytest.mark.parametrize(
@@ -241,3 +249,137 @@ def test_implied_stats_one_row_per_snapshot():
     assert stats.height == 1
     assert stats["n_bins"][0] == 4
     assert stats["mean"][0] == pytest.approx(0.4)
+
+
+OBS_SCHEMA = {
+    "series_id": pl.String, "observation_date": pl.Date, "value": pl.Float64,
+    "realtime_start": pl.Date, "realtime_end": pl.Date,
+}
+
+
+def _observations(rows: list[tuple]) -> pl.DataFrame:
+    # (series_id, observation_date, value, realtime_start, realtime_end or None)
+    return pl.DataFrame(rows, schema=OBS_SCHEMA, orient="row")
+
+
+def test_values_in_kalshi_units():
+    assert in_kalshi_units("KXCPI", 101.0, 100.0) == 1.0
+    assert in_kalshi_units("KXPAYROLLS", 159044.0, 158900.0) == 144000.0
+    assert in_kalshi_units("KXGDP", 101.0, 100.0) == 4.1
+
+
+def test_first_print_uses_the_previous_period_as_revised_on_release_day():
+    d = date
+    obs = _observations([
+        ("CPIAUCSL", d(2026, 7, 1), 329.0, d(2026, 8, 12), None),
+        ("CPIAUCSL", d(2026, 8, 1), 330.0, d(2026, 9, 11), d(2026, 10, 13)),
+        ("CPIAUCSL", d(2026, 8, 1), 333.0, d(2026, 10, 14), None),  # August revised with September
+        ("CPIAUCSL", d(2026, 9, 1), 336.33, d(2026, 10, 14), None),
+    ])
+    fp = first_prints(obs).filter(pl.col("series_ticker") == "KXCPI")
+    by_day = dict(zip(fp["release_date"].to_list(), fp["first_print"].to_list(), strict=True))
+    assert by_day[d(2026, 9, 11)] == 0.3  # 330 / 329
+    assert by_day[d(2026, 10, 14)] == 1.0  # 336.33 / 333, not / 330
+
+
+def test_a_skipped_month_leaves_the_next_first_print_empty():
+    d = date
+    obs = _observations([
+        ("CPIAUCSL", d(2025, 9, 1), 324.2, d(2025, 10, 24), None),
+        ("CPIAUCSL", d(2025, 10, 1), None, d(2025, 12, 18), None),  # never published
+        ("CPIAUCSL", d(2025, 11, 1), 325.0, d(2025, 12, 18), None),
+    ])
+    prints = first_prints(obs)
+    assert prints.filter(pl.col("release_date") == d(2025, 12, 18)).height == 2
+    row = latest_per_release(prints).filter(pl.col("release_date") == d(2025, 12, 18)).row(
+        0, named=True
+    )
+    assert row["reference_period"] == d(2025, 11, 1)  # the latest observation of that release
+    assert row["first_print"] is None
+
+
+def _event_markets(rows: list[tuple[str, str, datetime, str | None]]) -> pl.DataFrame:
+    # (series_ticker, event_ticker, close_time, expiration_value)
+    data = [(s, e, f"{e}-T", "greater", 0.0, c, v) for s, e, c, v in rows]
+    return pl.DataFrame(data, schema=MARKET_SCHEMA, orient="row")
+
+
+def test_event_surprise_matches_releases_and_falls_back_for_fomc():
+    d = date
+    obs = _observations([
+        ("CPIAUCSL", d(2026, 8, 1), 333.0, d(2026, 9, 11), None),
+        ("CPIAUCSL", d(2026, 9, 1), 336.33, d(2026, 10, 24), None),  # pushed back 9 days
+        ("CPIAUCSL", d(2026, 11, 1), 340.0, d(2026, 12, 18), None),
+    ])
+    markets = _event_markets([
+        ("KXCPI", "CPI-SEP", datetime(2026, 10, 15, 12, 29, tzinfo=UTC), "1.0"),
+        ("KXCPI", "CPI-OCT", datetime(2026, 11, 13, 13, 29, tzinfo=UTC), None),  # never published
+        ("KXFED", "FED-DEC", datetime(2026, 12, 9, 18, 55, tzinfo=UTC), "4.50"),
+    ])
+    stats = pl.DataFrame({
+        "event_ticker": ["CPI-SEP", "CPI-OCT", "FED-DEC"], "hours_before_close": [1, 1, 1],
+        "mean": [0.6, 0.3, 4.4], "sd": [0.2, 0.1, 0.1],
+    })
+
+    out = {r["event_ticker"]: r for r in event_surprises(markets, obs, stats).iter_rows(named=True)}
+
+    sep = out["CPI-SEP"]
+    assert (sep["release_date"], sep["first_print"], sep["first_print_source"]) == (
+        d(2026, 10, 24), 1.0, "alfred"
+    )
+    assert sep["surprise"] == pytest.approx(0.4)
+    assert sep["surprise_sd"] == pytest.approx(2.0)
+    assert out["CPI-OCT"]["first_print"] is None  # Dec 18 is more than 14 days later
+    fed = out["FED-DEC"]
+    assert (fed["first_print"], fed["first_print_source"]) == (4.5, "kalshi")
+    assert fed["surprise_sd"] == pytest.approx(1.0)
+
+
+@pytest.mark.parametrize(
+    ("series", "event", "expected"),
+    [
+        ("KXCPI", "KXCPI-25SEP", date(2025, 9, 1)),
+        ("KXCPI", "CPI-21JUN", date(2021, 6, 1)),
+        ("KXPAYROLLS", "PROLLS-23DECB", date(2023, 12, 1)),  # second event for the month
+        ("KXGDP", "GDP-21JUN30", date(2021, 4, 1)),  # quarter-end date: Q2 2021
+        ("KXGDP", "GDP-21DEC31", date(2021, 10, 1)),
+        ("KXGDP", "GDP-23APR27", date(2023, 1, 1)),  # release day: the quarter before
+        ("KXGDP", "KXGDP-25JAN31", date(2024, 10, 1)),  # January release: Q4 of last year
+        ("KXGDP", "KXGDP-25OCT30", date(2025, 7, 1)),
+        ("KXGDP", "GDP-232022 Q4", date(2022, 10, 1)),
+        ("KXGDP", "KXGDP-25SEP", None),  # GDP needs a day
+        ("KXFED", "KXFED-26DEC", None),  # no ALFRED period for the Fed
+        ("KXCPI", "KXCPI-NOPERIOD", None),
+    ],
+)
+def test_reference_period_from_event(series, event, expected):
+    assert reference_period_from_event(series, event) == expected
+
+
+def test_shutdown_delays_match_by_period_and_unnamed_tickers_fall_back_to_the_window():
+    d = date
+    obs = _observations([
+        ("PAYEMS", d(2025, 8, 1), 159500.0, d(2025, 9, 5), None),
+        ("PAYEMS", d(2025, 9, 1), 159619.0, d(2025, 11, 20), None),  # 48 days after the close
+        ("CPIAUCSL", d(2025, 8, 1), 323.0, d(2025, 9, 11), None),
+        ("CPIAUCSL", d(2025, 9, 1), 324.0, d(2025, 10, 24), None),
+    ])
+    markets = _event_markets([
+        ("KXPAYROLLS", "KXPAYROLLS-25SEP", datetime(2025, 10, 3, 12, 29, tzinfo=UTC), "119000"),
+        ("KXCPI", "KXCPI-NOPERIOD", datetime(2025, 10, 15, 12, 29, tzinfo=UTC), None),
+    ])
+    stats = pl.DataFrame({
+        "event_ticker": ["KXPAYROLLS-25SEP", "KXCPI-NOPERIOD"], "hours_before_close": [1, 1],
+        "mean": [50000.0, 0.3], "sd": [40000.0, 0.1],
+    })
+
+    out = {r["event_ticker"]: r for r in event_surprises(markets, obs, stats).iter_rows(named=True)}
+
+    jobs = out["KXPAYROLLS-25SEP"]
+    assert (jobs["match_method"], jobs["release_date"], jobs["first_print"]) == (
+        "reference_period", d(2025, 11, 20), 119000.0
+    )
+    cpi = out["KXCPI-NOPERIOD"]
+    assert (cpi["match_method"], cpi["release_date"], cpi["reference_period"]) == (
+        "release_window", d(2025, 10, 24), d(2025, 9, 1)
+    )
