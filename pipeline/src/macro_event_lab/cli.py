@@ -5,7 +5,9 @@ from __future__ import annotations
 import argparse
 from datetime import UTC, datetime
 
-from macro_event_lab import config, pit
+import polars as pl
+
+from macro_event_lab import config, pit, quality
 from macro_event_lab.build import build_silver
 from macro_event_lab.http import RateLimitedClient
 from macro_event_lab.sources import alfred, kalshi, releases
@@ -91,6 +93,18 @@ def cmd_asof(args: argparse.Namespace) -> None:
         print(f"  {row[0]:<11} {row[1]} markets")
 
 
+def cmd_check(args: argparse.Namespace) -> None:
+    results = quality.run_checks(pit.connect(config.get_paths().silver))
+    for r in results:
+        found = "" if r.problems is None else f" ({r.problems.height:,} rows)"
+        print(f"{r.status:<4}  {r.check.name}{found}: {r.check.description}")
+        if r.problems is not None and not r.problems.is_empty():
+            with pl.Config(tbl_hide_dataframe_shape=True, tbl_width_chars=160):
+                print(r.problems.head(args.show))
+    if any(r.status == "FAIL" for r in results):
+        raise SystemExit(1)
+
+
 def cmd_build(_: argparse.Namespace) -> None:
     counts = build_silver(config.get_paths())
     for table, n in counts.items():
@@ -123,6 +137,10 @@ def main(argv: list[str] | None = None) -> None:
 
     p_build = sub.add_parser("build", help="rebuild silver Parquet tables from raw")
     p_build.set_defaults(func=cmd_build)
+
+    p_check = sub.add_parser("check", help="data quality checks on silver (exit 1 on errors)")
+    p_check.add_argument("--show", type=int, default=5, help="problem rows to print per check")
+    p_check.set_defaults(func=cmd_check)
 
     p_asof = sub.add_parser("asof", help="print what was public at a moment (point in time)")
     p_asof.add_argument("timestamp", help="ISO time with zone, e.g. 2026-10-14T12:29Z")
