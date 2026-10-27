@@ -3,7 +3,7 @@ from datetime import UTC, date, datetime, timedelta
 import duckdb
 import polars as pl
 
-from macro_event_lab.quality import run_checks
+from macro_event_lab.quality import KnownAnomaly, run_checks
 
 T0 = datetime(2026, 1, 1, tzinfo=UTC)
 UTC_TS = pl.Datetime("us", "UTC")
@@ -104,6 +104,46 @@ def test_each_check_flags_exactly_the_planted_rows():
     assert results["market_missing_strike"].status == "WARN"
     assert results["market_missing_strike"].problems["ticker"].to_list() == ["CPI-22NOV-T0.0"]
     assert results["duplicates_alfred_observations"].status == "PASS"
+
+
+def _crossed_candles(ticker: str, hours_utc: list[datetime]) -> pl.DataFrame:
+    return pl.DataFrame(
+        [(ticker, ts, 0.22, 0.21, 0.21, 0.21) for ts in hours_utc],
+        schema={"ticker": pl.String, "end_period_ts": UTC_TS, "yes_bid_close": pl.Float64,
+                "yes_ask_close": pl.Float64, "price_close": pl.Float64, "price_mean": pl.Float64},
+        orient="row",
+    )
+
+
+def test_known_anomaly_excuses_only_its_ticker_and_window():
+    anomaly = KnownAnomaly("bid_above_ask", "A", T0, T0 + timedelta(hours=2), "test quirk")
+    candles = pl.concat([
+        _crossed_candles("A", [T0 + timedelta(hours=h) for h in (0, 2, 3)]),  # 3h is outside
+        _crossed_candles("B", [T0 + timedelta(hours=1)]),  # other ticker
+    ])
+    con = duckdb.connect()
+    con.register("kalshi_candles", candles)
+
+    result = {r.check.name: r for r in run_checks(con, anomalies=[anomaly])}["bid_above_ask"]
+
+    assert result.status == "FAIL"  # new crossed rows still fail the check
+    assert result.excused.height == 2
+    assert sorted(result.problems.select("ticker", "end_period_ts").rows()) == [
+        ("A", T0 + timedelta(hours=3)), ("B", T0 + timedelta(hours=1)),
+    ]
+
+
+def test_registered_fed_22dec_anomaly_covers_the_observed_rows():
+    # The five crossed hourly candles found in the real data (14 Nov 21:00 to 15 Nov 12:00 EST)
+    seen = [datetime(2022, 11, 15, h, tzinfo=UTC) for h in (2, 14, 15, 16, 17)]
+    later = datetime(2022, 11, 15, 18, tzinfo=UTC)
+    con = duckdb.connect()
+    con.register("kalshi_candles", _crossed_candles("FED-22DEC-T4.50", [*seen, later]))
+
+    result = {r.check.name: r for r in run_checks(con)}["bid_above_ask"]
+
+    assert result.excused["end_period_ts"].to_list() == seen
+    assert result.problems["end_period_ts"].to_list() == [later]
 
 
 def test_checks_on_tables_not_built_yet_are_skipped():

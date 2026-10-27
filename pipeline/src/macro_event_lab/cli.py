@@ -97,7 +97,8 @@ def cmd_check(args: argparse.Namespace) -> None:
     results = quality.run_checks(pit.connect(config.get_paths().silver))
     for r in results:
         found = "" if r.problems is None else f" ({r.problems.height:,} rows)"
-        print(f"{r.status:<4}  {r.check.name}{found}: {r.check.description}")
+        excused = f", {r.excused.height:,} known anomaly rows excused" if r.excused.height else ""
+        print(f"{r.status:<4}  {r.check.name}{found}{excused}: {r.check.description}")
         if r.problems is not None and not r.problems.is_empty():
             with pl.Config(tbl_hide_dataframe_shape=True, tbl_width_chars=160):
                 print(r.problems.head(args.show))

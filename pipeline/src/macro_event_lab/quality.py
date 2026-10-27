@@ -3,11 +3,14 @@
 Each check is one SQL query that returns one row per problem, so an empty result means the
 check passed and a non-empty one shows exactly which rows are wrong. Checks with severity
 "error" make `check` fail; "warn" checks report known, explainable gaps in the real data.
+Rows covered by a `KnownAnomaly` are reported as excused instead of failing the check, so a
+single investigated quirk in the source data does not hide new problems.
 """
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
+from datetime import datetime
 
 import duckdb
 import polars as pl
@@ -24,9 +27,38 @@ class Check:
 
 
 @dataclass(frozen=True)
+class KnownAnomaly:
+    """Problem rows of one check, for one ticker, within [start, end] (end_period_ts)."""
+
+    check: str
+    ticker: str
+    start: datetime
+    end: datetime
+    reason: str
+
+
+# Investigated quirks of the source data. Gold tables must still treat these rows as unusable
+# (e.g. no bid/ask mid from a crossed candle); the list only stops them from failing `check`.
+KNOWN_ANOMALIES: list[KnownAnomaly] = [
+    KnownAnomaly(
+        check="bid_above_ask",
+        ticker="FED-22DEC-T4.50",
+        start=datetime.fromisoformat("2022-11-15T02:00:00+00:00"),
+        end=datetime.fromisoformat("2022-11-15T17:00:00+00:00"),
+        reason=(
+            "Archived Kalshi candles keep the yes bid at 0.22 while the ask falls to 0.21 and "
+            "0.19 and trades print at 0.21 and 0.19, below that bid: a stale bid in the "
+            "history, not a real crossed book. Seen 2026-10-27."
+        ),
+    ),
+]
+
+
+@dataclass(frozen=True)
 class CheckResult:
     check: Check
     problems: pl.DataFrame | None  # None: a table the check needs is not built yet
+    excused: pl.DataFrame = field(default_factory=pl.DataFrame)  # rows matched a KnownAnomaly
 
     @property
     def status(self) -> str:
@@ -35,6 +67,20 @@ class CheckResult:
         if self.problems.is_empty():
             return "PASS"
         return "FAIL" if self.check.severity == "error" else "WARN"
+
+
+def split_known(
+    check_name: str, problems: pl.DataFrame, anomalies: list[KnownAnomaly]
+) -> tuple[pl.DataFrame, pl.DataFrame]:
+    """Split problem rows into (still problems, excused by a known anomaly)."""
+    rules = [a for a in anomalies if a.check == check_name]
+    if not rules or not {"ticker", "end_period_ts"} <= set(problems.columns):
+        return problems, problems.clear()
+    ts = pl.col("end_period_ts").dt.convert_time_zone("UTC")
+    known = pl.any_horizontal(
+        (pl.col("ticker") == a.ticker) & ts.is_between(a.start, a.end) for a in rules
+    )
+    return problems.filter(~known), problems.filter(known)
 
 
 def _duplicates(table: str, keys: list[str]) -> Check:
@@ -123,12 +169,18 @@ CHECKS: list[Check] = [
 ]
 
 
-def run_checks(con: duckdb.DuckDBPyConnection, checks: list[Check] = CHECKS) -> list[CheckResult]:
+def run_checks(
+    con: duckdb.DuckDBPyConnection,
+    checks: list[Check] = CHECKS,
+    anomalies: list[KnownAnomaly] = KNOWN_ANOMALIES,
+) -> list[CheckResult]:
     results = []
     for check in checks:
         try:
             problems = con.sql(check.sql).pl()
         except duckdb.CatalogException:
-            problems = None
-        results.append(CheckResult(check, problems))
+            results.append(CheckResult(check, None))
+            continue
+        remaining, excused = split_known(check.name, problems, anomalies)
+        results.append(CheckResult(check, remaining, excused))
     return results
