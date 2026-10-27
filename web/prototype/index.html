@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="color-scheme" content="light dark">
   <title>Macro Event Lab</title>
-  <!-- 32x32 square favicon placeholder -->
+  <!-- square 32x32 favicon placeholder until the real icon exists -->
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 32 32'%3E%3Crect x='1' y='1' width='30' height='30' fill='none' stroke='%238b8d98' stroke-width='1.5' stroke-dasharray='3,3'/%3E%3Ctext x='16' y='19' font-family='monospace' font-size='8' text-anchor='middle' fill='%2360646c'%3E32%3C/text%3E%3C/svg%3E">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -101,7 +101,6 @@
       -webkit-font-smoothing: antialiased;
     }
 
-    /* Typography scale */
     .t-micro {
       font-size: 12px;
       line-height: 16px;
@@ -158,7 +157,7 @@
       font-variant-numeric: tabular-nums lining-nums;
     }
 
-    /* Focus ring: 2px --accent, 2px offset, never removed */
+    /* focus ring stays visible on every control: 2px accent outline with a 2px offset */
     :focus-visible {
       outline: 2px solid var(--accent);
       outline-offset: 2px;
@@ -178,7 +177,6 @@
       color: inherit;
     }
 
-    /* Header & Logo Slot */
     .site-header {
       border-bottom: 1px solid var(--border);
       background-color: var(--bg);
@@ -208,7 +206,7 @@
       }
     }
 
-    /* Logo slot with mandatory >= 12px clear space on all sides */
+    /* the logo slot keeps at least 12px of clear space on every side */
     .logo-wrap {
       padding: 12px 12px 12px 0;
       margin-right: 12px;
@@ -264,7 +262,6 @@
       }
     }
 
-    /* Navigation */
     .header-nav {
       display: none;
       align-items: center;
@@ -303,7 +300,6 @@
       gap: 8px;
     }
 
-    /* Theme segmented control (System | Light | Dark) */
     .theme-group {
       display: inline-flex;
       border: 1px solid var(--border-control);
@@ -371,7 +367,6 @@
       gap: 8px;
     }
 
-    /* Main Container */
     .main-container {
       max-width: 1200px;
       margin: 0 auto;
@@ -388,7 +383,6 @@
       }
     }
 
-    /* Explorer Grid Layout */
     .explorer-layout {
       display: grid;
       grid-template-columns: 1fr;
@@ -402,7 +396,6 @@
       }
     }
 
-    /* Left Sidebar (Desktop >= 1024px) */
     .event-sidebar {
       display: none;
       border-right: 1px solid var(--border);
@@ -502,7 +495,6 @@
       width: 100%;
     }
 
-    /* Mobile Event Selectors (< 1024px) */
     .mobile-event-selectors {
       display: grid;
       grid-template-columns: 110px 1fr;
@@ -527,7 +519,6 @@
       font-weight: 500;
     }
 
-    /* Event Header & State Simulation Bar */
     .event-top-bar {
       display: flex;
       flex-wrap: wrap;
@@ -549,8 +540,7 @@
       flex-wrap: wrap;
     }
 
-    /* Key Number Strip (Five Second Test) */
-    /* Mobile: 2x2 grid; Tablet/Desktop: 3 blocks in a row */
+    /* key figures form a 2x2 grid on phones and one row of three from 640px */
     .key-strip {
       display: grid;
       grid-template-columns: 1fr 1fr;
@@ -629,7 +619,6 @@
       color: var(--surprise-down);
     }
 
-    /* Mobile As-Of + Readout Line */
     .readout-strip {
       display: flex;
       flex-wrap: wrap;
@@ -657,9 +646,7 @@
       cursor: pointer;
     }
 
-    /* Main Chart Row */
-    /* Mobile (<640px): Bin chart first, Fan chart second */
-    /* Desktop (>=640px): Fan chart left (60%), Bin chart right (40%) */
+    /* bin chart comes first on phones; from 768px the fan chart takes 60% on the left */
     .main-chart-row {
       display: flex;
       flex-direction: column;
@@ -778,7 +765,6 @@
       max-width: 70ch;
     }
 
-    /* Data Tables */
     .data-table-wrap {
       overflow-x: auto;
       margin-top: 12px;
@@ -814,8 +800,6 @@
       font-variant-numeric: tabular-nums lining-nums;
     }
 
-    /* Time Control Bar */
-    /* Sticky bottom on mobile (<640px), inline bar on desktop */
     .time-control-bar {
       background-color: var(--surface);
       border: 1px solid var(--border);
@@ -886,7 +870,6 @@
       flex-wrap: wrap;
     }
 
-    /* Secondary Section */
     .secondary-section {
       display: flex;
       flex-direction: column;
@@ -958,7 +941,6 @@
       }
     }
 
-    /* Notice banners (Shutdown, Sparse, Upcoming, Error, Loading) */
     .state-banner {
       padding: 16px;
       border: 1px solid var(--border-control);
@@ -972,7 +954,6 @@
       border-radius: 6px;
     }
 
-    /* Page B: Overview */
     .overview-grid {
       display: none;
     }
@@ -1028,7 +1009,7 @@
       cursor: pointer;
     }
 
-    /* Page C: Method (640px column + sidenotes on desktop) */
+    /* method page: a 640px reading column with sidenotes beside it from 1024px */
     .method-layout {
       display: grid;
       grid-template-columns: 1fr;
@@ -1073,7 +1054,6 @@
       margin: 16px 0;
     }
 
-    /* Footer */
     .site-footer {
       border-top: 1px solid var(--border);
       margin-top: 64px;
@@ -1114,10 +1094,8 @@
       }
     }
 
-    /* Premium pass: hierarchy from type and whitespace, not from boxes.
-       Overrides the base rules above; colors stay on the blue system. */
-    /* Navy and royal blue: deep navy ink instead of neutral black, one royal blue accent,
-       cool slate neutrals; dark mode sits on a blue-black navy. */
+    /* the rules below override the base styles: hierarchy comes from type and whitespace instead of boxes */
+    /* navy ink instead of black, one royal blue accent and cool slate neutrals; dark mode sits on blue-black navy */
     :root, html[data-theme="light"] {
       --bg: #ffffff;
       --surface: #f5f7fa;
@@ -1210,7 +1188,7 @@
       .t-hero { font-size: 52px; line-height: 58px; }
     }
 
-    /* Header: plain text navigation, quiet theme switch */
+    /* navigation is plain text and the theme switch stays quiet */
     .nav-btn {
       border: none;
       background: transparent;
@@ -1257,7 +1235,7 @@
       .explorer-layout { grid-template-columns: 216px 1fr; gap: 56px; }
     }
 
-    /* Sidebar: no rules between rows, selection shown by a thin blue edge */
+    /* sidebar rows have no dividers; a thin blue edge marks the selected event */
     .event-sidebar {
       border-right: none;
       padding-right: 0;
@@ -1284,7 +1262,7 @@
       color: var(--text);
     }
 
-    /* Chips and toggles: tinted when active, never a heavy solid fill */
+    /* active chips and toggles get a light blue tint instead of a solid fill */
     .chip-btn,
     .toggle-pair button {
       background-color: transparent;
@@ -1317,7 +1295,6 @@
       border-radius: 8px;
     }
 
-    /* Event header and the five second strip */
     .event-top-bar {
       border-bottom: none;
       padding-bottom: 0;
@@ -1399,7 +1376,7 @@
       background: transparent;
     }
 
-    /* Charts sit on the page, not in boxes */
+    /* charts sit directly on the page without boxes */
     .main-chart-row {
       gap: 40px;
       margin-bottom: 32px;
@@ -1452,7 +1429,7 @@
       background-color: transparent;
     }
 
-    /* Time controls: a ruled band on desktop, a sticky bar on phones */
+    /* time controls are a ruled band on desktop and a sticky bar on phones */
     .time-control-bar {
       background: transparent;
       border: none;
@@ -1483,7 +1460,7 @@
       gap: 12px;
     }
 
-    /* Secondary content: rules instead of panels */
+    /* secondary content is separated by rules instead of panels */
     .secondary-section {
       gap: 32px;
     }
@@ -1554,7 +1531,7 @@
     .chart-col-bin .chart-aspect-box {
       aspect-ratio: 340 / 300;
     }
-    /* Phones: the theme switch lives in the menu drawer so the header never overflows */
+    /* on phones the theme switch lives in the menu drawer so the header never overflows */
     .drawer-theme {
       margin-top: 12px;
     }
@@ -1565,8 +1542,7 @@
     @media (min-width: 640px) {
       .drawer-theme { display: none; }
     }
-    /* Release-day reaction: yields as two figures, sectors as a diverging bar list.
-       Rises are dark ink and falls are slate, so blue and orange keep their own meanings. */
+    /* sectors that rose are dark ink and those that fell are slate, so blue and orange keep their own meanings */
     .yield-pair {
       display: flex;
       gap: 32px;
@@ -1692,9 +1668,7 @@
   </header>
 
   <main class="main-container" id="app-main">
-    <!-- PAGE A & PAGE D: EVENT EXPLORER -->
     <section id="page-explorer">
-      <!-- Mobile Event Selectors (<1024px) -->
       <div class="mobile-event-selectors" aria-label="Mobile event selectors">
         <div>
           <label for="mobile-release-filter" class="sr-only">Release type</label>
@@ -1712,7 +1686,6 @@
       </div>
 
       <div class="explorer-layout">
-        <!-- Left Sidebar (Desktop >=1024px) -->
         <aside class="event-sidebar" aria-label="Release filter and event list">
           <div class="t-micro" style="color: var(--text-muted); margin-bottom: 6px;">Release type</div>
           <div class="filter-chips" role="group" aria-label="Filter by release type">
@@ -1725,9 +1698,7 @@
           <ul class="event-list" id="desktop-event-list"></ul>
         </aside>
 
-        <!-- Explorer Content Area -->
         <div id="explorer-content-col">
-          <!-- Loading State View -->
           <div id="state-loading-view" style="display: none;" aria-live="polite">
             <p class="t-label" style="margin: 0 0 12px 0;">Loading event data</p>
             <div class="skeleton-box" style="height: 64px; margin-bottom: 16px;"></div>
@@ -1738,14 +1709,12 @@
             </div>
           </div>
 
-          <!-- Error State View -->
           <div id="state-error-view" class="state-banner" style="display: none;" role="alert">
             <h2 class="t-h3" style="margin-bottom: 8px;">Unable to load point-in-time snapshot archive</h2>
             <p class="t-body" style="color: var(--text-muted); margin: 0 0 12px 0;">Connection to the vintage snapshot store timed out while reading Kalshi contract series.</p>
             <button type="button" class="play-btn" id="error-retry-btn">Retry</button>
           </div>
 
-          <!-- Active Event View -->
           <div id="state-normal-view">
             <div class="event-top-bar">
               <div>
@@ -1754,10 +1723,8 @@
               </div>
             </div>
 
-            <!-- Notice Banner for Special Event Cases (Shutdown, Sparse, Upcoming) -->
             <div id="special-case-banner" class="state-banner" style="display: none;"></div>
 
-            <!-- Key Number Strip (The Five Second Test) -->
             <div class="key-strip" aria-label="Five second summary metrics">
               <div class="key-block">
                 <div class="key-label" id="key-label-expected">MARKET EXPECTED (T&#8722;1h)</div>
@@ -1779,7 +1746,6 @@
               </div>
             </div>
 
-            <!-- As-of + Pinned Readout Strip -->
             <div class="readout-strip" aria-live="polite">
               <div>
                 <span class="t-label" id="as-of-banner-label">As of Oct 12 08:30 ET (T&#8722;48h):</span>
@@ -1788,9 +1754,8 @@
               <button type="button" class="readout-unpin" id="unpin-readout-btn" style="display: none;">Clear pin (Esc)</button>
             </div>
 
-            <!-- Main Chart Row -->
             <div class="main-chart-row">
-              <!-- Left on desktop (60%), second on mobile: Fan chart (CPI) or Stacked Area over time (FOMC) -->
+              <!-- fan chart for CPI, stacked area over time for FOMC -->
               <div class="chart-col-fan">
                 <figure class="chart-figure" aria-labelledby="fan-chart-title">
                   <div class="chart-header">
@@ -1815,7 +1780,7 @@
                 </figure>
               </div>
 
-              <!-- Right on desktop (40%), first on mobile: Bin probability chart (CPI) or 100% Stacked Horizontal Bar (FOMC) -->
+              <!-- bin probability chart for CPI, 100% stacked bar for FOMC -->
               <div class="chart-col-bin">
                 <figure class="chart-figure" aria-labelledby="bin-chart-title">
                   <div class="chart-header">
@@ -1843,7 +1808,6 @@
               </div>
             </div>
 
-            <!-- Time Control Bar (Sticky bottom on mobile, inline on desktop) -->
             <div class="time-control-bar" aria-label="Point-in-time playback controls">
               <button type="button" class="play-btn" id="play-pause-btn" aria-label="Play hourly timeline">Play</button>
               <div class="slider-wrap">
@@ -1876,9 +1840,7 @@
               </div>
             </div>
 
-            <!-- Secondary Section: Threshold Step Chart, Market Reaction, CSV, About This Data -->
             <div class="secondary-section">
-              <!-- Market reaction on release day: Treasury yields plus sector ETFs -->
               <figure class="chart-figure" aria-labelledby="reaction-chart-title">
                 <div class="chart-header">
                   <div>
@@ -1933,7 +1895,6 @@
                 </div>
               </figure>
 
-              <!-- Market Reaction & Source/CSV Strip -->
               <div class="reaction-strip">
                 <div>
                   <span class="t-label">Data behind these charts</span>
@@ -1944,7 +1905,6 @@
                 </div>
               </div>
 
-              <!-- Collapsible About This Data -->
               <details class="about-panel" id="about-data-details">
                 <summary>About this data (tickers, snapshot times, vintages, and the as-of rule)</summary>
                 <div class="about-grid">
@@ -1969,14 +1929,12 @@
       </div>
     </section>
 
-    <!-- PAGE B: EVENTS OVERVIEW (HOME / COMPARE) -->
     <section id="page-overview" style="display: none;">
       <div style="margin-bottom: 24px; border-bottom: 1px solid var(--border); padding-bottom: 16px;">
         <h1 class="t-h1" style="margin-bottom: 8px;">Macro Event Overview</h1>
         <p class="t-body" style="color: var(--text-muted); margin: 0;">Compare implied pre-release distributions at T&#8722;1h against the actual first print and standardized surprise across CPI, Jobs, and FOMC releases.</p>
       </div>
 
-      <!-- Surprise Strip -->
       <figure class="chart-figure" style="margin-bottom: 24px;" aria-labelledby="surprise-strip-title">
         <div class="chart-header">
           <div>
@@ -1992,7 +1950,6 @@
         </div>
       </figure>
 
-      <!-- Small Multiples Grid (Desktop/Tablet) & Sparkline Rows (Mobile) -->
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
         <h2 class="t-h2">Releases (T&#8722;1h distribution vs. first print)</h2>
         <span class="t-micro" style="color: var(--text-muted);">Shared horizontal scale per indicator</span>
@@ -2001,7 +1958,6 @@
       <div id="overview-mobile-rows" class="overview-mobile-list"></div>
     </section>
 
-    <!-- PAGE C: METHOD -->
     <section id="page-method" style="display: none;">
       <div class="method-layout">
         <article class="method-article">
@@ -2018,25 +1974,20 @@
           <h2 class="t-h2">2. Normalization and monotonicity enforcement</h2>
           <p class="t-body">Orderbook bid-ask bounce or thin liquidity in tail strikes can cause raw differences to violate monotonicity or sum to slightly more or less than 100%. We apply isotonic regression (pool-adjacent-violators) to enforce <span class="mono">S(k_1) &gt;= S(k_2) &gt;= ... &gt;= S(k_m)</span>, clip negative bin diffs to zero, and normalize bin masses <span class="mono">p_j = raw_j / sum(raw)</span> so the distribution sums to exactly 1.00. Both Raw and Normalized series are preserved in the threshold toggle.</p>
 
-          <!-- Simple SVG diagram of Point-in-Time architecture -->
           <figure class="chart-figure" style="margin: 24px 0;" aria-label="Point in time timeline diagram">
             <div class="t-label" style="margin-bottom: 8px;">Diagram: Bitemporal point-in-time visibility (<span class="mono">known_from</span> vs. <span class="mono">as_of</span>)</div>
             <svg viewBox="0 0 580 130" style="width: 100%; height: auto; display: block;">
               <line x1="30" y1="55" x2="550" y2="55" stroke="var(--border-control)" stroke-width="1.5"/>
-              <!-- T-168h -->
               <circle cx="60" cy="55" r="4" fill="var(--market)"/>
               <text x="60" y="38" text-anchor="middle" font-size="12" fill="var(--text)">T&#8722;168h</text>
               <text x="60" y="76" text-anchor="middle" font-size="12" fill="var(--text-muted)">Oct 7</text>
-              <!-- T-48h -->
               <line x1="210" y1="20" x2="210" y2="95" stroke="var(--accent)" stroke-width="1.5" stroke-dasharray="3,3"/>
               <circle cx="210" cy="55" r="5" fill="var(--accent)"/>
               <text x="210" y="15" text-anchor="middle" font-size="12" font-weight="500" fill="var(--accent)">Scrubber as_of (T&#8722;48h)</text>
               <text x="210" y="112" text-anchor="middle" font-size="12" fill="var(--text-muted)">Only snapshots &lt;= Oct 12 visible</text>
-              <!-- Release T=0 -->
               <circle cx="370" cy="55" r="5" fill="var(--actual)"/>
               <text x="370" y="38" text-anchor="middle" font-size="12" font-weight="500" fill="var(--actual)">First print (T=0)</text>
               <text x="370" y="76" text-anchor="middle" font-size="12" fill="var(--text-muted)">Oct 14, 08:30 ET (0.4%)</text>
-              <!-- Revision -->
               <circle cx="510" cy="55" r="5" fill="var(--bg)" stroke="var(--revision)" stroke-width="2" stroke-dasharray="2,2"/>
               <text x="510" y="38" text-anchor="middle" font-size="12" fill="var(--text-muted)">ALFRED Revision</text>
               <text x="510" y="76" text-anchor="middle" font-size="12" fill="var(--text-muted)">Nov 13 (0.3%)</text>
@@ -2067,7 +2018,6 @@
       </div>
     </section>
 
-    <!-- PAGE DATA: VERIFIABLE TABLE & CSV EXPORT -->
     <section id="page-data" style="display: none;">
       <div style="margin-bottom: 24px; border-bottom: 1px solid var(--border); padding-bottom: 16px; display: flex; justify-content: space-between; align-items: flex-end; flex-wrap: wrap; gap: 12px;">
         <div>
@@ -2079,7 +2029,6 @@
       <div class="data-table-wrap" id="full-archive-table-wrap"></div>
     </section>
 
-    <!-- PAGE SQL: POINT-IN-TIME QUERY INSPECTOR -->
     <section id="page-sql" style="display: none;">
       <div style="margin-bottom: 24px; border-bottom: 1px solid var(--border); padding-bottom: 16px;">
         <h1 class="t-h1" style="margin-bottom: 8px;">Point-in-Time SQL Queries</h1>
@@ -2114,7 +2063,7 @@
     (function() {
       "use strict";
 
-      // True minus sign (U+2212) helper
+      // U+2212, the true minus sign used for negative numbers
       var MINUS = "\u2212";
 
       // Hero value: number (and a leading "%") large, the rest of the unit small and muted
@@ -2137,7 +2086,7 @@
         return "T" + MINUS + Math.abs(h) + "h";
       }
 
-      // Exact Mock Data from Section 11 of Brief + Required Special Case Events (Section 9)
+      // illustrative events: the mock CPI and FOMC data plus the upcoming, not published and sparse cases
       var EVENTS_DB = {
         "cpi-2026-09": {
           id: "cpi-2026-09",
@@ -2270,7 +2219,6 @@
         "cpi-2024-05-sparse"
       ];
 
-      // Application State
       var state = {
         page: "explorer",        // explorer | overview | method | data | sql
         eventId: "cpi-2026-09",
@@ -2288,7 +2236,7 @@
         sqlPreset: "pit"
       };
 
-      // Parse URL parameters on load
+      // restore event, hour, view and page from the URL on load
       function readUrlState() {
         try {
           var params = new URLSearchParams(window.location.search);
@@ -2400,7 +2348,7 @@
         return out;
       }
 
-      // Format exact timestamp relative to release_ts
+      // clock time of an hour offset from the release timestamp
       function formatSnapshotTimestamp(ev, hour) {
         var base = new Date(ev.release_ts);
         var snapTime = new Date(base.getTime() + hour * 3600 * 1000);
@@ -2419,7 +2367,6 @@
         };
       }
 
-      // Theme switching
       function setThemePreference(pref) {
         var resolved = pref;
         if (pref === "system") {
@@ -2437,7 +2384,6 @@
         }
       }
 
-      // Render Sidebar & Mobile Event Selectors
       function renderEventLists() {
         var listEl = document.getElementById("desktop-event-list");
         var mobileSelect = document.getElementById("mobile-event-select");
@@ -2515,7 +2461,6 @@
         document.getElementById("state-normal-view").style.display = state.uiState === "normal" ? "block" : "none";
       }
 
-      // Render Key Number Strip & Special Banners
       function renderKeyStrip(ev, snap) {
         document.getElementById("event-title-heading").textContent = ev.title;
         document.getElementById("event-release-meta").textContent = ev.release_display;
@@ -2605,7 +2550,6 @@
         }
       }
 
-      // Update Readout & Slider Labels
       function renderSliderAndReadout(ev, snap) {
         var ts = formatSnapshotTimestamp(ev, state.hour);
         var hTag = state.hour === 0 ? "Final (Release)" : "T" + MINUS + Math.abs(state.hour) + "h";
@@ -2650,7 +2594,6 @@
         renderSliderAndReadout(ev, snap);
       }
 
-      // Render Left Chart: Fan Chart (CPI) or Stacked Area Over Time (FOMC)
       function renderFanOrAreaChart(ev, snap) {
         var svg = document.getElementById("fan-svg");
         var titleEl = document.getElementById("fan-chart-title");
@@ -2820,7 +2763,6 @@
           "<tbody>" + rowsHtml + "</tbody></table>";
       }
 
-      // Page D: FOMC Stacked Area Over Time
       function renderFomcStackedArea(svg, ev, snap, tableWrap) {
         var W = 560, H = 340;
         var padL = 44, padR = 104, padT = 20, padB = 36;
@@ -2889,7 +2831,6 @@
           "<tbody>" + rows + "</tbody></table>";
       }
 
-      // Render Right Chart: Bin Probability Chart (CPI) or 100% Stacked Horizontal Bar (FOMC)
       function renderBinOrFomcBarChart(ev, snap) {
         var svg = document.getElementById("bin-svg");
         var titleEl = document.getElementById("bin-chart-title");
@@ -3023,7 +2964,6 @@
           "<tbody>" + tRows + "</tbody></table>";
       }
 
-      // Page D: FOMC 100% Stacked Horizontal Bar
       function renderFomcStackedBar(svg, ev, snap, tableWrap) {
         var W = 440, H = 260;
         svg.setAttribute("viewBox", "0 0 " + W + " " + H);
@@ -3083,7 +3023,6 @@
           "<tbody>" + tRows + "</tbody></table>";
       }
 
-      // Render Secondary Threshold Step Chart P(X > k)
       function renderThresholdSection(ev, snap) {
         var svg = document.getElementById("threshold-svg");
         var tableWrap = document.getElementById("threshold-table-box");
@@ -3189,7 +3128,6 @@
           "<tbody>" + tRows + "</tbody></table>";
       }
 
-      // Render Page B: Overview (Surprise Strip + Small Multiples + Mobile Sparkline Rows)
       function renderOverviewPage() {
         var stripSvg = document.getElementById("surprise-strip-svg");
         var W = 800, H = 100;
@@ -3294,7 +3232,6 @@
         }
       }
 
-      // Render Page Data & Page SQL
       function renderDataAndSqlPages() {
         var wrap = document.getElementById("full-archive-table-wrap");
         var cpi = EVENTS_DB["cpi-2026-09"];
@@ -3325,7 +3262,6 @@
         document.getElementById("sql-result-preview").innerHTML = wrap.innerHTML;
       }
 
-      // CSV Download Trigger
       function downloadCsv() {
         var ev = EVENTS_DB[state.eventId];
         var lines = ["event_id,title,snapshot_t,mean,sd,p5,p25,p50,p75,p95,first_print,first_print_vintage,surprise_sd,note"];
@@ -3352,7 +3288,7 @@
         URL.revokeObjectURL(url);
       }
 
-      // Playback logic (Static first, opt-in Play, 250ms per step, stops at end, respects prefers-reduced-motion)
+      // playback is opt-in, 250ms per step, stops at the end, and steps manually under reduced motion
       function togglePlayback() {
         var reduced = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
         if (reduced) {
@@ -3397,8 +3333,7 @@
         if (btn) btn.textContent = "Play";
       }
 
-      // Illustrative release-day returns (%) of the SPDR sector ETFs and SPY, keyed by event id.
-      // Events without a published print have no reaction.
+      // illustrative release-day returns (%) of the SPDR sector ETFs and SPY by event id; unpublished events have none
       var SECTOR_NAMES = {
         SPY: "S&P 500", XLK: "Technology", XLC: "Communication", XLY: "Discretionary",
         XLP: "Staples", XLE: "Energy", XLF: "Financials", XLV: "Health Care",
@@ -3457,7 +3392,6 @@
         }).join("");
       }
 
-      // Master Render
       function renderAll() {
         var pages = ["explorer", "overview", "method", "data", "sql"];
         for (var p = 0; p < pages.length; p++) {
@@ -3489,7 +3423,6 @@
         syncUrlState();
       }
 
-      // Event Listeners Initialization
       function initListeners() {
         var themeBtns = document.querySelectorAll("[data-theme-set]");
         for (var i = 0; i < themeBtns.length; i++) {
