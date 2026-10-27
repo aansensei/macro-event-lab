@@ -2068,17 +2068,17 @@
       <div class="method-layout">
         <article class="method-article">
           <h1 class="t-h1" style="margin-bottom: 8px;">Methodology and Point-in-Time Architecture</h1>
-          <p class="t-label" style="color: var(--text-muted); margin-bottom: 24px;">Technical specification for probability extraction, percentile interpolation, and bitemporal vintage indexing.</p>
+          <p class="t-label" style="color: var(--text-muted); margin-bottom: 24px;">How market prices become probabilities, how every number is tied to the moment it became public, and how the surprise is measured.</p>
 
-          <p class="t-body">Macro Event Lab constructs an hourly point-in-time record of market expectations prior to major US macroeconomic releases and pairs each distribution with the exact first print published at the release timestamp.</p>
+          <p class="t-body">Macro Event Lab builds an hourly, point-in-time record of what prediction markets expected in the 7 days before each US CPI, jobs, GDP and Fed release, and pairs it with the number first published on release day.</p>
 
-          <h2 class="t-h2">1. Deriving bin probabilities from threshold contracts</h2>
-          <p class="t-body">Prediction markets on Kalshi list binary threshold contracts of the form "CPI month-over-month above <span class="mono">k</span>%" for an ordered ladder of strikes <span class="mono">k_1 &lt; k_2 &lt; ... &lt; k_m</span>. Let <span class="mono">M(k_i, t)</span> denote the mid-market price (average of best bid and best ask, scaled to <span class="mono">[0, 1]</span>) at hourly snapshot <span class="mono">t</span>.</p>
-          <p class="t-body">Because each threshold contract pays 1 if the realized print exceeds <span class="mono">k_i</span>, the survival function is <span class="mono">S(k_i) = P(X &gt; k_i)</span>. Interior bin probabilities are differences of adjacent thresholds:</p>
+          <h2 class="t-h2">1. From contract prices to a probability curve</h2>
+          <p class="t-body">Kalshi lists binary contracts of the form "CPI month over month above <span class="mono">k</span>%" for a ladder of strikes <span class="mono">k_1 &lt; k_2 &lt; ... &lt; k_m</span>. Each hourly candle gives one usable price per contract: the bid/ask mid when the book is not crossed and the spread is at most 10 cents (true for 96 to 99.7% of candles in the last week before close), otherwise the last trade, otherwise none.</p>
+          <p class="t-body">At each hourly snapshot <span class="mono">t</span>, a contract takes the latest usable price known at <span class="mono">t</span>, never a later one. A contract that pays 1 when the number is above <span class="mono">k_i</span> prices the survival function <span class="mono">S(k_i) = P(X &gt; k_i)</span>, and each outcome bin is the difference of two neighbouring strikes:</p>
           <div class="code-block">P(k_{i-1} &lt; X &lt;= k_i) = S(k_{i-1}) &#8722; S(k_i)</div>
 
-          <h2 class="t-h2">2. Normalization and monotonicity enforcement</h2>
-          <p class="t-body">Orderbook bid-ask bounce or thin liquidity in tail strikes can cause raw differences to violate monotonicity or sum to slightly more or less than 100%. We apply isotonic regression (pool-adjacent-violators) to enforce <span class="mono">S(k_1) &gt;= S(k_2) &gt;= ... &gt;= S(k_m)</span>, clip negative bin diffs to zero, and normalize bin masses <span class="mono">p_j = raw_j / sum(raw)</span> so the distribution sums to exactly 1.00. Both Raw and Normalized series are preserved in the threshold toggle.</p>
+          <h2 class="t-h2">2. Making the curve consistent</h2>
+          <p class="t-body">Raw prices sometimes rise with the strike, which no probability can do. A weighted isotonic regression (pool adjacent violators) finds the closest curve with <span class="mono">S(k_1) &gt;= S(k_2) &gt;= ... &gt;= S(k_m)</span>, weighting each price by the inverse of its spread, so one stale or wide quote barely moves its neighbours. Bins are then differences of the fitted curve, with <span class="mono">P(X &lt;= k_1) = 1 &#8722; S(k_1)</span> and <span class="mono">P(X &gt; k_m) = S(k_m)</span>, so they are never negative and sum to 1 by construction. The threshold chart keeps both the raw prices and the fitted curve.</p>
 
           <figure class="chart-figure" style="margin: 24px 0;" aria-label="Point in time timeline diagram">
             <div class="t-label" style="margin-bottom: 8px;">Diagram: Bitemporal point-in-time visibility (<span class="mono">known_from</span> vs. <span class="mono">as_of</span>)</div>
@@ -2100,25 +2100,25 @@
             </svg>
           </figure>
 
-          <h2 class="t-h2">3. Computing moments, percentiles, and surprise</h2>
-          <p class="t-body">From the normalized bin centers <span class="mono">x_j</span> and probabilities <span class="mono">p_j</span>, we compute the implied mean <span class="mono">mu = sum(x_j * p_j)</span> and standard deviation <span class="mono">sigma = sqrt(sum((x_j &#8722; mu)^2 * p_j))</span>. The 5th, 25th, 50th, 75th, and 95th percentiles are computed by piecewise-linear interpolation of the cumulative distribution function across bin boundaries.</p>
-          <p class="t-body">Standardized surprise is evaluated strictly against the T&#8722;1h expectation snapshot and the unrevised first print:</p>
+          <h2 class="t-h2">3. Mean, spread, percentiles and surprise</h2>
+          <p class="t-body">Each bin <span class="mono">(a, b]</span> holds the values that can actually be published in it, so its probability is spread evenly over <span class="mono">(a + r/2, b + r/2]</span>, where <span class="mono">r</span> is the publication step: 0.1 point for CPI and GDP, 0.25 for the Fed rate, 1,000 jobs for payrolls. A CPI bin (0.3, 0.4] therefore centres on 0.4, the only value it can print. The open tails are taken as wide as the median gap between strikes. The mean and standard deviation follow from these intervals (including the spread inside each bin), and the 5th to 95th percentiles interpolate within them.</p>
+          <p class="t-body">The first print comes from ALFRED, converted to the unit Kalshi settles on (CPI month over month %, payroll jobs added, GDP annualized growth) using both levels from the vintage of release day; Fed events use Kalshi's settled value. The surprise compares it with the last snapshot before the close:</p>
           <div class="code-block">Surprise (SD) = (First_Print &#8722; Mean_{T-1h}) / SD_{T-1h}</div>
 
-          <h2 class="t-h2">4. Point-in-time semantics and data sources</h2>
-          <p class="t-body">Macroeconomic series are frequently revised months or years after initial publication. Backtesting or evaluating market efficiency against revised data introduces look-ahead bias. Every observation in Macro Event Lab carries two timestamps: <span class="mono">reference_period</span> (the month measured) and <span class="mono">known_from</span> (the exact timestamp when the value became publicly available in ALFRED or Kalshi).</p>
-          <p class="t-body">Data sources: (1) Kalshi prediction market limit orderbook snapshots (<span class="mono">KXCPI</span>, <span class="mono">KXNFP</span>, <span class="mono">KXFOMC</span>); (2) Federal Reserve Bank of St. Louis ALFRED archival vintages (<span class="mono">CPIAUCSL</span>, <span class="mono">PAYEMS</span>, <span class="mono">DFEDTARU</span>); (3) FRED daily Treasury constant maturity yields (<span class="mono">DGS2</span>, <span class="mono">DGS10</span>).</p>
+          <h2 class="t-h2">4. Point in time and data sources</h2>
+          <p class="t-body">Official numbers are revised for months or years. Judging expectations against revised data uses information nobody had on release day. Every ALFRED vintage therefore carries <span class="mono">known_from</span>: the official release moment (08:30 ET for CPI, jobs and GDP; 14:00 ET for FOMC statements) when its date matches the release calendar, otherwise the end of that day in New York, so nothing is ever treated as known earlier than it was. A test checks that a query as of any moment never returns data published after it.</p>
+          <p class="t-body">Data sources: (1) Kalshi public market data for <span class="mono">KXCPI</span>, <span class="mono">KXPAYROLLS</span>, <span class="mono">KXGDP</span> and <span class="mono">KXFED</span>, including their older <span class="mono">CPI</span>, <span class="mono">FED</span> and <span class="mono">GDP</span> markets; (2) ALFRED vintages from the Federal Reserve Bank of St. Louis (<span class="mono">CPIAUCSL</span>, <span class="mono">PAYEMS</span>, <span class="mono">GDPC1</span> among others); (3) FRED release calendars and the Federal Reserve FOMC calendar. Treasury yields (<span class="mono">DGS2</span>, <span class="mono">DGS10</span>) and sector ETFs are planned.</p>
         </article>
 
         <aside aria-label="Method sidenotes">
           <div class="sidenote-box">
-            <strong>Note 1: Why T&#8722;1h is the benchmark.</strong> CPI and Employment Situation reports are published at 08:30 ET. Using the 07:30 ET (T&#8722;1h) snapshot captures final pre-release positioning before illiquidity widens spreads in the final seconds.
+            <strong>Note 1: What T&#8722;1h means.</strong> CPI, jobs and GDP markets close at 08:25 or 08:29 ET, just before the 08:30 release. Snapshots are taken on the hour, counted back from the hour of the close, so T&#8722;1h is 07:00 ET on release day.
           </div>
           <div class="sidenote-box">
-            <strong>Note 2: Discrete FOMC outcomes.</strong> Unlike continuous CPI bins, FOMC decisions fall into ordered policy actions (Cut 50, Cut 25, Hold, Hike 25). We render FOMC expectations with a 100% stacked bar and stacked area chart in ordered blues rather than a continuous fan.
+            <strong>Note 2: FOMC outcomes.</strong> Fed contracts ask whether the upper bound of the target range will be above <span class="mono">k</span>. With strikes 0.25 point apart, each bin is exactly one possible rate, so the page shows them as ordered outcomes (cut, hold, hike) instead of a continuous fan.
           </div>
           <div class="sidenote-box">
-            <strong>Note 3: Government shutdowns.</strong> When a release is cancelled or indefinitely delayed (such as October 2025 CPI), the pre-release market snapshots remain queryable while first print and surprise fields remain null.
+            <strong>Note 3: Government shutdowns.</strong> Each event is matched to the period its ticker names, so a release pushed back by weeks (September 2025 jobs, Q3 2025 GDP) still finds its market. A release that never came out (October 2025 CPI) keeps its market snapshots, with the first print and surprise left empty.
           </div>
         </aside>
       </div>
