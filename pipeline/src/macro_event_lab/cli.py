@@ -5,10 +5,10 @@ from __future__ import annotations
 import argparse
 from datetime import UTC, datetime
 
-from macro_event_lab import config
+from macro_event_lab import config, pit
 from macro_event_lab.build import build_silver
 from macro_event_lab.http import RateLimitedClient
-from macro_event_lab.sources import alfred, kalshi
+from macro_event_lab.sources import alfred, kalshi, releases
 
 
 def cmd_ingest_alfred(args: argparse.Namespace) -> None:
@@ -54,6 +54,43 @@ def cmd_ingest_kalshi(args: argparse.Namespace) -> None:
             print(f"Kalshi {series_ticker}: {len(markets)} markets, {requests} candle requests")
 
 
+def cmd_ingest_releases(_: argparse.Namespace) -> None:
+    paths = config.get_paths()
+    key = config.fred_api_key()
+    with RateLimitedClient(config.FRED_BASE_URL, config.FRED_RPS) as client:
+        for name, release in config.RELEASES.items():
+            if release.fred_release_id is None:
+                continue  # FOMC dates come from seeds/fomc_meetings.csv
+            n = releases.ingest_release_dates(
+                client, paths.raw, name, release.fred_release_id, key
+            )
+            print(f"FRED release {name} (id {release.fred_release_id}): {n:,} dates")
+
+
+def cmd_asof(args: argparse.Namespace) -> None:
+    ts = datetime.fromisoformat(args.timestamp.replace("Z", "+00:00"))
+    if ts.tzinfo is None:
+        raise SystemExit("Give a time zone, e.g. 2026-10-14T08:29-04:00 or 2026-10-14T12:29Z")
+    snapshot = pit.as_of(pit.connect(config.get_paths().silver), ts)
+    print(f"As of {ts.isoformat()}")
+    latest = (
+        snapshot.alfred.sort("observation_date")
+        .group_by("series_id", maintain_order=True)
+        .last()
+        .sort("series_id")
+    )
+    print("\nALFRED: latest observation public at that moment")
+    for row in latest.iter_rows(named=True):
+        print(
+            f"  {row['series_id']:<13} {row['observation_date']}  value={row['value']}"
+            f"  vintage={row['realtime_start']}  known_from={row['known_from']}"
+            f" ({row['known_from_source']})"
+        )
+    print(f"\nKalshi: {snapshot.kalshi.height} markets open")
+    for row in snapshot.kalshi.group_by("series_ticker").len().sort("series_ticker").iter_rows():
+        print(f"  {row[0]:<11} {row[1]} markets")
+
+
 def cmd_build(_: argparse.Namespace) -> None:
     counts = build_silver(config.get_paths())
     for table, n in counts.items():
@@ -81,8 +118,15 @@ def main(argv: list[str] | None = None) -> None:
     )
     p_kalshi.set_defaults(func=cmd_ingest_kalshi)
 
+    p_releases = ingest_sub.add_parser("releases", help="CPI, jobs and GDP release dates (FRED)")
+    p_releases.set_defaults(func=cmd_ingest_releases)
+
     p_build = sub.add_parser("build", help="rebuild silver Parquet tables from raw")
     p_build.set_defaults(func=cmd_build)
+
+    p_asof = sub.add_parser("asof", help="print what was public at a moment (point in time)")
+    p_asof.add_argument("timestamp", help="ISO time with zone, e.g. 2026-10-14T12:29Z")
+    p_asof.set_defaults(func=cmd_asof)
 
     args = parser.parse_args(argv)
     args.func(args)

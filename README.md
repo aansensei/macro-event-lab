@@ -72,7 +72,9 @@ macOS / Linux: `source .venv/bin/activate` and `cp .env.example .env`.
 | --- | --- |
 | `ingest alfred [--series ...]` | Download all vintages of the ALFRED series |
 | `ingest kalshi [--series ...] [--since YYYY-MM-DD] [--max-markets N] [--period 1/60/1440]` | Download markets and candlesticks |
+| `ingest releases` | Download CPI, jobs and GDP release dates (FRED); FOMC dates come from `pipeline/src/macro_event_lab/seeds/` |
 | `build` | Rebuild silver Parquet tables from raw |
+| `asof 2026-10-14T12:31Z` | Print what was public at that moment: newest ALFRED vintages and open Kalshi markets |
 
 ## License
 

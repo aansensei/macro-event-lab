@@ -15,6 +15,7 @@ dependencies = [
     "pyarrow>=15",
     "duckdb>=1.0",
     "python-dotenv>=1.0",
+    "tzdata>=2024.1",  # zoneinfo has no system time zone database on Windows
 ]
 
 [project.optional-dependencies]
@@ -29,6 +30,9 @@ mel = "macro_event_lab.cli:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]
+
+[tool.setuptools.package-data]
+macro_event_lab = ["seeds/*.csv"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

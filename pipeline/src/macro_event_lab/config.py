@@ -35,6 +35,26 @@ ALFRED_SERIES: dict[str, str] = {
     "GDPC1": "Real GDP",
 }
 
+
+
+@dataclass(frozen=True)
+class Release:
+    fred_release_id: int | None  # None: dates come from a seed file instead of FRED
+    local_time: str  # official release time, America/New_York
+    alfred_series: tuple[str, ...] = ()  # ALFRED series whose vintages this release publishes
+
+
+# FRED release ids checked on fred.stlouisfed.org/release?rid=... (Oct 2026). Release times
+# from the BLS schedule pages (CPI, Employment Situation: 08:30), the BEA schedule (GDP:
+# 8:30 AM ET) and FOMC statements ("For release at 2:00 p.m. EDT").
+RELEASE_TZ = "America/New_York"
+RELEASES: dict[str, Release] = {
+    "cpi": Release(10, "08:30", ("CPIAUCSL", "CPILFESL", "CUSR0000SAH1")),
+    "employment_situation": Release(50, "08:30", ("PAYEMS", "UNRATE")),
+    "gdp": Release(53, "08:30", ("GDPC1",)),
+    "fomc": Release(None, "14:00"),
+}
+
 # Requests per second. FRED documents 120 requests/minute; Kalshi documents 20/s for its
 # Basic authenticated tier, unauthenticated limits are not published, so stay well below.
 FRED_RPS = 1.5
