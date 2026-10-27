@@ -9,6 +9,7 @@ import polars as pl
 
 from macro_event_lab import config, pit, quality
 from macro_event_lab.build import build_silver
+from macro_event_lab.gold import build_gold
 from macro_event_lab.http import RateLimitedClient
 from macro_event_lab.sources import alfred, kalshi, releases
 
@@ -107,9 +108,11 @@ def cmd_check(args: argparse.Namespace) -> None:
 
 
 def cmd_build(_: argparse.Namespace) -> None:
-    counts = build_silver(config.get_paths())
-    for table, n in counts.items():
+    paths = config.get_paths()
+    for table, n in build_silver(paths).items():
         print(f"silver/{table}.parquet: {n:,} rows")
+    for table, n in build_gold(paths).items():
+        print(f"gold/{table}.parquet: {n:,} rows")
 
 
 def main(argv: list[str] | None = None) -> None:
@@ -136,7 +139,7 @@ def main(argv: list[str] | None = None) -> None:
     p_releases = ingest_sub.add_parser("releases", help="CPI, jobs and GDP release dates (FRED)")
     p_releases.set_defaults(func=cmd_ingest_releases)
 
-    p_build = sub.add_parser("build", help="rebuild silver Parquet tables from raw")
+    p_build = sub.add_parser("build", help="rebuild silver and gold Parquet tables from raw")
     p_build.set_defaults(func=cmd_build)
 
     p_check = sub.add_parser("check", help="data quality checks on silver (exit 1 on errors)")
