@@ -1588,6 +1588,122 @@
       .sector-name { white-space: nowrap; }
       .yield-pair { gap: 20px; font-size: 18px; }
     }
+    /* the about page is one 760px reading column; rows pair a short label with its explanation */
+    .about-page {
+      max-width: 760px;
+    }
+    .about-lead {
+      font-size: 19px;
+      line-height: 30px;
+      color: var(--text-muted);
+      margin: 12px 0 0 0;
+      max-width: 62ch;
+    }
+    .about-section {
+      margin-top: 56px;
+    }
+    .about-section > .t-h2 {
+      margin-bottom: 8px;
+    }
+    .about-rows {
+      margin: 0;
+    }
+    .about-rows > div {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 4px;
+      padding: 16px 0;
+      border-top: 1px solid var(--border);
+    }
+    @media (min-width: 640px) {
+      .about-rows > div { grid-template-columns: 200px 1fr; gap: 24px; }
+    }
+    .about-rows dt {
+      font-weight: 600;
+    }
+    .about-rows dd {
+      margin: 0;
+      color: var(--text-muted);
+      line-height: 26px;
+    }
+    /* author profile: dashed boxes mark what is still to be added */
+    .author-card {
+      display: grid;
+      grid-template-columns: 96px 1fr;
+      gap: 24px;
+      align-items: start;
+      padding: 20px 0;
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+    }
+    @media (max-width: 479px) {
+      .author-card { grid-template-columns: 1fr; }
+    }
+    .author-photo {
+      width: 96px;
+      height: 96px;
+      border-radius: 50%;
+      border: 1px dashed var(--border-control);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+    .author-name {
+      font-size: 22px;
+      line-height: 28px;
+      font-weight: 600;
+      letter-spacing: -0.01em;
+      margin: 0;
+    }
+    .author-role, .author-bio {
+      margin: 6px 0 0 0;
+      color: var(--text-muted);
+    }
+    .author-links {
+      margin: 16px 0 0 0;
+      display: grid;
+      gap: 6px;
+    }
+    .author-links > div {
+      display: grid;
+      grid-template-columns: 88px 1fr;
+      gap: 12px;
+      font-size: 15px;
+    }
+    .author-links dt {
+      color: var(--text-muted);
+    }
+    .author-links dd {
+      margin: 0;
+      overflow-wrap: anywhere;
+    }
+    .author-links dd.tba {
+      color: var(--text-muted);
+    }
+    .about-note {
+      margin-top: 16px;
+      color: var(--text-muted);
+    }
+    .faq-list details {
+      border-top: 1px solid var(--border);
+      padding: 14px 0;
+    }
+    .faq-list details:last-child {
+      border-bottom: 1px solid var(--border);
+    }
+    .faq-list summary {
+      cursor: pointer;
+      font-weight: 600;
+      list-style-position: inside;
+    }
+    .faq-list p {
+      margin: 10px 0 0 0;
+      color: var(--text-muted);
+      line-height: 26px;
+      max-width: 66ch;
+    }
     .footer-states .chip-btn {
       min-height: 28px;
       padding: 2px 8px;
@@ -1609,6 +1725,7 @@
         <button type="button" class="nav-btn" data-nav="method">Method</button>
         <button type="button" class="nav-btn" data-nav="data">Data</button>
         <button type="button" class="nav-btn" data-nav="sql">SQL</button>
+        <button type="button" class="nav-btn" data-nav="about">About</button>
       </nav>
 
       <div class="header-right">
@@ -1627,6 +1744,7 @@
         <button type="button" class="nav-btn" data-nav="method">Method</button>
         <button type="button" class="nav-btn" data-nav="data">Data</button>
         <button type="button" class="nav-btn" data-nav="sql">SQL</button>
+        <button type="button" class="nav-btn" data-nav="about">About</button>
       </div>
       <div class="theme-group drawer-theme" role="group" aria-label="Color theme">
         <button type="button" class="theme-btn" data-theme-set="system" aria-pressed="false">System</button>
@@ -2011,6 +2129,85 @@
       <pre class="code-block" id="sql-code-display"></pre>
       <div class="data-table-wrap" id="sql-result-preview"></div>
     </section>
+
+    <section id="page-about" class="about-page" style="display: none;">
+      <h1 class="t-h1">About Macro Event Lab</h1>
+      <p class="about-lead">Macro Event Lab shows what prediction markets expected before each US CPI report, jobs report and Fed decision, how that compared with the number first published, and how markets reacted.</p>
+
+      <section class="about-section" aria-labelledby="about-why">
+        <h2 class="t-h2" id="about-why">Why it exists</h2>
+        <dl class="about-rows">
+          <div><dt>Numbers as they were known</dt><dd>Official figures get revised. Judging a forecast against today's revised number uses information nobody had on release day, so every value here carries the moment it became public, and every chart can be replayed hour by hour.</dd></div>
+          <div><dt>The whole distribution</dt><dd>A prediction market prices every outcome, not one consensus number. That shows how sure the market was, how that certainty changed in the week before a release, and how large the surprise really was.</dd></div>
+          <div><dt>An engineering project</dt><dd>Behind the site is an automated, tested data pipeline that collects public market and economic data and rebuilds every table from the raw responses it saved.</dd></div>
+        </dl>
+      </section>
+
+      <section class="about-section" aria-labelledby="about-stack">
+        <h2 class="t-h2" id="about-stack">How it is built</h2>
+        <dl class="about-rows">
+          <div><dt>Data sources</dt><dd>Kalshi public market data for the "above k" contracts on CPI, payrolls, GDP and the Fed rate; ALFRED vintages from the Federal Reserve Bank of St. Louis for first prints and revisions; FRED release calendars; the Federal Reserve FOMC calendar.</dd></div>
+          <div><dt>Pipeline</dt><dd>Python with httpx, Polars, DuckDB and Parquet. Every API response is stored first as compressed JSON named by its hash, then parsed into clean tables that can be rebuilt from scratch at any time.</dd></div>
+          <div><dt>Methods</dt><dd>As-of joins so a snapshot only sees prices known at that hour; weighted isotonic regression to turn contract prices into a consistent probability curve; bins aligned with how each number is published, so a CPI bin is centred on the value it can actually print.</dd></div>
+          <div><dt>Quality</dt><dd>pytest with Hypothesis property tests, including one that checks no snapshot ever uses later data; ruff; data quality checks on every build; continuous integration on GitHub Actions.</dd></div>
+          <div><dt>Website</dt><dd>This prototype is plain HTML, CSS and JavaScript with hand-drawn SVG charts. The production site is planned in React, TypeScript and Vite with d3, loading DuckDB-WASM only on the SQL page.</dd></div>
+          <div><dt>Hosting</dt><dd>Planned as a static site at no cost.</dd></div>
+        </dl>
+      </section>
+
+      <section class="about-section" aria-labelledby="about-author">
+        <h2 class="t-h2" id="about-author">Who built it</h2>
+        <div class="author-card">
+          <div class="author-photo" role="img" aria-label="Photo to be added">Photo TBA</div>
+          <div class="author-body">
+            <p class="author-name">An Nguyen</p>
+            <p class="author-role">Role and school: TBA</p>
+            <p class="author-bio">Short bio: TBA</p>
+            <dl class="author-links">
+              <div><dt>Code</dt><dd><a href="https://github.com/aansensei/macro-event-lab">github.com/aansensei/macro-event-lab</a></dd></div>
+              <div><dt>Portfolio</dt><dd class="tba">TBA</dd></div>
+              <div><dt>LinkedIn</dt><dd class="tba">TBA</dd></div>
+              <div><dt>Email</dt><dd class="tba">TBA</dd></div>
+            </dl>
+          </div>
+        </div>
+        <p class="t-body about-note">Found a mistake or have a question? Open an issue on <a href="https://github.com/aansensei/macro-event-lab/issues">GitHub</a>.</p>
+      </section>
+
+      <section class="about-section" aria-labelledby="about-faq">
+        <h2 class="t-h2" id="about-faq">FAQ</h2>
+        <div class="faq-list">
+          <details>
+            <summary>What does "point in time" mean here?</summary>
+            <p>Each number is shown as it was known at a chosen moment. Drag the time slider to 48 hours before a release and the page shows only the market prices and official figures that were public at that hour, never anything published later.</p>
+          </details>
+          <details>
+            <summary>Why prediction markets instead of economist surveys?</summary>
+            <p>Markets trade around the clock and price every possible outcome, so their expectations can be read hour by hour as a full distribution. A survey gives one median number, collected days before the release.</p>
+          </details>
+          <details>
+            <summary>Why compare with the first print and not today's number?</summary>
+            <p>On release day the market reacted to the first published number. Revisions arrive weeks or months later; they are shown separately, so the comparison stays fair to what was known at the time.</p>
+          </details>
+          <details>
+            <summary>What happens when a release is not published?</summary>
+            <p>Some releases never came out, such as October 2025 CPI during the government shutdown. The market data is still shown; the first print and the surprise stay empty instead of being filled in.</p>
+          </details>
+          <details>
+            <summary>Are these numbers real?</summary>
+            <p>Not in this prototype: it uses illustrative data to test the design. The pipeline behind it runs on real data, and the public site will show derived tables only, never raw market data.</p>
+          </details>
+          <details>
+            <summary>Can I download the data?</summary>
+            <p>Every chart has a table view and a CSV download of exactly the rows it draws.</p>
+          </details>
+          <details>
+            <summary>Is this investment advice?</summary>
+            <p>No. Macro Event Lab is a research and engineering project. Nothing on this site is a recommendation to buy, sell or trade anything.</p>
+          </details>
+        </div>
+      </section>
+    </section>
   </main>
 
   <footer class="site-footer">
@@ -2230,7 +2427,7 @@
             state.showBinTable = true;
           }
           var pageParam = params.get("page");
-          if (pageParam && ["explorer", "overview", "method", "data", "sql"].indexOf(pageParam) !== -1) {
+          if (pageParam && ["explorer", "overview", "method", "data", "sql", "about"].indexOf(pageParam) !== -1) {
             state.page = pageParam;
           }
         } catch (e) {}
@@ -3380,7 +3577,7 @@
       }
 
       function renderAll() {
-        var pages = ["explorer", "overview", "method", "data", "sql"];
+        var pages = ["explorer", "overview", "method", "data", "sql", "about"];
         for (var p = 0; p < pages.length; p++) {
           var sec = document.getElementById("page-" + pages[p]);
           if (sec) sec.style.display = (state.page === pages[p]) ? "block" : "none";
