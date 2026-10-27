@@ -1,9 +1,17 @@
 from datetime import UTC, datetime
 
+import httpx
 from hypothesis import given
 from hypothesis import strategies as st
 
-from macro_event_lab.sources.kalshi import parse_candles, parse_markets, time_chunks
+from macro_event_lab.raw_store import save_raw
+from macro_event_lab.sources.kalshi import (
+    fetched_candle_windows,
+    ingest_candles,
+    parse_candles,
+    parse_markets,
+    time_chunks,
+)
 
 LIVE_CANDLES = {
     "ticker": "KXCPI-26SEP-T0.3",
@@ -71,6 +79,48 @@ def test_unsettled_market_result_is_null_not_empty_string():
     row = parse_markets("KXCPI", payload)[0]
     assert row["result"] is None
     assert row["expiration_value"] is None
+
+
+def test_fetched_candle_windows_only_counts_closed_windows(tmp_path):
+    fetched_at = datetime(2026, 10, 26, 12, 0, tzinfo=UTC)
+    now_ts = int(fetched_at.timestamp())
+    closed = {"start_ts": now_ts - 20 * 3600, "end_ts": now_ts - 10 * 3600, "period_interval": 60}
+    still_open = {"start_ts": now_ts - 3600, "end_ts": now_ts + 3600, "period_interval": 60}
+    for params in (closed, still_open):
+        save_raw(tmp_path, "kalshi.candles", "u", params, b'{"candlesticks": []}',
+                 {"series_ticker": "KXCPI", "ticker": "T1"}, fetched_at)
+    save_raw(tmp_path, "kalshi.markets", "u", {}, b'{"markets": []}', {}, fetched_at)
+
+    assert fetched_candle_windows(tmp_path) == {
+        ("T1", closed["start_ts"], closed["end_ts"], 60)
+    }
+
+
+class _RecordingClient:
+    def __init__(self):
+        self.calls = []
+
+    def get(self, path, params=None):
+        self.calls.append(params)
+        request = httpx.Request("GET", f"https://example.test{path}")
+        return httpx.Response(200, json={"candlesticks": []}, request=request)
+
+
+def test_ingest_candles_skips_windows_already_fetched(tmp_path):
+    market = {
+        "ticker": "T1", "open_time": "2026-06-01T00:00:00Z", "close_time": "2026-06-25T00:00:00Z",
+    }
+    client = _RecordingClient()
+    first = ingest_candles(client, tmp_path, "KXCPI", market, historical=True)
+    assert first == 3  # 24 days in 10-day windows
+
+    skip = {(
+        "T1", client.calls[0]["start_ts"], client.calls[0]["end_ts"], 60,
+    )}
+    client.calls.clear()
+    second = ingest_candles(client, tmp_path, "KXCPI", market, historical=True, skip=skip)
+    assert second == 2
+    assert all(c["start_ts"] != min(s[1] for s in skip) for c in client.calls)
 
 
 @given(

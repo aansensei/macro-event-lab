@@ -13,11 +13,12 @@ from pathlib import Path
 from typing import Any
 
 from macro_event_lab.http import RateLimitedClient
-from macro_event_lab.raw_store import save_raw
+from macro_event_lab.raw_store import iter_manifest, save_raw
 
 PAGE_LIMIT = 1000
 PERIOD_MINUTES = 60  # allowed: 1, 60, 1440
 CHUNK_SECONDS = 10 * 24 * 3600  # request candles in 10-day windows
+CANDLE_KINDS = {"kalshi.candles", "kalshi.historical_candles"}
 
 
 def _save(client_resp, raw_dir: Path, kind: str, params: dict[str, Any], meta: dict[str, Any]):
@@ -74,6 +75,23 @@ def time_chunks(start_ts: int, end_ts: int, size: int = CHUNK_SECONDS) -> list[t
     return chunks
 
 
+def fetched_candle_windows(raw_dir: Path) -> set[tuple[str, int, int, int]]:
+    """(ticker, start_ts, end_ts, period) of candle windows already in the raw store.
+
+    Only windows whose last period had closed when they were fetched count: those can no
+    longer change, so a re-run (for example after a crash) can skip them safely.
+    """
+    done = set()
+    for record in iter_manifest(raw_dir):
+        if record.kind not in CANDLE_KINDS:
+            continue
+        p = record.params
+        fetched = datetime.fromisoformat(record.fetched_at_utc).timestamp()
+        if p["end_ts"] + p["period_interval"] * 60 <= fetched:
+            done.add((record.meta["ticker"], p["start_ts"], p["end_ts"], p["period_interval"]))
+    return done
+
+
 def ingest_candles(
     client: RateLimitedClient,
     raw_dir: Path,
@@ -81,8 +99,12 @@ def ingest_candles(
     market: dict[str, Any],
     historical: bool,
     period_minutes: int = PERIOD_MINUTES,
+    skip: set[tuple[str, int, int, int]] | None = None,
 ) -> int:
-    """Download candlesticks for one market from open_time to close_time. Returns request count."""
+    """Download candlesticks for one market from open_time to close_time. Returns request count.
+
+    Windows listed in `skip` (see `fetched_candle_windows`) are not requested again.
+    """
     ticker = market["ticker"]
     opened, closed = parse_ts(market.get("open_time")), parse_ts(market.get("close_time"))
     if opened is None or closed is None:
@@ -95,6 +117,8 @@ def ingest_candles(
 
     requests = 0
     for lo, hi in time_chunks(int(opened.timestamp()), int(closed.timestamp())):
+        if skip and (ticker, lo, hi, period_minutes) in skip:
+            continue
         params = {"start_ts": lo, "end_ts": hi, "period_interval": period_minutes}
         response = client.get(path, params=params)
         _save(response, raw_dir, kind, params, {"series_ticker": series_ticker, "ticker": ticker})

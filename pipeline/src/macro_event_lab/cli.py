@@ -27,6 +27,7 @@ def cmd_ingest_kalshi(args: argparse.Namespace) -> None:
     since = datetime.fromisoformat(args.since).replace(tzinfo=UTC) if args.since else None
     with RateLimitedClient(config.KALSHI_BASE_URL, config.KALSHI_RPS) as client:
         cutoff = kalshi.parse_ts(kalshi.get_cutoff(client, paths.raw).get("market_settled_ts"))
+        already_fetched = kalshi.fetched_candle_windows(paths.raw)
         for series_ticker in series:
             live = list(kalshi.iter_markets(client, paths.raw, series_ticker, historical=False))
             old = list(kalshi.iter_markets(client, paths.raw, series_ticker, historical=True))
@@ -47,7 +48,8 @@ def cmd_ingest_kalshi(args: argparse.Namespace) -> None:
                 settled = kalshi.parse_ts(market.get("settlement_ts"))
                 historical = archived or bool(cutoff and settled and settled < cutoff)
                 requests += kalshi.ingest_candles(
-                    client, paths.raw, series_ticker, market, historical, args.period
+                    client, paths.raw, series_ticker, market, historical, args.period,
+                    skip=already_fetched,
                 )
             print(f"Kalshi {series_ticker}: {len(markets)} markets, {requests} candle requests")
 
