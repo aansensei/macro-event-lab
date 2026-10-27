@@ -5,8 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="color-scheme" content="light dark">
   <title>Macro Event Lab</title>
-  <!-- square 32x32 favicon placeholder until the real icon exists -->
-  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 32 32'%3E%3Crect x='1' y='1' width='30' height='30' fill='none' stroke='%238b8d98' stroke-width='1.5' stroke-dasharray='3,3'/%3E%3Ctext x='16' y='19' font-family='monospace' font-size='8' text-anchor='middle' fill='%2360646c'%3E32%3C/text%3E%3C/svg%3E">
+  <link rel="icon" href="assets/favicon.ico" sizes="32x32">
+  <link rel="icon" type="image/png" href="assets/favicon-96x96.png" sizes="96x96">
+  <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
@@ -214,51 +215,24 @@
       align-items: center;
       flex-shrink: 0;
     }
+    /* the logo keeps its own 2:1 shape: 30px tall on phones, 36px from 640px; the PNG is 3x that */
     .logo-slot {
       display: flex;
       align-items: center;
-      justify-content: center;
-      width: 120px;
-      height: 24px;
-      border: 1px dashed var(--border);
-      color: var(--text-muted);
+      height: 30px;
       text-decoration: none;
-      position: relative;
-      overflow: hidden;
     }
     .logo-slot:hover {
       text-decoration: none;
-      border-color: var(--border-control);
     }
     .logo-slot img {
-      width: 100%;
       height: 100%;
-      object-fit: contain;
-      display: none;
-    }
-    .logo-placeholder-text {
-      font-size: 12px;
-      line-height: 16px;
-      font-weight: 500;
-      letter-spacing: 0.06em;
-      font-variant-caps: all-small-caps;
-      color: var(--text-muted);
-      user-select: none;
-      white-space: nowrap;
-    }
-    .logo-size-desktop {
-      display: none;
+      width: auto;
+      display: block;
     }
     @media (min-width: 640px) {
       .logo-slot {
-        width: 160px;
-        height: 32px;
-      }
-      .logo-size-mobile {
-        display: none;
-      }
-      .logo-size-desktop {
-        display: inline;
+        height: 36px;
       }
     }
 
@@ -1625,12 +1599,7 @@
     <div class="header-inner">
       <div class="logo-wrap">
         <a class="logo-slot" href="#page-overview" id="logo-home-link" aria-label="Macro Event Lab home">
-          <img src="logo-light.svg" alt="Macro Event Lab" class="logo-img-light" onerror="this.style.display='none'">
-          <img src="logo-dark.svg" alt="Macro Event Lab" class="logo-img-dark" onerror="this.style.display='none'">
-          <span class="logo-placeholder-text">
-            <span class="logo-size-desktop">LOGO 160 x 32</span>
-            <span class="logo-size-mobile">LOGO 120 x 24</span>
-          </span>
+          <img src="assets/logo.png" alt="Macro Event Lab" width="70" height="36">
         </a>
       </div>
 
@@ -1942,7 +1911,7 @@
             <p class="chart-summary">Click any release marker on the horizontal axis to open its full hourly distribution in the Event Explorer.</p>
           </div>
         </div>
-        <div style="width: 100%; height: 110px;">
+        <div style="width: 100%; height: 130px;">
           <svg id="surprise-strip-svg" class="chart-svg" role="group" aria-label="Horizontal axis of release surprises in standard deviations"></svg>
         </div>
         <div class="chart-footer">
@@ -3130,10 +3099,10 @@
 
       function renderOverviewPage() {
         var stripSvg = document.getElementById("surprise-strip-svg");
-        var W = 800, H = 100;
+        var W = 800, H = 120;
         stripSvg.setAttribute("viewBox", "0 0 " + W + " " + H);
 
-        var padL = 60, padR = 60, midY = 50;
+        var padL = 60, padR = 60, midY = 80;
         var plotW = W - padL - padR;
         function xSd(sd) {
           return padL + ((sd + 2.0) / 4.0) * plotW;
@@ -3147,14 +3116,32 @@
           sHtml += '<text x="' + tx + '" y="' + (midY + 24) + '" text-anchor="middle" font-size="12" fill="var(--text-muted)" class="num">' + fmtSigned(ticks[i], 1, " SD") + '</text>';
         }
 
+        var marks = [];
         for (var eIdx = 0; eIdx < EVENT_ORDER.length; eIdx++) {
           var ev = EVENTS_DB[EVENT_ORDER[eIdx]];
           if (ev.surprise_sd === null || ev.surprise_sd === undefined) continue;
-          var cx = xSd(ev.surprise_sd).toFixed(1);
-          var col = ev.surprise_sd > 0 ? "var(--surprise-up)" : (ev.surprise_sd < 0 ? "var(--surprise-down)" : "var(--actual)");
-          sHtml += '<g class="surprise-dot-group" data-open-event="' + ev.id + '" style="cursor:pointer;">' +
+          marks.push({
+            ev: ev,
+            cx: xSd(ev.surprise_sd),
+            label: ev.title.split(",")[0] + " (" + fmtSigned(ev.surprise_sd, 1, " SD") + ")"
+          });
+        }
+        // labels go left to right into the lowest row where they clear the previous label (about 6.6px per character at 12px)
+        marks.sort(function(a, b) { return a.cx - b.cx; });
+        var rowRight = [];
+        for (var mIdx = 0; mIdx < marks.length; mIdx++) {
+          var mk = marks[mIdx];
+          var halfW = mk.label.length * 3.3;
+          var row = 0;
+          while (rowRight[row] !== undefined && rowRight[row] > mk.cx - halfW - 8) row++;
+          rowRight[row] = mk.cx + halfW;
+          var ly = midY - 14 - row * 18;
+          var col = mk.ev.surprise_sd > 0 ? "var(--surprise-up)" : (mk.ev.surprise_sd < 0 ? "var(--surprise-down)" : "var(--actual)");
+          var cx = mk.cx.toFixed(1);
+          sHtml += '<g class="surprise-dot-group" data-open-event="' + mk.ev.id + '" style="cursor:pointer;">' +
+            (row > 0 ? '<line x1="' + cx + '" y1="' + (midY - 8) + '" x2="' + cx + '" y2="' + (ly + 4) + '" stroke="' + col + '" stroke-width="1" stroke-opacity="0.6"/>' : "") +
             '<circle cx="' + cx + '" cy="' + midY + '" r="7" fill="' + col + '" stroke="var(--bg)" stroke-width="1.5"/>' +
-            '<text x="' + cx + '" y="' + (midY - 14) + '" text-anchor="middle" font-size="12" font-weight="500" fill="' + col + '" class="num">' + ev.title.split(",")[0] + " (" + fmtSigned(ev.surprise_sd, 1, " SD") + ')</text>' +
+            '<text x="' + cx + '" y="' + ly + '" text-anchor="middle" font-size="12" font-weight="500" fill="' + col + '" class="num">' + mk.label + '</text>' +
             '</g>';
         }
         stripSvg.innerHTML = sHtml;
