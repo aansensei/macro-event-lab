@@ -12,6 +12,7 @@ from macro_event_lab.build import build_silver
 from macro_event_lab.gold import build_gold
 from macro_event_lab.http import RateLimitedClient
 from macro_event_lab.sources import alfred, kalshi, releases
+from macro_event_lab.web_export import build_web
 
 
 def cmd_ingest_alfred(args: argparse.Namespace) -> None:
@@ -113,6 +114,7 @@ def cmd_build(_: argparse.Namespace) -> None:
         print(f"silver/{table}.parquet: {n:,} rows")
     for table, n in build_gold(paths).items():
         print(f"gold/{table}.parquet: {n:,} rows")
+    print(f"web/manifest.json: {build_web(paths)['events']:,} events")
 
 
 def main(argv: list[str] | None = None) -> None:

@@ -78,6 +78,10 @@ class Paths:
         return self.root / "gold"
 
     @property
+    def web(self) -> Path:
+        return self.root / "web"
+
+    @property
     def manifest(self) -> Path:
         return self.raw / "_manifest.jsonl"
 
