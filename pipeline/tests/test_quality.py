@@ -24,6 +24,20 @@ def _markets(rows: list[tuple[str, str | None, float | None]]) -> pl.DataFrame:
         orient="row",
     ).with_columns(
         series_ticker=pl.lit("KXCPI"), event_ticker=pl.lit("E"),
+        cap_strike=pl.lit(None, dtype=pl.Float64), strike_source=pl.lit("api"),
+        result=pl.lit(None, dtype=pl.String), expiration_value=pl.lit(None, dtype=pl.String),
+    )
+
+
+def _settled(rows: list[tuple[str, float, str, str]]) -> pl.DataFrame:
+    return pl.DataFrame(
+        rows,
+        schema={"ticker": pl.String, "floor_strike": pl.Float64,
+                "expiration_value": pl.String, "result": pl.String},
+        orient="row",
+    ).with_columns(
+        strike_type=pl.lit("greater"), strike_source=pl.lit("ticker"),
+        series_ticker=pl.lit("KXCPI"), event_ticker=pl.lit("E"),
         cap_strike=pl.lit(None, dtype=pl.Float64),
     )
 
@@ -144,6 +158,24 @@ def test_registered_fed_22dec_anomaly_covers_the_observed_rows():
 
     assert result.excused["end_period_ts"].to_list() == seen
     assert result.problems["end_period_ts"].to_list() == [later]
+
+
+def test_settled_result_must_match_strike():
+    markets = _settled([
+        ("CPI-21DEC-T0.5", 0.5, "0.5", "no"),  # equal is not above
+        ("CPI-22DEC-TN0.2", -0.2, "-0.1", "yes"),
+        ("FED-21SEP-T0.25", 0.25, "0-0.25", "no"),  # range: the upper end is the value
+        ("KXPAYROLLS-25AUG-T-100000", -100000.0, "22,000", "yes"),
+        ("KXFED-26JAN-T3.50", 3.5, "Above 3.50%", "yes"),  # descriptive value is skipped
+        ("CPI-22DEC-TN0.1", 0.1, "-0.1", "yes"),  # sign lost while parsing: must be caught
+    ])
+    con = duckdb.connect()
+    con.register("kalshi_markets", markets)
+
+    result = {r.check.name: r for r in run_checks(con)}["settled_result_matches_strike"]
+
+    assert result.status == "FAIL"
+    assert result.problems["ticker"].to_list() == ["CPI-22DEC-TN0.1"]
 
 
 def test_checks_on_tables_not_built_yet_are_skipped():

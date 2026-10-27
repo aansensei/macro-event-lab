@@ -156,14 +156,39 @@ CHECKS: list[Check] = [
         name="market_missing_strike",
         severity="warn",
         description=(
-            "a market has a strike type and a strike (legacy CPI-* style markets only carry "
-            "the threshold in the ticker)"
+            "a market has a strike type and a strike, from the API or parsed from the ticker"
         ),
         sql="""
             SELECT series_ticker, event_ticker, ticker, strike_type, floor_strike, cap_strike
             FROM kalshi_markets
             WHERE strike_type IS NULL OR (floor_strike IS NULL AND cap_strike IS NULL)
             ORDER BY series_ticker, event_ticker, ticker
+        """,
+    ),
+    Check(
+        name="settled_result_matches_strike",
+        severity="error",
+        description=(
+            "a settled 'greater' market resolved yes exactly when the published value is "
+            "above its strike (catches a wrongly parsed or wrongly signed strike)"
+        ),
+        # expiration_value comes as "0.3", "0.25%", ".9%", "22,000" or a range "0-0.25";
+        # the last number not glued to a preceding digit is the published value, and
+        # descriptive values such as "Above 3.50%" are skipped rather than guessed
+        sql="""
+            WITH settled AS (
+                SELECT ticker, strike_source, floor_strike, expiration_value, result,
+                       CASE WHEN regexp_matches(expiration_value, '^[0-9.,%+ -]+$')
+                            THEN TRY_CAST(regexp_extract(replace(expiration_value, ',', ''),
+                                '(?:^|[^0-9.])(-?[0-9]*\\.?[0-9]+)%?\\s*$', 1) AS DOUBLE)
+                       END AS value
+                FROM kalshi_markets
+                WHERE strike_type = 'greater' AND result IN ('yes', 'no')
+            )
+            SELECT ticker, strike_source, floor_strike, expiration_value, value, result
+            FROM settled
+            WHERE value IS NOT NULL AND (result = 'yes') <> (value > floor_strike)
+            ORDER BY ticker
         """,
     ),
 ]

@@ -7,6 +7,7 @@ Docs: https://docs.kalshi.com/getting_started/historical_data
 
 from __future__ import annotations
 
+import re
 from collections.abc import Iterator
 from datetime import UTC, datetime
 from pathlib import Path
@@ -126,7 +127,26 @@ def ingest_candles(
     return requests
 
 
-# ---------- parsing (used by `build`, never at ingest time) ----------
+# everything below parses saved responses and runs only in `build`, never at ingest time
+
+# Last ticker segment of an "above k" market: T0.4, T-0.1, TN0.1 (N also means minus), T256000
+TICKER_STRIKE = re.compile(r"-T(N?)(-?\d+(?:\.\d+)?)$")
+TITLE_STRIKE = re.compile(r"(?:more than|above)\s+(-?[\d,]*\.?\d+)", re.IGNORECASE)
+
+
+def strike_from_ticker(ticker: str, title: str | None) -> float | None:
+    """Threshold k of a legacy "above k" market whose API record has no strike fields.
+
+    Older CPI-, FED- and GDP- markets (and two early 2025 events) carry k only in the ticker.
+    The value is accepted only when the title states the same number ("more than 0.4%",
+    "above -100000 jobs"), so an unfamiliar ticker shape yields None instead of a guess.
+    """
+    m = TICKER_STRIKE.search(ticker)
+    t = TITLE_STRIKE.search(title or "")
+    if not m or not t:
+        return None
+    value = float(m.group(2)) * (-1 if m.group(1) else 1)
+    return value if value == float(t.group(1).replace(",", "")) else None
 
 def _num(value: Any) -> float | None:
     if value is None or value == "":
@@ -144,15 +164,24 @@ def _ohlc(obj: dict[str, Any] | None, field: str) -> float | None:
 def parse_markets(series_ticker: str, payload: dict[str, Any]) -> list[dict[str, Any]]:
     rows = []
     for m in payload.get("markets", []):
+        strike_type = m.get("strike_type")
+        floor_strike, cap_strike = _num(m.get("floor_strike")), _num(m.get("cap_strike"))
+        has_strike = floor_strike is not None or cap_strike is not None
+        strike_source = "api" if strike_type and has_strike else None
+        if strike_source is None:
+            k = strike_from_ticker(m["ticker"], m.get("title"))
+            if k is not None:
+                strike_type, floor_strike, cap_strike, strike_source = "greater", k, None, "ticker"
         rows.append(
             {
                 "ticker": m["ticker"],
                 "event_ticker": m.get("event_ticker"),
                 "series_ticker": series_ticker,
                 "title": m.get("title"),
-                "strike_type": m.get("strike_type"),
-                "floor_strike": _num(m.get("floor_strike")),
-                "cap_strike": _num(m.get("cap_strike")),
+                "strike_type": strike_type,
+                "floor_strike": floor_strike,
+                "cap_strike": cap_strike,
+                "strike_source": strike_source,
                 "status": m.get("status"),
                 # Kalshi sends "" for both until the market settles
                 "result": m.get("result") or None,

@@ -35,6 +35,7 @@ MARKET_SCHEMA = {
     "strike_type": pl.String,
     "floor_strike": pl.Float64,
     "cap_strike": pl.Float64,
+    "strike_source": pl.String,
     "status": pl.String,
     "result": pl.String,
     "expiration_value": pl.String,

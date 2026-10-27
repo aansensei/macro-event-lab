@@ -1,6 +1,7 @@
 from datetime import UTC, datetime
 
 import httpx
+import pytest
 from hypothesis import given
 from hypothesis import strategies as st
 
@@ -10,6 +11,7 @@ from macro_event_lab.sources.kalshi import (
     ingest_candles,
     parse_candles,
     parse_markets,
+    strike_from_ticker,
     time_chunks,
 )
 
@@ -69,6 +71,36 @@ def test_market_strikes():
     assert row["floor_strike"] == 200000.0
     assert row["cap_strike"] is None
     assert row["close_time"] == datetime(2026, 9, 4, 12, 29, tzinfo=UTC)
+
+
+@pytest.mark.parametrize(
+    ("ticker", "title", "expected"),
+    [
+        ("CPI-21AUG-T0.4", "Will the CPI increase more than 0.4% in August?", 0.4),
+        ("CPI-22AUG-TN0.1", "Will inflation rise more than -0.1% in August?", -0.1),
+        ("KXPAYROLLS-25JAN-T-100000", "Will above -100000 jobs be added in Jan 2025?", -100000.0),
+        ("FED-25JAN-T5.25", "Will the upper bound of the federal funds rate be above 5.25%?", 5.25),
+        ("GDP-21DEC31-T6.0", "Will real GDP increase by more than 6% in Q4 2021?", 6.0),
+        ("CPI-21AUG-T0.4", "Will CPI increase more than 0.5% in August?", None),  # title disagrees
+        ("CPI-21AUG-T0.4", None, None),
+        ("KXFED-26JAN-H0", "Will the Fed hold?", None),  # not a threshold ticker
+    ],
+)
+def test_strike_from_ticker(ticker, title, expected):
+    assert strike_from_ticker(ticker, title) == expected
+
+
+def test_legacy_market_gets_strike_from_ticker_and_api_strike_is_kept():
+    payload = {"markets": [
+        {"ticker": "CPI-22AUG-TN0.1", "title": "Will inflation rise more than -0.1% in August?"},
+        {"ticker": "KXCPI-26OCT-T1.0", "title": "Will CPI rise more than 1.0% in October 2026?",
+         "strike_type": "greater", "floor_strike": 1},
+    ]}
+    legacy, current = parse_markets("KXCPI", payload)
+    assert (legacy["strike_type"], legacy["floor_strike"], legacy["strike_source"]) == (
+        "greater", -0.1, "ticker"
+    )
+    assert (current["floor_strike"], current["strike_source"]) == (1.0, "api")
 
 
 def test_unsettled_market_result_is_null_not_empty_string():
