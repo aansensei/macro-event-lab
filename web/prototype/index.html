@@ -1704,6 +1704,25 @@
       line-height: 26px;
       max-width: 66ch;
     }
+    /* the disclaimer closes the about page as a quiet panel, collapsed until opened */
+    .disclaimer {
+      margin-top: 56px;
+      padding: 14px 16px;
+      background-color: var(--surface);
+      border-radius: 8px;
+    }
+    .disclaimer summary {
+      cursor: pointer;
+      font-weight: 600;
+      list-style-position: inside;
+    }
+    .disclaimer-body p {
+      margin: 12px 0 0 0;
+      font-size: 15px;
+      line-height: 24px;
+      color: var(--text-muted);
+      max-width: 70ch;
+    }
     .footer-states .chip-btn {
       min-height: 28px;
       padding: 2px 8px;
@@ -2207,6 +2226,17 @@
           </details>
         </div>
       </section>
+
+      <details class="disclaimer" id="about-disclaimer">
+        <summary>Disclaimer</summary>
+        <div class="disclaimer-body">
+          <p>Macro Event Lab is a personal research and learning project built by one person. It is not a product, a data service or a financial publication.</p>
+          <p>It can contain mistakes. Data can be missing, delayed or wrong, and the methods used to turn market prices into probabilities rest on assumptions that may not hold. Please check anything important against the original sources.</p>
+          <p>Nothing on this site is investment, trading, financial, legal or tax advice, and nothing here is an offer or a recommendation to buy or sell anything. Past market expectations do not predict future results.</p>
+          <p>The site is not affiliated with, endorsed by or sponsored by Kalshi, the Federal Reserve, the Federal Reserve Bank of St. Louis, the Bureau of Labor Statistics or the Bureau of Economic Analysis. Their names are used only to identify where the data comes from, and their data stays subject to their own terms.</p>
+          <p>Everything here is provided as is, without any warranty. The author accepts no responsibility for any loss or decision that results from using this site or its data.</p>
+        </div>
+      </details>
     </section>
   </main>
 
