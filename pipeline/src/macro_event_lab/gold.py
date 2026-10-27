@@ -8,6 +8,9 @@ the latest usable price of each "above k" contract known at that hour. Those pri
 the survival function S(k) = P(X > k); isotonic regression weighted by inverse spread makes S
 non-increasing in k, and differences of S give the probability of each outcome bin, which sum
 to 1 by construction.
+
+implied_stats summarises each snapshot's bins (mean, standard deviation, 5/25/50/75/95
+percentiles), and implied_bins carries the T-168h probability of each bin for comparison.
 """
 
 from __future__ import annotations
@@ -25,6 +28,11 @@ MAX_SPREAD = 0.10
 MIN_SPREAD = 0.01
 WINDOW_HOURS = 168
 SNAPSHOT_KEYS = ["series_ticker", "event_ticker", "ts", "hours_before_close"]
+# Smallest step of the published number, measured on settled expiration values: CPI and GDP
+# are published to 0.1 point, the Fed target upper bound moves in 0.25 point steps, and
+# payrolls are published in thousands of jobs.
+RESOLUTION = {"KXCPI": 0.1, "KXGDP": 0.1, "KXFED": 0.25, "KXPAYROLLS": 1000.0}
+QUANTILES = (0.05, 0.25, 0.50, 0.75, 0.95)
 BIN_TYPE = pl.Struct({"bin_lower": pl.Float64, "bin_upper": pl.Float64, "prob": pl.Float64})
 
 
@@ -87,6 +95,96 @@ def bins_from_survival(
     s = [1.0, *survival, 0.0]
     edges = [None, *strikes, None]
     return [(edges[i], edges[i + 1], s[i] - s[i + 1]) for i in range(len(s) - 1)]
+
+
+def bin_intervals(
+    lowers: list[float | None], uppers: list[float | None], resolution: float
+) -> list[tuple[float, float]]:
+    """Real-valued interval each outcome bin covers, for spreading its probability uniformly.
+
+    A bin (a, b] holds the published values a + r, ..., b, which are what real values in
+    (a + r/2, b + r/2] round to; for CPI the bin (0.3, 0.4] therefore centres on 0.4, not 0.35.
+    The open tails are assumed as wide as the median gap between the strikes.
+    """
+    strikes = [x for x in uppers if x is not None]
+    gaps = sorted(b - a for a, b in zip(strikes, strikes[1:], strict=False) if b > a)
+    tail = gaps[len(gaps) // 2] if gaps else resolution
+    half = resolution / 2
+    out = []
+    for lo, hi in zip(lowers, uppers, strict=True):
+        lo = hi - tail if lo is None else lo
+        hi = lo + tail if hi is None else hi
+        out.append((lo + half, hi + half))
+    return out
+
+
+def distribution_stats(
+    lowers: list[float | None],
+    uppers: list[float | None],
+    probs: list[float],
+    resolution: float,
+) -> dict[str, float | None]:
+    """Mean, standard deviation and QUANTILES of a binned distribution.
+
+    Each bin's probability is spread uniformly over its interval from bin_intervals, so the
+    quantiles interpolate within a bin. Needs at least two strikes (three bins); fewer give None.
+    """
+    names = ["mean", "sd", *(f"p{round(q * 100):02d}" for q in QUANTILES)]
+    if len(probs) < 3:
+        return dict.fromkeys(names)
+    intervals = bin_intervals(lowers, uppers, resolution)
+    mean = sum(p * (lo + hi) / 2 for p, (lo, hi) in zip(probs, intervals, strict=True))
+    second = sum(
+        p * ((hi - lo) ** 2 / 12 + ((lo + hi) / 2) ** 2)
+        for p, (lo, hi) in zip(probs, intervals, strict=True)
+    )
+    stats: dict[str, float | None] = {"mean": mean, "sd": max(0.0, second - mean**2) ** 0.5}
+    for q in QUANTILES:
+        cum, value = 0.0, intervals[-1][1]
+        for p, (lo, hi) in zip(probs, intervals, strict=True):
+            if p > 0 and cum + p >= q:
+                value = lo + (q - cum) / p * (hi - lo)
+                break
+            cum += p
+        stats[f"p{round(q * 100):02d}"] = value
+    return stats
+
+
+def implied_stats(bins: pl.DataFrame) -> pl.DataFrame:
+    """One row of distribution_stats per snapshot, using the series' RESOLUTION."""
+    stat_type = pl.Struct({
+        "mean": pl.Float64, "sd": pl.Float64,
+        **{f"p{round(q * 100):02d}": pl.Float64 for q in QUANTILES},
+    })
+    return (
+        bins.group_by(SNAPSHOT_KEYS, maintain_order=True)
+        .agg("bin_lower", "bin_upper", "prob", n_bins=pl.len())
+        .with_columns(
+            stats=pl.struct("series_ticker", "bin_lower", "bin_upper", "prob").map_elements(
+                lambda r: distribution_stats(
+                    list(r["bin_lower"]), list(r["bin_upper"]), list(r["prob"]),
+                    RESOLUTION.get(r["series_ticker"], 0.0),
+                ),
+                return_dtype=stat_type,
+            )
+        )
+        .select([*SNAPSHOT_KEYS, "n_bins", "stats"])
+        .unnest("stats")
+    )
+
+
+def with_week_ago(bins: pl.DataFrame) -> pl.DataFrame:
+    """Add prob_t168: the same bin's probability in the event's T-168h snapshot.
+
+    Null when the event has no T-168h snapshot or that snapshot had no such bin (a strike
+    listed later in the week).
+    """
+    week_ago = bins.filter(pl.col("hours_before_close") == WINDOW_HOURS).select(
+        "event_ticker", "bin_lower", "bin_upper", prob_t168="prob"
+    )
+    return bins.join(
+        week_ago, on=["event_ticker", "bin_lower", "bin_upper"], how="left", nulls_equal=True
+    )
 
 
 def snapshot_grid(markets: pl.DataFrame, data_end: datetime) -> pl.DataFrame:
@@ -179,7 +277,12 @@ def build_gold(paths: Paths) -> dict[str, int]:
     paths.gold.mkdir(parents=True, exist_ok=True)
     prices = contract_prices(candles)
     survival, bins = implied_distributions(markets, prices)
-    tables = {"contract_prices": prices, "implied_survival": survival, "implied_bins": bins}
+    tables = {
+        "contract_prices": prices,
+        "implied_survival": survival,
+        "implied_bins": with_week_ago(bins),
+        "implied_stats": implied_stats(bins),
+    }
     for name, df in tables.items():
         df.write_parquet(paths.gold / f"{name}.parquet", compression="zstd")
     return {name: df.height for name, df in tables.items()}

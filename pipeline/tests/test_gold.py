@@ -7,11 +7,15 @@ from hypothesis import strategies as st
 
 from macro_event_lab.config import Paths
 from macro_event_lab.gold import (
+    bin_intervals,
     bins_from_survival,
     build_gold,
     contract_prices,
+    distribution_stats,
     implied_distributions,
+    implied_stats,
     isotonic_decreasing,
+    with_week_ago,
 )
 
 T0 = datetime(2026, 10, 1, tzinfo=UTC)
@@ -161,3 +165,79 @@ def test_snapshots_use_only_prices_known_at_each_hour():
     assert at[1]["price_age_h"].to_list() == [0, 1]
     for (_,), g in bins.partition_by("hours_before_close", as_dict=True).items():
         assert g["prob"].sum() == pytest.approx(1.0)
+
+
+CPI_LOWERS = [None, 0.2, 0.3, 0.4]
+CPI_UPPERS = [0.2, 0.3, 0.4, None]
+
+
+def test_cpi_bins_centre_on_the_published_value():
+    # (0.3, 0.4] can only be published as 0.4, so its interval centres on 0.4, not 0.35
+    intervals = bin_intervals(CPI_LOWERS, CPI_UPPERS, 0.1)
+    flat = [x for pair in intervals for x in pair]
+    assert flat == pytest.approx([0.15, 0.25, 0.25, 0.35, 0.35, 0.45, 0.45, 0.55])
+
+
+def test_stats_of_a_single_bin_distribution():
+    stats = distribution_stats(CPI_LOWERS, CPI_UPPERS, [0.0, 0.0, 1.0, 0.0], 0.1)
+    assert stats["mean"] == pytest.approx(0.4)
+    assert stats["sd"] == pytest.approx(0.1 / 12**0.5)
+    assert (stats["p05"], stats["p50"], stats["p95"]) == pytest.approx((0.355, 0.4, 0.445))
+
+
+def test_open_tail_is_as_wide_as_the_strike_gap():
+    # payrolls: strikes 100k and 150k, half the mass above 150k
+    stats = distribution_stats(
+        [None, 100000.0, 150000.0], [100000.0, 150000.0, None], [0.0, 0.5, 0.5], 1000.0
+    )
+    assert stats["p50"] == pytest.approx(150500.0)
+    assert stats["mean"] == pytest.approx(150500.0)
+
+
+def test_one_strike_is_not_a_distribution():
+    stats = distribution_stats([None, 0.3], [0.3, None], [0.4, 0.6], 0.1)
+    assert all(v is None for v in stats.values())
+
+
+@given(st.lists(st.floats(min_value=0, max_value=1), min_size=2, max_size=15))
+def test_quantiles_are_ordered_and_inside_the_support(values):
+    survival = isotonic_decreasing(values)
+    strikes = [round(0.1 * i, 1) for i in range(len(survival))]
+    bins = bins_from_survival(strikes, survival)
+    lowers, uppers, probs = (list(x) for x in zip(*bins, strict=True))
+    stats = distribution_stats(lowers, uppers, probs, 0.1)
+    qs = [stats[k] for k in ("p05", "p25", "p50", "p75", "p95")]
+    intervals = bin_intervals(lowers, uppers, 0.1)
+    assert all(a <= b + 1e-9 for a, b in zip(qs, qs[1:], strict=False))
+    assert intervals[0][0] - 1e-9 <= stats["mean"] <= intervals[-1][1] + 1e-9
+    assert stats["sd"] >= 0
+
+
+def _bins(rows: list[tuple[int, float | None, float | None, float]]) -> pl.DataFrame:
+    # (hours before close, lower, upper, prob) for one CPI event
+    return pl.DataFrame(
+        [("KXCPI", "E", CLOSE - timedelta(hours=h), h, lo, hi, p) for h, lo, hi, p in rows],
+        schema={"series_ticker": pl.String, "event_ticker": pl.String,
+                "ts": pl.Datetime("us", "UTC"), "hours_before_close": pl.Int64,
+                "bin_lower": pl.Float64, "bin_upper": pl.Float64, "prob": pl.Float64},
+        orient="row",
+    )
+
+
+def test_week_ago_probability_matches_bins_including_open_ends():
+    bins = _bins([
+        (168, None, 0.3, 0.6), (168, 0.3, None, 0.4),
+        (1, None, 0.3, 0.2), (1, 0.3, 0.4, 0.5), (1, 0.4, None, 0.3),  # 0.4 strike listed later
+    ])
+    out = with_week_ago(bins).filter(pl.col("hours_before_close") == 1).sort(
+        "bin_upper", nulls_last=True
+    )
+    assert out["prob_t168"].to_list() == [0.6, None, None]
+
+
+def test_implied_stats_one_row_per_snapshot():
+    bins = _bins([(1, None, 0.2, 0.0), (1, 0.2, 0.3, 0.0), (1, 0.3, 0.4, 1.0), (1, 0.4, None, 0.0)])
+    stats = implied_stats(bins)
+    assert stats.height == 1
+    assert stats["n_bins"][0] == 4
+    assert stats["mean"][0] == pytest.approx(0.4)
