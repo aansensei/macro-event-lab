@@ -29,3 +29,7 @@ ehthumbs.db
 
 # Local archives (old project snapshots)
 *.zip
+
+# Local working files: research notes and generated reports
+research_notes/
+reports/
