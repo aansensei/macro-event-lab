@@ -1,0 +1,3677 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="color-scheme" content="light dark">
+  <title>Macro Event Lab</title>
+  <!-- 32x32 square favicon placeholder -->
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 32 32'%3E%3Crect x='1' y='1' width='30' height='30' fill='none' stroke='%238b8d98' stroke-width='1.5' stroke-dasharray='3,3'/%3E%3Ctext x='16' y='19' font-family='monospace' font-size='8' text-anchor='middle' fill='%2360646c'%3E32%3C/text%3E%3C/svg%3E">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <script>
+    (function() {
+      var saved = 'system';
+      try {
+        saved = localStorage.getItem('mel-theme-pref') || 'system';
+      } catch (e) {}
+      var resolved = saved;
+      if (saved === 'system') {
+        resolved = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+      }
+      document.documentElement.setAttribute('data-theme', resolved);
+      document.documentElement.setAttribute('data-theme-pref', saved);
+    })();
+  </script>
+  <style>
+    :root, html[data-theme="light"] {
+      --bg: #ffffff;
+      --surface: #f9f9fb;
+      --surface-hover: #f0f0f3;
+      --border: #d9d9e0;
+      --border-control: #8b8d98;
+      --text: #1c2024;
+      --text-muted: #60646c;
+      --accent: #0f62fe;
+      --button-bg: #0f62fe;
+      --accent-hover: #0043ce;
+      --market: #0f62fe;
+      --band-90: #d0e2ff;
+      --band-50: #a6c8ff;
+      --median: #0043ce;
+      --actual: #1c2024;
+      --revision: #60646c;
+      --ghost: #8b8d98;
+      --surprise-up: #b35806;
+      --surprise-down: #542788;
+      --fomc-1: #a6c8ff;
+      --fomc-2: #4589ff;
+      --fomc-3: #0043ce;
+      --fomc-4: #001d6c;
+      --fomc-text-1: #1c2024;
+      --fomc-text-2: #ffffff;
+      --fomc-text-3: #ffffff;
+      --fomc-text-4: #ffffff;
+    }
+
+    html[data-theme="dark"] {
+      --bg: #111113;
+      --surface: #18191b;
+      --surface-hover: #212225;
+      --border: #363a3f;
+      --border-control: #696e77;
+      --text: #edeef0;
+      --text-muted: #b0b4ba;
+      --accent: #78a9ff;
+      --button-bg: #0f62fe;
+      --accent-hover: #0043ce;
+      --market: #4589ff;
+      --band-90: #002d9c;
+      --band-50: #0043ce;
+      --median: #a6c8ff;
+      --actual: #edeef0;
+      --revision: #b0b4ba;
+      --ghost: #777b84;
+      --surprise-up: #e08214;
+      --surprise-down: #b2abd2;
+      --fomc-1: #002d9c;
+      --fomc-2: #0043ce;
+      --fomc-3: #4589ff;
+      --fomc-4: #a6c8ff;
+      --fomc-text-1: #edeef0;
+      --fomc-text-2: #ffffff;
+      --fomc-text-3: #111113;
+      --fomc-text-4: #111113;
+    }
+
+    *, *::before, *::after {
+      box-sizing: border-box;
+    }
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      background-color: var(--bg);
+      color: var(--text);
+      font-family: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+      font-size: 16px;
+      line-height: 24px;
+      font-weight: 400;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* Typography scale */
+    .t-micro {
+      font-size: 12px;
+      line-height: 16px;
+      font-weight: 400;
+    }
+    .t-label {
+      font-size: 14px;
+      line-height: 20px;
+      font-weight: 500;
+    }
+    .t-body {
+      font-size: 16px;
+      line-height: 24px;
+      font-weight: 400;
+      max-width: 70ch;
+    }
+    .t-h3 {
+      font-size: 20px;
+      line-height: 28px;
+      font-weight: 500;
+      margin: 0;
+    }
+    .t-h2 {
+      font-size: 24px;
+      line-height: 30px;
+      font-weight: 500;
+      margin: 0;
+    }
+    .t-h1 {
+      font-size: 28px;
+      line-height: 36px;
+      font-weight: 600;
+      margin: 0;
+    }
+    .t-hero {
+      font-size: 24px;
+      line-height: 30px;
+      font-weight: 600;
+      font-variant-numeric: tabular-nums lining-nums;
+    }
+    @media (min-width: 640px) {
+      .t-hero {
+        font-size: 35px;
+        line-height: 40px;
+      }
+    }
+
+    .mono {
+      font-family: "IBM Plex Mono", ui-monospace, monospace;
+      font-size: 13px;
+    }
+
+    .num {
+      font-variant-numeric: tabular-nums lining-nums;
+    }
+
+    /* Focus ring: 2px --accent, 2px offset, never removed */
+    :focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 2px;
+    }
+
+    a {
+      color: var(--accent);
+      text-decoration: none;
+    }
+    a:hover {
+      text-decoration: underline;
+    }
+
+    button, input, select {
+      font-family: inherit;
+      font-size: inherit;
+      color: inherit;
+    }
+
+    /* Header & Logo Slot */
+    .site-header {
+      border-bottom: 1px solid var(--border);
+      background-color: var(--bg);
+      position: sticky;
+      top: 0;
+      z-index: 40;
+    }
+    .header-inner {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 16px;
+      min-height: 56px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+    @media (min-width: 640px) {
+      .header-inner {
+        padding: 0 24px;
+        min-height: 64px;
+      }
+    }
+    @media (min-width: 1024px) {
+      .header-inner {
+        padding: 0 32px;
+      }
+    }
+
+    /* Logo slot with mandatory >= 12px clear space on all sides */
+    .logo-wrap {
+      padding: 12px 12px 12px 0;
+      margin-right: 12px;
+      display: flex;
+      align-items: center;
+      flex-shrink: 0;
+    }
+    .logo-slot {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 120px;
+      height: 24px;
+      border: 1px dashed var(--border);
+      color: var(--text-muted);
+      text-decoration: none;
+      position: relative;
+      overflow: hidden;
+    }
+    .logo-slot:hover {
+      text-decoration: none;
+      border-color: var(--border-control);
+    }
+    .logo-slot img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      display: none;
+    }
+    .logo-placeholder-text {
+      font-size: 12px;
+      line-height: 16px;
+      font-weight: 500;
+      letter-spacing: 0.06em;
+      font-variant-caps: all-small-caps;
+      color: var(--text-muted);
+      user-select: none;
+      white-space: nowrap;
+    }
+    .logo-size-desktop {
+      display: none;
+    }
+    @media (min-width: 640px) {
+      .logo-slot {
+        width: 160px;
+        height: 32px;
+      }
+      .logo-size-mobile {
+        display: none;
+      }
+      .logo-size-desktop {
+        display: inline;
+      }
+    }
+
+    /* Navigation */
+    .header-nav {
+      display: none;
+      align-items: center;
+      gap: 4px;
+    }
+    @media (min-width: 768px) {
+      .header-nav {
+        display: flex;
+      }
+    }
+    .nav-btn {
+      background: transparent;
+      border: 1px solid transparent;
+      border-radius: 6px;
+      padding: 6px 12px;
+      min-height: 36px;
+      font-size: 14px;
+      line-height: 20px;
+      font-weight: 500;
+      color: var(--text-muted);
+      cursor: pointer;
+    }
+    .nav-btn:hover {
+      background-color: var(--surface-hover);
+      color: var(--text);
+    }
+    .nav-btn[aria-current="page"] {
+      color: var(--accent);
+      background-color: var(--surface);
+      border-color: var(--border);
+    }
+
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    /* Theme segmented control (System | Light | Dark) */
+    .theme-group {
+      display: inline-flex;
+      border: 1px solid var(--border-control);
+      border-radius: 6px;
+      background-color: var(--surface);
+      padding: 2px;
+    }
+    .theme-btn {
+      background: transparent;
+      border: none;
+      border-radius: 4px;
+      padding: 4px 8px;
+      min-height: 28px;
+      min-width: 44px;
+      font-size: 12px;
+      line-height: 16px;
+      font-weight: 500;
+      color: var(--text-muted);
+      cursor: pointer;
+    }
+    @media (pointer: coarse) {
+      .theme-btn {
+        min-height: 40px;
+        padding: 6px 10px;
+      }
+    }
+    .theme-btn[aria-pressed="true"] {
+      background-color: var(--bg);
+      color: var(--accent);
+      box-shadow: inset 0 0 0 1px var(--border);
+    }
+
+    .mobile-menu-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 44px;
+      min-height: 44px;
+      padding: 8px 12px;
+      border: 1px solid var(--border-control);
+      border-radius: 6px;
+      background-color: var(--surface);
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+    }
+    @media (min-width: 768px) {
+      .mobile-menu-btn {
+        display: none;
+      }
+    }
+
+    .mobile-nav-drawer {
+      display: none;
+      border-bottom: 1px solid var(--border);
+      background-color: var(--surface);
+      padding: 12px 16px;
+    }
+    .mobile-nav-drawer.open {
+      display: block;
+    }
+    .mobile-nav-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    /* Main Container */
+    .main-container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 16px;
+    }
+    @media (min-width: 640px) {
+      .main-container {
+        padding: 24px;
+      }
+    }
+    @media (min-width: 1024px) {
+      .main-container {
+        padding: 32px;
+      }
+    }
+
+    /* Explorer Grid Layout */
+    .explorer-layout {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 24px;
+    }
+    @media (min-width: 1024px) {
+      .explorer-layout {
+        grid-template-columns: 240px 1fr;
+        gap: 32px;
+        align-items: start;
+      }
+    }
+
+    /* Left Sidebar (Desktop >= 1024px) */
+    .event-sidebar {
+      display: none;
+      border-right: 1px solid var(--border);
+      padding-right: 24px;
+    }
+    @media (min-width: 1024px) {
+      .event-sidebar {
+        display: block;
+      }
+    }
+    .filter-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+      margin-bottom: 16px;
+    }
+    .chip-btn {
+      background-color: var(--surface);
+      border: 1px solid var(--border-control);
+      border-radius: 6px;
+      padding: 4px 10px;
+      min-height: 32px;
+      font-size: 12px;
+      line-height: 16px;
+      font-weight: 500;
+      color: var(--text);
+      cursor: pointer;
+    }
+    @media (pointer: coarse) {
+      .chip-btn {
+        min-height: 44px;
+        padding: 8px 12px;
+      }
+    }
+    .chip-btn:hover {
+      background-color: var(--surface-hover);
+    }
+    .chip-btn[aria-pressed="true"], .chip-btn.active {
+      background-color: var(--button-bg);
+      border-color: var(--button-bg);
+      color: #ffffff;
+    }
+
+    .sidebar-section-label {
+      font-size: 12px;
+      line-height: 16px;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin: 16px 0 8px 0;
+    }
+
+    .event-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      border-top: 1px solid var(--border);
+    }
+    .event-list-item {
+      border-bottom: 1px solid var(--border);
+    }
+    .event-item-btn {
+      width: 100%;
+      text-align: left;
+      background: transparent;
+      border: none;
+      padding: 10px 8px;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      border-left: 3px solid transparent;
+    }
+    .event-item-btn:hover {
+      background-color: var(--surface-hover);
+    }
+    .event-item-btn.selected {
+      border-left-color: var(--accent);
+      background-color: var(--surface);
+    }
+    .event-item-btn.selected .event-item-title {
+      color: var(--accent);
+      font-weight: 600;
+    }
+    .event-item-title {
+      font-size: 14px;
+      line-height: 20px;
+      font-weight: 500;
+      color: var(--text);
+    }
+    .event-item-meta {
+      font-size: 12px;
+      line-height: 16px;
+      color: var(--text-muted);
+      display: flex;
+      justify-content: space-between;
+      width: 100%;
+    }
+
+    /* Mobile Event Selectors (< 1024px) */
+    .mobile-event-selectors {
+      display: grid;
+      grid-template-columns: 110px 1fr;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+    @media (min-width: 1024px) {
+      .mobile-event-selectors {
+        display: none;
+      }
+    }
+    .control-select {
+      width: 100%;
+      min-height: 44px;
+      padding: 8px 10px;
+      border: 1px solid var(--border-control);
+      border-radius: 6px;
+      background-color: var(--surface);
+      color: var(--text);
+      font-size: 14px;
+      line-height: 20px;
+      font-weight: 500;
+    }
+
+    /* Event Header & State Simulation Bar */
+    .event-top-bar {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: flex-end;
+      gap: 12px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 16px;
+    }
+    .event-meta-sub {
+      color: var(--text-muted);
+      margin-top: 4px;
+    }
+    .state-sim-bar {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    /* Key Number Strip (Five Second Test) */
+    /* Mobile: 2x2 grid; Tablet/Desktop: 3 blocks in a row */
+    .key-strip {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background-color: var(--bg);
+      margin-bottom: 24px;
+      overflow: hidden;
+    }
+    @media (min-width: 640px) {
+      .key-strip {
+        grid-template-columns: repeat(3, 1fr);
+      }
+    }
+    .key-block {
+      padding: 16px;
+      border-bottom: 1px solid var(--border);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+    .key-block:nth-child(2n) {
+      border-right: none;
+    }
+    .key-block:nth-child(3) {
+      grid-column: 1 / -1;
+      border-bottom: none;
+      border-right: none;
+    }
+    @media (min-width: 640px) {
+      .key-block {
+        border-bottom: none;
+        border-right: 1px solid var(--border);
+      }
+      .key-block:nth-child(2n) {
+        border-right: 1px solid var(--border);
+      }
+      .key-block:nth-child(3) {
+        grid-column: auto;
+        border-right: none;
+      }
+    }
+    .key-label {
+      font-size: 12px;
+      line-height: 16px;
+      font-weight: 500;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin-bottom: 8px;
+    }
+    .key-sub {
+      font-size: 14px;
+      line-height: 20px;
+      color: var(--text-muted);
+      margin-top: 6px;
+    }
+    .key-sub-micro {
+      font-size: 12px;
+      line-height: 16px;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
+    .val-market {
+      color: var(--market);
+    }
+    .val-actual {
+      color: var(--actual);
+    }
+    .val-surprise-up {
+      color: var(--surprise-up);
+    }
+    .val-surprise-down {
+      color: var(--surprise-down);
+    }
+
+    /* Mobile As-Of + Readout Line */
+    .readout-strip {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px;
+      background-color: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      margin-bottom: 16px;
+      min-height: 40px;
+    }
+    .readout-text {
+      font-size: 14px;
+      line-height: 20px;
+      color: var(--text);
+    }
+    .readout-unpin {
+      background: transparent;
+      border: 1px solid var(--border-control);
+      border-radius: 4px;
+      padding: 2px 8px;
+      font-size: 12px;
+      cursor: pointer;
+    }
+
+    /* Main Chart Row */
+    /* Mobile (<640px): Bin chart first, Fan chart second */
+    /* Desktop (>=640px): Fan chart left (60%), Bin chart right (40%) */
+    .main-chart-row {
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+      margin-bottom: 24px;
+    }
+    .chart-col-fan {
+      order: 2;
+    }
+    .chart-col-bin {
+      order: 1;
+    }
+    @media (min-width: 768px) {
+      .main-chart-row {
+        display: grid;
+        grid-template-columns: 3fr 2fr;
+        gap: 24px;
+        align-items: start;
+      }
+      .chart-col-fan {
+        order: 1;
+      }
+      .chart-col-bin {
+        order: 2;
+      }
+    }
+
+    .chart-figure {
+      margin: 0;
+      padding: 16px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background-color: var(--bg);
+    }
+    .chart-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 12px;
+      margin-bottom: 8px;
+    }
+    .chart-summary {
+      font-size: 14px;
+      line-height: 20px;
+      color: var(--text-muted);
+      margin: 0 0 12px 0;
+      max-width: 70ch;
+    }
+    .chart-aspect-box {
+      width: 100%;
+      aspect-ratio: 4 / 5;
+      position: relative;
+      touch-action: pan-y;
+    }
+    @media (min-width: 640px) {
+      .chart-aspect-box {
+        aspect-ratio: 16 / 10;
+      }
+    }
+    .chart-svg {
+      width: 100%;
+      height: 100%;
+      display: block;
+      overflow: visible;
+      touch-action: pan-y;
+    }
+
+    .chart-footer {
+      margin-top: 12px;
+      padding-top: 8px;
+      border-top: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .chart-footer-top {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .text-btn {
+      background: transparent;
+      border: 1px solid var(--border-control);
+      border-radius: 6px;
+      padding: 4px 10px;
+      min-height: 28px;
+      font-size: 12px;
+      line-height: 16px;
+      font-weight: 500;
+      color: var(--text);
+      cursor: pointer;
+    }
+    .text-btn:hover {
+      background-color: var(--surface-hover);
+    }
+
+    details.how-to-read {
+      font-size: 12px;
+      line-height: 16px;
+      color: var(--text-muted);
+    }
+    details.how-to-read summary {
+      cursor: pointer;
+      color: var(--accent);
+      font-weight: 500;
+      padding: 4px 0;
+    }
+    details.how-to-read p {
+      margin: 6px 0 0 0;
+      color: var(--text);
+      font-size: 14px;
+      line-height: 20px;
+      max-width: 70ch;
+    }
+
+    /* Data Tables */
+    .data-table-wrap {
+      overflow-x: auto;
+      margin-top: 12px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+    }
+    table.mel-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 14px;
+      line-height: 20px;
+    }
+    table.mel-table th, table.mel-table td {
+      padding: 8px 12px;
+      border-bottom: 1px solid var(--border);
+      text-align: left;
+    }
+    table.mel-table th {
+      background-color: var(--surface);
+      font-weight: 500;
+      color: var(--text-muted);
+      font-size: 12px;
+      line-height: 16px;
+    }
+    table.mel-table tr:nth-child(even) td {
+      background-color: var(--surface);
+    }
+    table.mel-table tr:hover td {
+      background-color: var(--surface-hover);
+    }
+    table.mel-table th.r, table.mel-table td.r {
+      text-align: right;
+      font-variant-numeric: tabular-nums lining-nums;
+    }
+
+    /* Time Control Bar */
+    /* Sticky bottom on mobile (<640px), inline bar on desktop */
+    .time-control-bar {
+      background-color: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 12px 16px;
+      margin-bottom: 24px;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 12px;
+    }
+    @media (max-width: 639px) {
+      .time-control-bar {
+        position: sticky;
+        bottom: 0;
+        z-index: 30;
+        margin: 16px -16px 0 -16px;
+        border-radius: 0;
+        border-left: none;
+        border-right: none;
+        border-bottom: none;
+        padding: 12px 16px calc(12px + env(safe-area-inset-bottom));
+      }
+    }
+
+    .play-btn {
+      background-color: var(--button-bg);
+      color: #ffffff;
+      border: 1px solid var(--button-bg);
+      border-radius: 6px;
+      padding: 8px 16px;
+      min-width: 84px;
+      min-height: 44px;
+      font-size: 14px;
+      line-height: 20px;
+      font-weight: 500;
+      cursor: pointer;
+    }
+    .play-btn:hover {
+      background-color: var(--accent-hover);
+      border-color: var(--accent-hover);
+    }
+
+    .slider-wrap {
+      flex: 1 1 200px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .slider-top-labels {
+      display: flex;
+      justify-content: space-between;
+      font-size: 12px;
+      line-height: 16px;
+      color: var(--text-muted);
+    }
+    input[type="range"].time-slider {
+      width: 100%;
+      height: 24px;
+      accent-color: var(--accent);
+      cursor: pointer;
+      margin: 0;
+    }
+
+    .preset-chips {
+      display: flex;
+      gap: 4px;
+      flex-wrap: wrap;
+    }
+
+    /* Secondary Section */
+    .secondary-section {
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+      margin-bottom: 32px;
+    }
+
+    .toggle-pair {
+      display: inline-flex;
+      border: 1px solid var(--border-control);
+      border-radius: 6px;
+      background-color: var(--surface);
+      padding: 2px;
+    }
+    .toggle-pair button {
+      background: transparent;
+      border: none;
+      border-radius: 4px;
+      padding: 4px 10px;
+      min-height: 28px;
+      font-size: 12px;
+      line-height: 16px;
+      font-weight: 500;
+      color: var(--text-muted);
+      cursor: pointer;
+    }
+    .toggle-pair button[aria-pressed="true"] {
+      background-color: var(--bg);
+      color: var(--accent);
+      box-shadow: inset 0 0 0 1px var(--border);
+    }
+
+    .reaction-strip {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 16px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background-color: var(--surface);
+    }
+
+    .about-panel {
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background-color: var(--surface);
+      padding: 12px 16px;
+    }
+    .about-panel summary {
+      font-size: 14px;
+      line-height: 20px;
+      font-weight: 500;
+      cursor: pointer;
+      color: var(--text);
+    }
+    .about-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 16px;
+      margin-top: 12px;
+      padding-top: 12px;
+      border-top: 1px solid var(--border);
+    }
+    @media (min-width: 640px) {
+      .about-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    /* Notice banners (Shutdown, Sparse, Upcoming, Error, Loading) */
+    .state-banner {
+      padding: 16px;
+      border: 1px solid var(--border-control);
+      border-radius: 8px;
+      background-color: var(--surface);
+      margin-bottom: 24px;
+    }
+    .skeleton-box {
+      background-color: var(--surface-hover);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+    }
+
+    /* Page B: Overview */
+    .overview-grid {
+      display: none;
+    }
+    .overview-mobile-list {
+      display: flex;
+      flex-direction: column;
+      border-top: 1px solid var(--border);
+    }
+    @media (min-width: 640px) {
+      .overview-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 16px;
+      }
+      .overview-mobile-list {
+        display: none;
+      }
+    }
+    @media (min-width: 1024px) {
+      .overview-grid {
+        grid-template-columns: repeat(3, 1fr);
+      }
+    }
+    .small-multiple-tile {
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 16px;
+      background-color: var(--bg);
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 12px;
+      text-align: left;
+    }
+    .small-multiple-tile:hover {
+      background-color: var(--surface-hover);
+      border-color: var(--border-control);
+    }
+    .sparkline-row {
+      display: grid;
+      grid-template-columns: 1.2fr 1fr auto;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 4px;
+      border-bottom: 1px solid var(--border);
+      background: transparent;
+      border-left: none;
+      border-right: none;
+      border-top: none;
+      width: 100%;
+      text-align: left;
+      cursor: pointer;
+    }
+
+    /* Page C: Method (640px column + sidenotes on desktop) */
+    .method-layout {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 24px;
+    }
+    @media (min-width: 1024px) {
+      .method-layout {
+        grid-template-columns: 640px 260px;
+        gap: 48px;
+        align-items: start;
+      }
+    }
+    .method-article {
+      max-width: 640px;
+    }
+    .method-article h2 {
+      margin-top: 32px;
+      margin-bottom: 12px;
+      padding-top: 16px;
+      border-top: 1px solid var(--border);
+    }
+    .method-article p {
+      margin: 0 0 16px 0;
+    }
+    .sidenote-box {
+      font-size: 12px;
+      line-height: 16px;
+      color: var(--text-muted);
+      border-left: 2px solid var(--border);
+      padding-left: 12px;
+      margin: 12px 0 20px 0;
+    }
+    .code-block {
+      background-color: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 16px;
+      overflow-x: auto;
+      font-family: "IBM Plex Mono", ui-monospace, monospace;
+      font-size: 13px;
+      line-height: 20px;
+      margin: 16px 0;
+    }
+
+    /* Footer */
+    .site-footer {
+      border-top: 1px solid var(--border);
+      margin-top: 64px;
+      padding: 24px 16px;
+      background-color: var(--surface);
+    }
+    .footer-inner {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      font-size: 12px;
+      line-height: 16px;
+      color: var(--text-muted);
+    }
+
+    .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+      }
+    }
+
+    /* Premium pass: hierarchy from type and whitespace, not from boxes.
+       Overrides the base rules above; colors stay on the blue system. */
+    /* Navy and royal blue: deep navy ink instead of neutral black, one royal blue accent,
+       cool slate neutrals; dark mode sits on a blue-black navy. */
+    :root, html[data-theme="light"] {
+      --bg: #ffffff;
+      --surface: #f5f7fa;
+      --surface-hover: #edf1f6;
+      --border: #e3e8ef;
+      --border-control: #77849b;
+      --text: #0b1b33;
+      --text-muted: #4f5d75;
+      --accent: #1d4ed8;
+      --button-bg: #1d4ed8;
+      --accent-hover: #1e40af;
+      --accent-tint: rgba(29, 78, 216, 0.08);
+      --market: #1d4ed8;
+      --band-90: rgba(29, 78, 216, 0.09);
+      --band-50: rgba(29, 78, 216, 0.22);
+      --median: #1e3a8a;
+      --actual: #0b1b33;
+      --revision: #4f5d75;
+      --ghost: #77849b;
+      --surprise-up: #b45309;
+      --surprise-down: #5b21b6;
+      --fomc-1: #c7d7ff;
+      --fomc-2: #7ea6ff;
+      --fomc-3: #1d4ed8;
+      --fomc-4: #172e6e;
+      --fomc-text-1: #0b1b33;
+      --fomc-text-2: #0b1b33;
+      --fomc-text-3: #ffffff;
+      --fomc-text-4: #ffffff;
+    }
+    html[data-theme="dark"] {
+      --bg: #0a0f1a;
+      --surface: #111827;
+      --surface-hover: #172033;
+      --border: #1f2a3d;
+      --border-control: #5d6b84;
+      --text: #e8edf5;
+      --text-muted: #9aa8bf;
+      --accent: #7ea6ff;
+      --button-bg: #1d4ed8;
+      --accent-hover: #1e40af;
+      --accent-tint: rgba(126, 166, 255, 0.12);
+      --market: #5b8cff;
+      --band-90: rgba(126, 166, 255, 0.12);
+      --band-50: rgba(126, 166, 255, 0.26);
+      --median: #c7d7ff;
+      --actual: #e8edf5;
+      --revision: #9aa8bf;
+      --ghost: #5d6b84;
+      --surprise-up: #f59e0b;
+      --surprise-down: #c4b5fd;
+      --fomc-1: #172e6e;
+      --fomc-2: #1d4ed8;
+      --fomc-3: #5b8cff;
+      --fomc-4: #c7d7ff;
+      --fomc-text-1: #e8edf5;
+      --fomc-text-2: #ffffff;
+      --fomc-text-3: #0a0f1a;
+      --fomc-text-4: #0a0f1a;
+    }
+
+    html, body {
+      text-rendering: optimizeLegibility;
+    }
+    .t-h1 {
+      font-size: 26px;
+      line-height: 32px;
+      letter-spacing: -0.02em;
+    }
+    .t-h3 {
+      font-size: 17px;
+      line-height: 24px;
+      font-weight: 600;
+      letter-spacing: -0.01em;
+    }
+    .t-hero {
+      font-size: 30px;
+      line-height: 36px;
+      font-weight: 500;
+      letter-spacing: -0.025em;
+    }
+    @media (min-width: 640px) {
+      .t-h1 { font-size: 34px; line-height: 40px; }
+      .t-hero { font-size: 46px; line-height: 52px; }
+    }
+    @media (min-width: 1024px) {
+      .t-hero { font-size: 40px; line-height: 48px; letter-spacing: -0.03em; }
+    }
+    @media (min-width: 1280px) {
+      .t-hero { font-size: 52px; line-height: 58px; }
+    }
+
+    /* Header: plain text navigation, quiet theme switch */
+    .nav-btn {
+      border: none;
+      background: transparent;
+      padding: 6px 10px;
+      color: var(--text-muted);
+    }
+    .nav-btn:hover {
+      background: transparent;
+      color: var(--text);
+    }
+    .nav-btn[aria-current="page"] {
+      background: transparent;
+      border: none;
+      color: var(--text);
+      text-decoration: underline;
+      text-decoration-color: var(--accent);
+      text-decoration-thickness: 2px;
+      text-underline-offset: 10px;
+    }
+    .theme-group {
+      border: none;
+      background: transparent;
+      padding: 0;
+      gap: 2px;
+    }
+    .theme-btn[aria-pressed="true"] {
+      background-color: var(--surface-hover);
+      color: var(--text);
+      box-shadow: none;
+    }
+    .mobile-menu-btn {
+      border: none;
+      background: transparent;
+    }
+    .mobile-nav-drawer {
+      background-color: var(--bg);
+    }
+
+    .main-container {
+      padding-top: 24px;
+    }
+    @media (min-width: 1024px) {
+      .main-container { padding-top: 40px; }
+      .explorer-layout { grid-template-columns: 216px 1fr; gap: 56px; }
+    }
+
+    /* Sidebar: no rules between rows, selection shown by a thin blue edge */
+    .event-sidebar {
+      border-right: none;
+      padding-right: 0;
+    }
+    .sidebar-section-label {
+      font-weight: 600;
+      letter-spacing: 0.07em;
+      margin-top: 24px;
+    }
+    .event-list,
+    .event-list-item {
+      border: none;
+    }
+    .event-item-btn {
+      padding: 8px 10px;
+      border-left: 2px solid transparent;
+      border-radius: 0 6px 6px 0;
+    }
+    .event-item-btn.selected {
+      border-left-color: var(--accent);
+      background-color: var(--accent-tint);
+    }
+    .event-item-btn.selected .event-item-title {
+      color: var(--text);
+    }
+
+    /* Chips and toggles: tinted when active, never a heavy solid fill */
+    .chip-btn,
+    .toggle-pair button {
+      background-color: transparent;
+      border: 1px solid transparent;
+      color: var(--text-muted);
+      font-weight: 500;
+    }
+    .chip-btn:hover,
+    .toggle-pair button:hover {
+      background-color: var(--surface-hover);
+      color: var(--text);
+    }
+    .chip-btn[aria-pressed="true"], .chip-btn.active,
+    .toggle-pair button[aria-pressed="true"] {
+      background-color: var(--accent-tint);
+      border-color: transparent;
+      color: var(--accent);
+      box-shadow: none;
+    }
+    .toggle-pair {
+      border: none;
+      background: transparent;
+      padding: 0;
+      gap: 2px;
+    }
+    .control-select {
+      border: none;
+      background-color: var(--surface);
+      font-weight: 600;
+      border-radius: 8px;
+    }
+
+    /* Event header and the five second strip */
+    .event-top-bar {
+      border-bottom: none;
+      padding-bottom: 0;
+      margin-bottom: 28px;
+    }
+    .event-meta-sub {
+      margin-top: 6px;
+      font-weight: 400;
+    }
+    .state-banner {
+      border: none;
+      background-color: var(--surface);
+      padding: 14px 16px;
+      font-size: 15px;
+      line-height: 22px;
+      margin-bottom: 32px;
+    }
+    .key-strip {
+      border: none;
+      border-radius: 0;
+      background: transparent;
+      overflow: visible;
+      row-gap: 24px;
+      margin-bottom: 40px;
+    }
+    .key-block,
+    .key-block:nth-child(2n),
+    .key-block:nth-child(3) {
+      border: none;
+      padding: 0 16px 0 0;
+      justify-content: flex-start;
+    }
+    .key-block:nth-child(3) {
+      border-top: 1px solid var(--border);
+      padding-top: 20px;
+    }
+    @media (min-width: 640px) {
+      .key-block,
+      .key-block:nth-child(2n),
+      .key-block:nth-child(3) {
+        padding: 0 28px;
+        border-top: none;
+        border-left: 1px solid var(--border);
+      }
+      .key-block:first-child {
+        padding-left: 0;
+        border-left: none;
+      }
+    }
+    .key-label {
+      font-weight: 600;
+      letter-spacing: 0.07em;
+      margin-bottom: 10px;
+    }
+    .key-sub {
+      margin-top: 10px;
+      color: var(--text);
+    }
+    .key-sub-micro {
+      font-size: 13px;
+      line-height: 18px;
+      margin-top: 4px;
+    }
+
+    .readout-strip {
+      background: transparent;
+      border: none;
+      border-top: 1px solid var(--border);
+      border-radius: 0;
+      padding: 14px 0;
+      margin-bottom: 20px;
+    }
+    .readout-text {
+      color: var(--text-muted);
+    }
+    .readout-unpin {
+      border: none;
+      color: var(--accent);
+      background: transparent;
+    }
+
+    /* Charts sit on the page, not in boxes */
+    .main-chart-row {
+      gap: 40px;
+      margin-bottom: 32px;
+    }
+    @media (min-width: 768px) {
+      .main-chart-row { gap: 48px; }
+    }
+    .chart-figure {
+      border: none;
+      border-radius: 0;
+      padding: 0;
+      background: transparent;
+    }
+    .chart-summary {
+      font-size: 15px;
+      line-height: 22px;
+      margin-top: 4px;
+    }
+    .chart-footer {
+      border-top: none;
+      padding-top: 0;
+      margin-top: 14px;
+    }
+    .text-btn {
+      border: none;
+      background: transparent;
+      color: var(--accent);
+      padding: 4px 0;
+      white-space: nowrap;
+    }
+    .text-btn:hover {
+      background: transparent;
+      text-decoration: underline;
+    }
+    details.how-to-read summary {
+      color: var(--text-muted);
+    }
+    details.how-to-read summary:hover {
+      color: var(--text);
+    }
+    .data-table-wrap {
+      border: none;
+      border-top: 1px solid var(--border);
+      border-radius: 0;
+    }
+    table.mel-table th {
+      background-color: transparent;
+    }
+    table.mel-table tr:nth-child(even) td {
+      background-color: transparent;
+    }
+
+    /* Time controls: a ruled band on desktop, a sticky bar on phones */
+    .time-control-bar {
+      background: transparent;
+      border: none;
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+      border-radius: 0;
+      padding: 16px 0;
+      margin-bottom: 48px;
+      gap: 16px;
+    }
+    @media (max-width: 639px) {
+      .time-control-bar {
+        background-color: var(--bg);
+        border-bottom: none;
+        padding: 12px 16px calc(12px + env(safe-area-inset-bottom));
+      }
+    }
+    .play-btn {
+      border-radius: 8px;
+      padding: 6px 16px;
+      min-width: 72px;
+      min-height: 40px;
+    }
+    @media (pointer: coarse) {
+      .play-btn { min-height: 44px; }
+    }
+    .slider-top-labels {
+      gap: 12px;
+    }
+
+    /* Secondary content: rules instead of panels */
+    .secondary-section {
+      gap: 32px;
+    }
+    .reaction-strip {
+      background: transparent;
+      border: none;
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+      border-radius: 0;
+      padding: 16px 0;
+    }
+    .about-panel {
+      background: transparent;
+      border: none;
+      border-radius: 0;
+      padding: 0;
+    }
+    .about-panel summary {
+      font-size: 15px;
+      font-weight: 600;
+    }
+    .about-grid {
+      border-top: none;
+    }
+    .small-multiple-tile {
+      border: none;
+      border-top: 1px solid var(--border);
+      border-radius: 0;
+      padding: 16px 0;
+      background: transparent;
+    }
+    .small-multiple-tile:hover {
+      background: transparent;
+    }
+    .skeleton-box {
+      border: none;
+    }
+
+    .site-footer {
+      background: transparent;
+      margin-top: 80px;
+    }
+    .footer-states {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      flex-wrap: wrap;
+    }
+    .t-hero {
+      white-space: nowrap;
+    }
+    .t-hero .hero-unit {
+      font-size: 0.42em;
+      font-weight: 500;
+      letter-spacing: 0;
+      color: var(--text-muted);
+      margin-left: 0.3em;
+      line-height: 1;
+    }
+    .t-hero.is-text {
+      font-size: 26px;
+      line-height: 32px;
+      white-space: normal;
+    }
+    @media (min-width: 640px) {
+      .t-hero.is-text { font-size: 32px; line-height: 40px; }
+    }
+    .chart-col-bin .chart-aspect-box {
+      aspect-ratio: 340 / 300;
+    }
+    /* Phones: the theme switch lives in the menu drawer so the header never overflows */
+    .drawer-theme {
+      margin-top: 12px;
+    }
+    @media (max-width: 639px) {
+      .header-right .theme-group { display: none; }
+      .logo-wrap { margin-right: 0; }
+    }
+    @media (min-width: 640px) {
+      .drawer-theme { display: none; }
+    }
+    /* Release-day reaction: yields as two figures, sectors as a diverging bar list.
+       Rises are dark ink and falls are slate, so blue and orange keep their own meanings. */
+    .yield-pair {
+      display: flex;
+      gap: 32px;
+      font-size: 22px;
+      line-height: 28px;
+      font-weight: 500;
+      letter-spacing: -0.01em;
+      margin: 8px 0 20px 0;
+    }
+    .yield-label {
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.07em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin-right: 6px;
+    }
+    .sector-bars {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+    }
+    .sector-row {
+      display: grid;
+      grid-template-columns: 9.5rem 1fr 4rem;
+      align-items: center;
+      gap: 12px;
+      min-height: 30px;
+      font-size: 14px;
+      line-height: 20px;
+    }
+    .sector-row.is-benchmark {
+      font-weight: 600;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 6px;
+      margin-bottom: 6px;
+    }
+    .sector-ticker {
+      font-family: "IBM Plex Mono", ui-monospace, monospace;
+      font-size: 12px;
+      color: var(--text-muted);
+      display: inline-block;
+      min-width: 2.6rem;
+    }
+    .sector-track {
+      position: relative;
+      height: 14px;
+      background: linear-gradient(var(--border-control), var(--border-control)) center / 1px 100% no-repeat;
+    }
+    .sector-bar {
+      position: absolute;
+      top: 2px;
+      bottom: 2px;
+      border-radius: 2px;
+    }
+    .sector-bar.is-up {
+      background-color: var(--text);
+      opacity: 0.85;
+    }
+    .sector-bar.is-down {
+      background-color: var(--border-control);
+    }
+    .sector-value {
+      text-align: right;
+    }
+    @media (max-width: 639px) {
+      .sector-row { grid-template-columns: 7rem 1fr 3.5rem; gap: 8px; font-size: 13px; }
+      .sector-ticker { display: none; }
+      .sector-name { white-space: nowrap; }
+      .yield-pair { gap: 20px; font-size: 18px; }
+    }
+    .footer-states .chip-btn {
+      min-height: 28px;
+      padding: 2px 8px;
+    }
+  </style>
+</head>
+<body>
+  <header class="site-header">
+    <div class="header-inner">
+      <div class="logo-wrap">
+        <a class="logo-slot" href="#page-overview" id="logo-home-link" aria-label="Macro Event Lab home">
+          <img src="logo-light.svg" alt="Macro Event Lab" class="logo-img-light" onerror="this.style.display='none'">
+          <img src="logo-dark.svg" alt="Macro Event Lab" class="logo-img-dark" onerror="this.style.display='none'">
+          <span class="logo-placeholder-text">
+            <span class="logo-size-desktop">LOGO 160 x 32</span>
+            <span class="logo-size-mobile">LOGO 120 x 24</span>
+          </span>
+        </a>
+      </div>
+
+      <nav class="header-nav" aria-label="Primary navigation">
+        <button type="button" class="nav-btn" data-nav="explorer" aria-current="page">Events</button>
+        <button type="button" class="nav-btn" data-nav="overview">Compare</button>
+        <button type="button" class="nav-btn" data-nav="method">Method</button>
+        <button type="button" class="nav-btn" data-nav="data">Data</button>
+        <button type="button" class="nav-btn" data-nav="sql">SQL</button>
+      </nav>
+
+      <div class="header-right">
+        <div class="theme-group" role="group" aria-label="Color theme">
+          <button type="button" class="theme-btn" data-theme-set="system" aria-pressed="false">System</button>
+          <button type="button" class="theme-btn" data-theme-set="light" aria-pressed="true">Light</button>
+          <button type="button" class="theme-btn" data-theme-set="dark" aria-pressed="false">Dark</button>
+        </div>
+        <button type="button" class="mobile-menu-btn" id="mobile-menu-toggle" aria-expanded="false" aria-controls="mobile-nav-drawer">Menu</button>
+      </div>
+    </div>
+    <div class="mobile-nav-drawer" id="mobile-nav-drawer">
+      <div class="mobile-nav-list">
+        <button type="button" class="nav-btn" data-nav="explorer">Events</button>
+        <button type="button" class="nav-btn" data-nav="overview">Compare</button>
+        <button type="button" class="nav-btn" data-nav="method">Method</button>
+        <button type="button" class="nav-btn" data-nav="data">Data</button>
+        <button type="button" class="nav-btn" data-nav="sql">SQL</button>
+      </div>
+      <div class="theme-group drawer-theme" role="group" aria-label="Color theme">
+        <button type="button" class="theme-btn" data-theme-set="system" aria-pressed="false">System</button>
+        <button type="button" class="theme-btn" data-theme-set="light" aria-pressed="true">Light</button>
+        <button type="button" class="theme-btn" data-theme-set="dark" aria-pressed="false">Dark</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="main-container" id="app-main">
+    <!-- PAGE A & PAGE D: EVENT EXPLORER -->
+    <section id="page-explorer">
+      <!-- Mobile Event Selectors (<1024px) -->
+      <div class="mobile-event-selectors" aria-label="Mobile event selectors">
+        <div>
+          <label for="mobile-release-filter" class="sr-only">Release type</label>
+          <select id="mobile-release-filter" class="control-select">
+            <option value="all">All types</option>
+            <option value="cpi">CPI</option>
+            <option value="fomc">FOMC</option>
+            <option value="jobs">Jobs</option>
+          </select>
+        </div>
+        <div>
+          <label for="mobile-event-select" class="sr-only">Select event</label>
+          <select id="mobile-event-select" class="control-select"></select>
+        </div>
+      </div>
+
+      <div class="explorer-layout">
+        <!-- Left Sidebar (Desktop >=1024px) -->
+        <aside class="event-sidebar" aria-label="Release filter and event list">
+          <div class="t-micro" style="color: var(--text-muted); margin-bottom: 6px;">Release type</div>
+          <div class="filter-chips" role="group" aria-label="Filter by release type">
+            <button type="button" class="chip-btn" data-filter="all" aria-pressed="true">All</button>
+            <button type="button" class="chip-btn" data-filter="cpi" aria-pressed="false">CPI</button>
+            <button type="button" class="chip-btn" data-filter="jobs" aria-pressed="false">Jobs</button>
+            <button type="button" class="chip-btn" data-filter="fomc" aria-pressed="false">FOMC</button>
+          </div>
+          <div class="sidebar-section-label">Events (Newest first)</div>
+          <ul class="event-list" id="desktop-event-list"></ul>
+        </aside>
+
+        <!-- Explorer Content Area -->
+        <div id="explorer-content-col">
+          <!-- Loading State View -->
+          <div id="state-loading-view" style="display: none;" aria-live="polite">
+            <p class="t-label" style="margin: 0 0 12px 0;">Loading event data</p>
+            <div class="skeleton-box" style="height: 64px; margin-bottom: 16px;"></div>
+            <div class="skeleton-box" style="height: 112px; margin-bottom: 24px;"></div>
+            <div class="main-chart-row">
+              <div class="skeleton-box chart-aspect-box"></div>
+              <div class="skeleton-box chart-aspect-box"></div>
+            </div>
+          </div>
+
+          <!-- Error State View -->
+          <div id="state-error-view" class="state-banner" style="display: none;" role="alert">
+            <h2 class="t-h3" style="margin-bottom: 8px;">Unable to load point-in-time snapshot archive</h2>
+            <p class="t-body" style="color: var(--text-muted); margin: 0 0 12px 0;">Connection to the vintage snapshot store timed out while reading Kalshi contract series.</p>
+            <button type="button" class="play-btn" id="error-retry-btn">Retry</button>
+          </div>
+
+          <!-- Active Event View -->
+          <div id="state-normal-view">
+            <div class="event-top-bar">
+              <div>
+                <h1 class="t-h1" id="event-title-heading">CPI, September 2026</h1>
+                <div class="t-label event-meta-sub" id="event-release-meta">Released Oct 14 2026, 08:30 ET</div>
+              </div>
+            </div>
+
+            <!-- Notice Banner for Special Event Cases (Shutdown, Sparse, Upcoming) -->
+            <div id="special-case-banner" class="state-banner" style="display: none;"></div>
+
+            <!-- Key Number Strip (The Five Second Test) -->
+            <div class="key-strip" aria-label="Five second summary metrics">
+              <div class="key-block">
+                <div class="key-label" id="key-label-expected">MARKET EXPECTED (T&#8722;1h)</div>
+                <div class="t-hero val-market" id="key-val-expected">0.3% m/m</div>
+                <div class="key-sub num" id="key-sub-expected">50% range 0.25 to 0.37</div>
+                <div class="key-sub-micro" id="key-sentence-expected">Implied mean 0.31%, SD 0.09%</div>
+              </div>
+              <div class="key-block">
+                <div class="key-label">FIRST PRINT</div>
+                <div class="t-hero val-actual" id="key-val-actual">0.4% m/m</div>
+                <div class="key-sub" id="key-sub-vintage">ALFRED vintage 2026-10-14</div>
+                <div class="key-sub-micro num" id="key-sub-revision">Revised to 0.3% (Nov 13)</div>
+              </div>
+              <div class="key-block">
+                <div class="key-label">SURPRISE</div>
+                <div class="t-hero val-surprise-up" id="key-val-surprise">+1.0 SD</div>
+                <div class="key-sub" id="key-sub-surprise">above implied mean</div>
+                <div class="key-sub-micro num" id="key-sub-reaction">Release day: 2y +6 bp, 10y +4 bp</div>
+              </div>
+            </div>
+
+            <!-- As-of + Pinned Readout Strip -->
+            <div class="readout-strip" aria-live="polite">
+              <div>
+                <span class="t-label" id="as-of-banner-label">As of Oct 12 08:30 ET (T&#8722;48h):</span>
+                <span class="readout-text num" id="pinned-readout-text">Market mean 0.30% m/m (50% interval 0.24% to 0.36%). Tap or hover any chart mark to inspect.</span>
+              </div>
+              <button type="button" class="readout-unpin" id="unpin-readout-btn" style="display: none;">Clear pin (Esc)</button>
+            </div>
+
+            <!-- Main Chart Row -->
+            <div class="main-chart-row">
+              <!-- Left on desktop (60%), second on mobile: Fan chart (CPI) or Stacked Area over time (FOMC) -->
+              <div class="chart-col-fan">
+                <figure class="chart-figure" aria-labelledby="fan-chart-title">
+                  <div class="chart-header">
+                    <h2 class="t-h3" id="fan-chart-title">Implied CPI expectation narrowed toward 0.3% in the final 48 hours</h2>
+                    <button type="button" class="text-btn" id="toggle-fan-table-btn" aria-expanded="false">Show data table</button>
+                  </div>
+                  <p class="chart-summary num" id="fan-chart-summary">The fan narrows toward the release: the 90% interval compressed from 0.35 percentage points at T&#8722;168h to 0.29 percentage points at T&#8722;1h.</p>
+                  <div id="fan-chart-view" class="chart-aspect-box">
+                    <svg id="fan-svg" class="chart-svg" tabindex="0" role="group" aria-label="Expectation fan chart over the 7 days before release. Use Left and Right arrow keys to scrub hours."></svg>
+                  </div>
+                  <div id="fan-table-view" class="data-table-wrap" style="display: none;"></div>
+                  <div class="chart-footer">
+                    <div class="chart-footer-top">
+                      <span class="t-micro" id="fan-source-line">Sources: Kalshi KXCPI hourly snapshots; BLS CPI via ALFRED, vintage 2026-10-14</span>
+                      <span class="t-micro mono" id="fan-vintage-badge">as_of: 2026-10-12T08:30:00-04:00</span>
+                    </div>
+                    <details class="how-to-read">
+                      <summary>How to read this chart</summary>
+                      <p id="fan-how-to-text">The dark blue line tracks the market median from 168 hours (7 days) before release to the release print. The inner shaded band covers the middle 50% of implied outcomes (25th to 75th percentile), and the outer band covers the 90% interval (5th to 95th percentile). Notice how the fan narrows toward the release as uncertainty resolves. After release at 08:30 ET, the horizontal line marks the first published print and hollow dashed markers show subsequent ALFRED revisions.</p>
+                    </details>
+                  </div>
+                </figure>
+              </div>
+
+              <!-- Right on desktop (40%), first on mobile: Bin probability chart (CPI) or 100% Stacked Horizontal Bar (FOMC) -->
+              <div class="chart-col-bin">
+                <figure class="chart-figure" aria-labelledby="bin-chart-title">
+                  <div class="chart-header">
+                    <div>
+                      <div class="t-micro" style="color: var(--accent); font-weight: 500;" id="bin-asof-kicker">As of Oct 12 08:30 ET (T&#8722;48h)</div>
+                      <h2 class="t-h3" id="bin-chart-title">Outcome distribution centered on 0.3% m/m</h2>
+                    </div>
+                    <button type="button" class="text-btn" id="toggle-bin-table-btn" aria-expanded="false">Show data table</button>
+                  </div>
+                  <p class="chart-summary num" id="bin-chart-summary">At T&#8722;48h the market put 46% on 0.3% m/m, up from 38% a week earlier.</p>
+                  <div id="bin-chart-view" class="chart-aspect-box">
+                    <svg id="bin-svg" class="chart-svg" tabindex="0" role="group" aria-label="Outcome probability distribution at selected timestamp. Use Left and Right arrow keys to inspect outcome bins."></svg>
+                  </div>
+                  <div id="bin-table-view" class="data-table-wrap" style="display: none;"></div>
+                  <div class="chart-footer">
+                    <div class="chart-footer-top">
+                      <span class="t-micro" id="bin-source-line">Sources: Kalshi KXCPI hourly snapshots; BLS CPI via ALFRED, vintage 2026-10-14</span>
+                    </div>
+                    <details class="how-to-read">
+                      <summary>How to read this chart</summary>
+                      <p id="bin-how-to-text">Solid blue bars show the implied probability of each CPI outcome bin at the selected hour. Hollow dashed outlines ("ghost bars") show the prior distribution 7 days before release (T&#8722;168h) so shifts in conviction are immediately visible. When viewing the Final state after release, the outcome bin containing the actual first print is framed in a dark border.</p>
+                    </details>
+                  </div>
+                </figure>
+              </div>
+            </div>
+
+            <!-- Time Control Bar (Sticky bottom on mobile, inline on desktop) -->
+            <div class="time-control-bar" aria-label="Point-in-time playback controls">
+              <button type="button" class="play-btn" id="play-pause-btn" aria-label="Play hourly timeline">Play</button>
+              <div class="slider-wrap">
+                <div class="slider-top-labels">
+                  <span>T&#8722;7d</span>
+                  <span class="num" id="slider-current-readout" style="color: var(--text); font-weight: 500;">T&#8722;48h (Oct 12, 08:30 ET)</span>
+                  <span>Release</span>
+                </div>
+                <label for="time-range-slider" class="sr-only">Hours before release</label>
+                <input
+                  type="range"
+                  id="time-range-slider"
+                  class="time-slider"
+                  min="-168"
+                  max="0"
+                  step="1"
+                  value="-48"
+                  aria-valuemin="-168"
+                  aria-valuemax="0"
+                  aria-valuenow="-48"
+                  aria-valuetext="48 hours before CPI release, Oct 12 08:30 ET"
+                >
+              </div>
+              <div class="preset-chips" role="group" aria-label="Time snapshot presets">
+                <button type="button" class="chip-btn" data-preset="-168" aria-pressed="false">T&#8722;7d</button>
+                <button type="button" class="chip-btn" data-preset="-48" aria-pressed="true">T&#8722;48h</button>
+                <button type="button" class="chip-btn" data-preset="-24" aria-pressed="false">T&#8722;1d</button>
+                <button type="button" class="chip-btn" data-preset="-1" aria-pressed="false">T&#8722;1h</button>
+                <button type="button" class="chip-btn" data-preset="0" aria-pressed="false">Final</button>
+              </div>
+            </div>
+
+            <!-- Secondary Section: Threshold Step Chart, Market Reaction, CSV, About This Data -->
+            <div class="secondary-section">
+              <!-- Market reaction on release day: Treasury yields plus sector ETFs -->
+              <figure class="chart-figure" aria-labelledby="reaction-chart-title">
+                <div class="chart-header">
+                  <div>
+                    <div class="t-micro" style="color: var(--text-muted); font-weight: 600; letter-spacing: 0.07em;">MARKET REACTION ON RELEASE DAY</div>
+                    <h2 class="t-h3" id="reaction-chart-title">Rate-sensitive sectors fell the most</h2>
+                  </div>
+                </div>
+                <p class="chart-summary num" id="reaction-chart-summary"></p>
+                <div class="yield-pair num" id="reaction-yields"></div>
+                <ul class="sector-bars" id="sector-bars" aria-label="Sector ETF returns on release day, sorted from highest to lowest"></ul>
+                <div class="chart-footer">
+                  <span class="t-micro" id="reaction-source-line">Sources: SPDR sector ETFs and SPY, close on release day vs prior close; Treasury yields FRED DGS2, DGS10. Illustrative data.</span>
+                  <details class="how-to-read">
+                    <summary>How to read this chart</summary>
+                    <p id="reaction-how-to-text">Each bar is one sector ETF's return from the previous close to the close on release day, sorted from best to worst. Dark bars rose, light bars fell; the sign is always printed. The top row is the S&amp;P 500 (SPY) for reference. CPI and jobs data come out at 08:30 ET, before the market opens, so the whole trading day reflects the release. FOMC statements come out at 14:00 ET, so daily data mixes trading before and after the decision.</p>
+                  </details>
+                </div>
+              </figure>
+
+              <figure class="chart-figure" aria-labelledby="threshold-chart-title">
+                <div class="chart-header" style="flex-wrap: wrap;">
+                  <div>
+                    <h2 class="t-h3" id="threshold-chart-title">Probability above strike threshold P(X &gt; k)</h2>
+                    <p class="chart-summary num" id="threshold-chart-summary" style="margin-top: 4px;">Each bin probability equals the vertical drop between adjacent Kalshi threshold contracts.</p>
+                  </div>
+                  <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                    <div class="toggle-pair" role="group" aria-label="Threshold chart or table view">
+                      <button type="button" data-thresh-view="chart" aria-pressed="true">Chart</button>
+                      <button type="button" data-thresh-view="table" aria-pressed="false">Table</button>
+                    </div>
+                    <div class="toggle-pair" role="group" aria-label="Raw or normalized contract probabilities">
+                      <button type="button" data-thresh-norm="normalized" aria-pressed="true">Normalized</button>
+                      <button type="button" data-thresh-norm="raw" aria-pressed="false">Raw</button>
+                    </div>
+                  </div>
+                </div>
+
+                <div id="threshold-chart-box" class="chart-aspect-box" style="max-height: 300px;">
+                  <svg id="threshold-svg" class="chart-svg" tabindex="0" role="group" aria-label="Probability above threshold step chart. Use Left and Right arrow keys to inspect strike dots."></svg>
+                </div>
+                <div id="threshold-table-box" class="data-table-wrap" style="display: none;"></div>
+
+                <div class="chart-footer">
+                  <div class="chart-footer-top">
+                    <span class="t-micro" id="threshold-source-line">Sources: Kalshi KXCPI threshold ladders; BLS CPI via ALFRED, vintage 2026-10-14</span>
+                    <span class="t-micro num" id="threshold-norm-note">Normalized sum: 100.0% (Raw bid/ask midpoint sum: 102.4%)</span>
+                  </div>
+                  <details class="how-to-read">
+                    <summary>How to read this chart</summary>
+                    <p>Kalshi lists binary contracts of the form "Will CPI exceed strike k?". Plotting P(X &gt; k) produces a descending step function. The probability assigned to a specific bin [k_i, k_{i+1}) is the difference P(X &gt; k_{i-1}) &#8722; P(X &gt; k_i). Toggle between Raw midpoints and Normalized probabilities (enforcing non-increasing monotonicity and unit sum).</p>
+                  </details>
+                </div>
+              </figure>
+
+              <!-- Market Reaction & Source/CSV Strip -->
+              <div class="reaction-strip">
+                <div>
+                  <span class="t-label">Data behind these charts</span>
+                </div>
+                <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
+                  <span class="t-micro" id="secondary-source-line">Vintage: 2026-10-14 (Illustrative data)</span>
+                  <button type="button" class="text-btn" id="download-csv-btn">Download CSV</button>
+                </div>
+              </div>
+
+              <!-- Collapsible About This Data -->
+              <details class="about-panel" id="about-data-details">
+                <summary>About this data (tickers, snapshot times, vintages, and the as-of rule)</summary>
+                <div class="about-grid">
+                  <div>
+                    <div class="t-label" style="margin-bottom: 4px;">Series identifiers and tickers</div>
+                    <p class="t-micro" style="color: var(--text-muted); margin: 0 0 6px 0;">Prediction market and macro series joined strictly on point-in-time availability:</p>
+                    <ul class="t-micro mono" style="margin: 0; padding-left: 16px; color: var(--text);">
+                      <li id="about-ticker-kalshi">Kalshi ticker prefix: KXCPI-26SEP</li>
+                      <li id="about-ticker-alfred">ALFRED series: CPIAUCSL (vintage 2026-10-14)</li>
+                      <li>Treasury yields: FRED DGS2, DGS10 (daily close)</li>
+                    </ul>
+                  </div>
+                  <div>
+                    <div class="t-label" style="margin-bottom: 4px;">Point-in-time (as_of) rule</div>
+                    <p class="t-micro" style="color: var(--text-muted); margin: 0;">Every chart and summary metric filters records where <span class="mono">known_from &lt;= as_of</span>. When scrubbing prior to 08:30 ET on release day, only hourly Kalshi orderbook snapshots recorded up to that hour are visible. Revisions published weeks later (such as the Nov 13 vintage) are stored with their own <span class="mono">vintage_date</span> and never overwrite the first print.</p>
+                  </div>
+                </div>
+              </details>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- PAGE B: EVENTS OVERVIEW (HOME / COMPARE) -->
+    <section id="page-overview" style="display: none;">
+      <div style="margin-bottom: 24px; border-bottom: 1px solid var(--border); padding-bottom: 16px;">
+        <h1 class="t-h1" style="margin-bottom: 8px;">Macro Event Overview</h1>
+        <p class="t-body" style="color: var(--text-muted); margin: 0;">Compare implied pre-release distributions at T&#8722;1h against the actual first print and standardized surprise across CPI, Jobs, and FOMC releases.</p>
+      </div>
+
+      <!-- Surprise Strip -->
+      <figure class="chart-figure" style="margin-bottom: 24px;" aria-labelledby="surprise-strip-title">
+        <div class="chart-header">
+          <div>
+            <h2 class="t-h3" id="surprise-strip-title">Standardized surprise strip (first print minus T&#8722;1h expectation, in SD)</h2>
+            <p class="chart-summary">Click any release marker on the horizontal axis to open its full hourly distribution in the Event Explorer.</p>
+          </div>
+        </div>
+        <div style="width: 100%; height: 110px;">
+          <svg id="surprise-strip-svg" class="chart-svg" role="group" aria-label="Horizontal axis of release surprises in standard deviations"></svg>
+        </div>
+        <div class="chart-footer">
+          <span class="t-micro">Positive surprises (+) in orange; negative surprises (&#8722;) in purple. Illustrative data.</span>
+        </div>
+      </figure>
+
+      <!-- Small Multiples Grid (Desktop/Tablet) & Sparkline Rows (Mobile) -->
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+        <h2 class="t-h2">Releases (T&#8722;1h distribution vs. first print)</h2>
+        <span class="t-micro" style="color: var(--text-muted);">Shared horizontal scale per indicator</span>
+      </div>
+      <div id="overview-small-multiples" class="overview-grid"></div>
+      <div id="overview-mobile-rows" class="overview-mobile-list"></div>
+    </section>
+
+    <!-- PAGE C: METHOD -->
+    <section id="page-method" style="display: none;">
+      <div class="method-layout">
+        <article class="method-article">
+          <h1 class="t-h1" style="margin-bottom: 8px;">Methodology and Point-in-Time Architecture</h1>
+          <p class="t-label" style="color: var(--text-muted); margin-bottom: 24px;">Technical specification for probability extraction, percentile interpolation, and bitemporal vintage indexing.</p>
+
+          <p class="t-body">Macro Event Lab constructs an hourly point-in-time record of market expectations prior to major US macroeconomic releases and pairs each distribution with the exact first print published at the release timestamp.</p>
+
+          <h2 class="t-h2">1. Deriving bin probabilities from threshold contracts</h2>
+          <p class="t-body">Prediction markets on Kalshi list binary threshold contracts of the form "CPI month-over-month above <span class="mono">k</span>%" for an ordered ladder of strikes <span class="mono">k_1 &lt; k_2 &lt; ... &lt; k_m</span>. Let <span class="mono">M(k_i, t)</span> denote the mid-market price (average of best bid and best ask, scaled to <span class="mono">[0, 1]</span>) at hourly snapshot <span class="mono">t</span>.</p>
+          <p class="t-body">Because each threshold contract pays 1 if the realized print exceeds <span class="mono">k_i</span>, the survival function is <span class="mono">S(k_i) = P(X &gt; k_i)</span>. Interior bin probabilities are differences of adjacent thresholds:</p>
+          <div class="code-block">P(k_{i-1} &lt; X &lt;= k_i) = S(k_{i-1}) &#8722; S(k_i)</div>
+
+          <h2 class="t-h2">2. Normalization and monotonicity enforcement</h2>
+          <p class="t-body">Orderbook bid-ask bounce or thin liquidity in tail strikes can cause raw differences to violate monotonicity or sum to slightly more or less than 100%. We apply isotonic regression (pool-adjacent-violators) to enforce <span class="mono">S(k_1) &gt;= S(k_2) &gt;= ... &gt;= S(k_m)</span>, clip negative bin diffs to zero, and normalize bin masses <span class="mono">p_j = raw_j / sum(raw)</span> so the distribution sums to exactly 1.00. Both Raw and Normalized series are preserved in the threshold toggle.</p>
+
+          <!-- Simple SVG diagram of Point-in-Time architecture -->
+          <figure class="chart-figure" style="margin: 24px 0;" aria-label="Point in time timeline diagram">
+            <div class="t-label" style="margin-bottom: 8px;">Diagram: Bitemporal point-in-time visibility (<span class="mono">known_from</span> vs. <span class="mono">as_of</span>)</div>
+            <svg viewBox="0 0 580 130" style="width: 100%; height: auto; display: block;">
+              <line x1="30" y1="55" x2="550" y2="55" stroke="var(--border-control)" stroke-width="1.5"/>
+              <!-- T-168h -->
+              <circle cx="60" cy="55" r="4" fill="var(--market)"/>
+              <text x="60" y="38" text-anchor="middle" font-size="12" fill="var(--text)">T&#8722;168h</text>
+              <text x="60" y="76" text-anchor="middle" font-size="12" fill="var(--text-muted)">Oct 7</text>
+              <!-- T-48h -->
+              <line x1="210" y1="20" x2="210" y2="95" stroke="var(--accent)" stroke-width="1.5" stroke-dasharray="3,3"/>
+              <circle cx="210" cy="55" r="5" fill="var(--accent)"/>
+              <text x="210" y="15" text-anchor="middle" font-size="12" font-weight="500" fill="var(--accent)">Scrubber as_of (T&#8722;48h)</text>
+              <text x="210" y="112" text-anchor="middle" font-size="12" fill="var(--text-muted)">Only snapshots &lt;= Oct 12 visible</text>
+              <!-- Release T=0 -->
+              <circle cx="370" cy="55" r="5" fill="var(--actual)"/>
+              <text x="370" y="38" text-anchor="middle" font-size="12" font-weight="500" fill="var(--actual)">First print (T=0)</text>
+              <text x="370" y="76" text-anchor="middle" font-size="12" fill="var(--text-muted)">Oct 14, 08:30 ET (0.4%)</text>
+              <!-- Revision -->
+              <circle cx="510" cy="55" r="5" fill="var(--bg)" stroke="var(--revision)" stroke-width="2" stroke-dasharray="2,2"/>
+              <text x="510" y="38" text-anchor="middle" font-size="12" fill="var(--text-muted)">ALFRED Revision</text>
+              <text x="510" y="76" text-anchor="middle" font-size="12" fill="var(--text-muted)">Nov 13 (0.3%)</text>
+            </svg>
+          </figure>
+
+          <h2 class="t-h2">3. Computing moments, percentiles, and surprise</h2>
+          <p class="t-body">From the normalized bin centers <span class="mono">x_j</span> and probabilities <span class="mono">p_j</span>, we compute the implied mean <span class="mono">mu = sum(x_j * p_j)</span> and standard deviation <span class="mono">sigma = sqrt(sum((x_j &#8722; mu)^2 * p_j))</span>. The 5th, 25th, 50th, 75th, and 95th percentiles are computed by piecewise-linear interpolation of the cumulative distribution function across bin boundaries.</p>
+          <p class="t-body">Standardized surprise is evaluated strictly against the T&#8722;1h expectation snapshot and the unrevised first print:</p>
+          <div class="code-block">Surprise (SD) = (First_Print &#8722; Mean_{T-1h}) / SD_{T-1h}</div>
+
+          <h2 class="t-h2">4. Point-in-time semantics and data sources</h2>
+          <p class="t-body">Macroeconomic series are frequently revised months or years after initial publication. Backtesting or evaluating market efficiency against revised data introduces look-ahead bias. Every observation in Macro Event Lab carries two timestamps: <span class="mono">reference_period</span> (the month measured) and <span class="mono">known_from</span> (the exact timestamp when the value became publicly available in ALFRED or Kalshi).</p>
+          <p class="t-body">Data sources: (1) Kalshi prediction market limit orderbook snapshots (<span class="mono">KXCPI</span>, <span class="mono">KXNFP</span>, <span class="mono">KXFOMC</span>); (2) Federal Reserve Bank of St. Louis ALFRED archival vintages (<span class="mono">CPIAUCSL</span>, <span class="mono">PAYEMS</span>, <span class="mono">DFEDTARU</span>); (3) FRED daily Treasury constant maturity yields (<span class="mono">DGS2</span>, <span class="mono">DGS10</span>).</p>
+        </article>
+
+        <aside aria-label="Method sidenotes">
+          <div class="sidenote-box">
+            <strong>Note 1: Why T&#8722;1h is the benchmark.</strong> CPI and Employment Situation reports are published at 08:30 ET. Using the 07:30 ET (T&#8722;1h) snapshot captures final pre-release positioning before illiquidity widens spreads in the final seconds.
+          </div>
+          <div class="sidenote-box">
+            <strong>Note 2: Discrete FOMC outcomes.</strong> Unlike continuous CPI bins, FOMC decisions fall into ordered policy actions (Cut 50, Cut 25, Hold, Hike 25). We render FOMC expectations with a 100% stacked bar and stacked area chart in ordered blues rather than a continuous fan.
+          </div>
+          <div class="sidenote-box">
+            <strong>Note 3: Government shutdowns.</strong> When a release is cancelled or indefinitely delayed (such as October 2025 CPI), the pre-release market snapshots remain queryable while first print and surprise fields remain null.
+          </div>
+        </aside>
+      </div>
+    </section>
+
+    <!-- PAGE DATA: VERIFIABLE TABLE & CSV EXPORT -->
+    <section id="page-data" style="display: none;">
+      <div style="margin-bottom: 24px; border-bottom: 1px solid var(--border); padding-bottom: 16px; display: flex; justify-content: space-between; align-items: flex-end; flex-wrap: wrap; gap: 12px;">
+        <div>
+          <h1 class="t-h1" style="margin-bottom: 8px;">Point-in-Time Snapshot Archive</h1>
+          <p class="t-body" style="color: var(--text-muted); margin: 0;">Complete anchor snapshots, vintage dates, and implied moments from the illustrative dataset.</p>
+        </div>
+        <button type="button" class="play-btn" id="data-page-csv-btn">Download Full CSV</button>
+      </div>
+      <div class="data-table-wrap" id="full-archive-table-wrap"></div>
+    </section>
+
+    <!-- PAGE SQL: POINT-IN-TIME QUERY INSPECTOR -->
+    <section id="page-sql" style="display: none;">
+      <div style="margin-bottom: 24px; border-bottom: 1px solid var(--border); padding-bottom: 16px;">
+        <h1 class="t-h1" style="margin-bottom: 8px;">Point-in-Time SQL Queries</h1>
+        <p class="t-body" style="color: var(--text-muted); margin: 0;">Reproducible DuckDB / PostgreSQL queries enforcing <span class="mono">known_from &lt;= as_of</span> without look-ahead bias.</p>
+      </div>
+      <div style="margin-bottom: 16px; display: flex; gap: 8px; flex-wrap: wrap;">
+        <button type="button" class="chip-btn sql-preset-btn" data-sql="pit" aria-pressed="true">1. Point-in-time snapshot join</button>
+        <button type="button" class="chip-btn sql-preset-btn" data-sql="surprise" aria-pressed="false">2. Standardized surprise &amp; ALFRED vintage</button>
+        <button type="button" class="chip-btn sql-preset-btn" data-sql="fomc" aria-pressed="false">3. Discrete FOMC ladder verification</button>
+      </div>
+      <pre class="code-block" id="sql-code-display"></pre>
+      <div class="data-table-wrap" id="sql-result-preview"></div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <div>
+        <strong>Macro Event Lab</strong> | Point-in-time macro expectations and ALFRED vintage archive
+      </div>
+      <div>Illustrative data. Layout prototype; figures are not real market data.</div>
+      <div class="footer-states" role="group" aria-label="Preview UI states">
+        <span>Preview state:</span>
+        <button type="button" class="chip-btn" data-ui-state="normal" aria-pressed="true">Default</button>
+        <button type="button" class="chip-btn" data-ui-state="loading" aria-pressed="false">Loading</button>
+        <button type="button" class="chip-btn" data-ui-state="error" aria-pressed="false">Error</button>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    (function() {
+      "use strict";
+
+      // True minus sign (U+2212) helper
+      var MINUS = "\u2212";
+
+      // Hero value: number (and a leading "%") large, the rest of the unit small and muted
+      function heroHtml(num, unit) {
+        var u = unit || "";
+        var lead = u.charAt(0) === "%" ? "%" : "";
+        var rest = (lead ? u.slice(1) : " " + u).trim();
+        return num + lead + (rest ? '<span class="hero-unit">' + rest + "</span>" : "");
+      }
+
+      function fmtSigned(val, decimals, suffix) {
+        if (val === null || val === undefined || isNaN(val)) return "N/A";
+        var absStr = Math.abs(val).toFixed(decimals);
+        var sign = val > 0 ? "+" : (val < 0 ? MINUS : "");
+        return sign + absStr + (suffix || "");
+      }
+
+      function fmtHourLabel(h) {
+        if (h === 0) return "Final (Release)";
+        return "T" + MINUS + Math.abs(h) + "h";
+      }
+
+      // Exact Mock Data from Section 11 of Brief + Required Special Case Events (Section 9)
+      var EVENTS_DB = {
+        "cpi-2026-09": {
+          id: "cpi-2026-09",
+          release: "cpi",
+          typeLabel: "CPI",
+          title: "CPI, September 2026",
+          release_ts: "2026-10-14T08:30:00-04:00",
+          release_display: "Released Oct 14 2026, 08:30 ET",
+          unit: "% m/m",
+          first_print: 0.4,
+          first_print_vintage: "2026-10-14",
+          revisions: [{ value: 0.3, vintage: "2026-11-13", display: "Revised to 0.3% (Nov 13)" }],
+          reaction_bp: { dgs2: 6, dgs10: 4 },
+          surprise_sd: 1.0,
+          bins: [0.1, 0.2, 0.3, 0.4, 0.5],
+          kalshi_ticker: "KXCPI-26SEP",
+          alfred_series: "CPIAUCSL",
+          source_line: "Sources: Kalshi KXCPI hourly snapshots; BLS CPI via ALFRED, vintage 2026-10-14",
+          special_state: "normal",
+          snapshots: [
+            { hour: -168, t: "-168h", probs: [0.10, 0.27, 0.38, 0.17, 0.08], mean: 0.29, sd: 0.14, p5: 0.07, p25: 0.20, p50: 0.29, p75: 0.38, p95: 0.52 },
+            { hour: -48,  t: "-48h",  probs: [0.06, 0.21, 0.46, 0.19, 0.08], mean: 0.30, sd: 0.10, p5: 0.13, p25: 0.24, p50: 0.30, p75: 0.36, p95: 0.46 },
+            { hour: -1,   t: "-1h",   probs: [0.03, 0.17, 0.52, 0.22, 0.06], mean: 0.31, sd: 0.09, p5: 0.16, p25: 0.25, p50: 0.31, p75: 0.37, p95: 0.45 }
+          ]
+        },
+        "fomc-2026-12": {
+          id: "fomc-2026-12",
+          release: "fomc",
+          typeLabel: "FOMC",
+          title: "FOMC, December 2026",
+          release_ts: "2026-12-16T14:00:00-05:00",
+          release_display: "Released Dec 16 2026, 14:00 ET",
+          unit: "decision",
+          first_print: "Cut 25",
+          first_print_vintage: "2026-12-16",
+          revisions: [],
+          reaction_bp: { dgs2: -5, dgs10: -3 },
+          surprise_sd: -0.4,
+          outcomes: ["Cut 50", "Cut 25", "Hold", "Hike 25"],
+          decision: "Cut 25",
+          kalshi_ticker: "KXFOMC-26DEC",
+          alfred_series: "DFEDTARU",
+          source_line: "Sources: Kalshi KXFOMC hourly snapshots; Federal Reserve FOMC statement via ALFRED, vintage 2026-12-16",
+          special_state: "normal",
+          snapshots: [
+            { hour: -168, t: "-168h", probs: [0.08, 0.48, 0.40, 0.04] },
+            { hour: -48,  t: "-48h",  probs: [0.06, 0.56, 0.35, 0.03] },
+            { hour: -1,   t: "-1h",   probs: [0.05, 0.62, 0.31, 0.02] }
+          ]
+        },
+        "cpi-2026-10-upcoming": {
+          id: "cpi-2026-10-upcoming",
+          release: "cpi",
+          typeLabel: "CPI",
+          title: "CPI, October 2026 (Upcoming)",
+          release_ts: "2026-11-10T08:30:00-05:00",
+          release_display: "Scheduled Nov 10 2026, 08:30 ET",
+          unit: "% m/m",
+          first_print: null,
+          first_print_vintage: "Pending (due Nov 10)",
+          revisions: [],
+          reaction_bp: null,
+          surprise_sd: null,
+          bins: [0.1, 0.2, 0.3, 0.4, 0.5],
+          kalshi_ticker: "KXCPI-26OCT",
+          alfred_series: "CPIAUCSL",
+          source_line: "Sources: Kalshi KXCPI live snapshots (Release due Nov 10, 08:30 ET)",
+          special_state: "upcoming",
+          snapshots: [
+            { hour: -168, t: "-168h", probs: [0.10, 0.27, 0.38, 0.17, 0.08], mean: 0.29, sd: 0.14, p5: 0.07, p25: 0.20, p50: 0.29, p75: 0.38, p95: 0.52 },
+            { hour: -48,  t: "-48h",  probs: [0.06, 0.21, 0.46, 0.19, 0.08], mean: 0.30, sd: 0.10, p5: 0.13, p25: 0.24, p50: 0.30, p75: 0.36, p95: 0.46 },
+            { hour: -1,   t: "-1h",   probs: [0.03, 0.17, 0.52, 0.22, 0.06], mean: 0.31, sd: 0.09, p5: 0.16, p25: 0.25, p50: 0.31, p75: 0.37, p95: 0.45 }
+          ]
+        },
+        "cpi-2025-10-shutdown": {
+          id: "cpi-2025-10-shutdown",
+          release: "cpi",
+          typeLabel: "CPI",
+          title: "CPI, October 2025",
+          release_ts: "2025-11-13T08:30:00-05:00",
+          release_display: "Scheduled Nov 13 2025, 08:30 ET (Not published)",
+          unit: "% m/m",
+          first_print: null,
+          first_print_vintage: "Not published",
+          revisions: [],
+          reaction_bp: null,
+          surprise_sd: null,
+          bins: [0.1, 0.2, 0.3, 0.4, 0.5],
+          kalshi_ticker: "KXCPI-25OCT",
+          alfred_series: "CPIAUCSL",
+          source_line: "Sources: Kalshi KXCPI snapshots; BLS release cancelled during federal shutdown",
+          special_state: "shutdown",
+          snapshots: [
+            { hour: -168, t: "-168h", probs: [0.10, 0.27, 0.38, 0.17, 0.08], mean: 0.29, sd: 0.14, p5: 0.07, p25: 0.20, p50: 0.29, p75: 0.38, p95: 0.52 },
+            { hour: -48,  t: "-48h",  probs: [0.06, 0.21, 0.46, 0.19, 0.08], mean: 0.30, sd: 0.10, p5: 0.13, p25: 0.24, p50: 0.30, p75: 0.36, p95: 0.46 },
+            { hour: -1,   t: "-1h",   probs: [0.03, 0.17, 0.52, 0.22, 0.06], mean: 0.31, sd: 0.09, p5: 0.16, p25: 0.25, p50: 0.31, p75: 0.37, p95: 0.45 }
+          ]
+        },
+        "cpi-2024-05-sparse": {
+          id: "cpi-2024-05-sparse",
+          release: "jobs",
+          typeLabel: "Jobs",
+          title: "Early Archive Sample (Sparse Bins)",
+          release_ts: "2024-06-12T08:30:00-04:00",
+          release_display: "Released Jun 12 2024, 08:30 ET",
+          unit: "% m/m",
+          first_print: 0.3,
+          first_print_vintage: "2024-06-12",
+          revisions: [],
+          reaction_bp: { dgs2: -4, dgs10: -3 },
+          surprise_sd: 0.0,
+          bins: [0.2, 0.3, 0.4],
+          kalshi_ticker: "KXCPI-EARLY",
+          alfred_series: "CPIAUCSL",
+          source_line: "Sources: Early Kalshi snapshot archive (3 active strikes); ALFRED vintage 2024-06-12",
+          special_state: "sparse",
+          snapshots: [
+            { hour: -168, t: "-168h", probs: [0.27, 0.48, 0.25], mean: 0.30, sd: 0.10, p5: 0.20, p25: 0.24, p50: 0.30, p75: 0.36, p95: 0.40 },
+            { hour: -48,  t: "-48h",  probs: [0.24, 0.54, 0.22], mean: 0.30, sd: 0.09, p5: 0.20, p25: 0.25, p50: 0.30, p75: 0.35, p95: 0.40 },
+            { hour: -1,   t: "-1h",   probs: [0.20, 0.60, 0.20], mean: 0.30, sd: 0.09, p5: 0.21, p25: 0.26, p50: 0.30, p75: 0.35, p95: 0.39 }
+          ]
+        }
+      };
+
+      var EVENT_ORDER = [
+        "fomc-2026-12",
+        "cpi-2026-10-upcoming",
+        "cpi-2026-09",
+        "cpi-2025-10-shutdown",
+        "cpi-2024-05-sparse"
+      ];
+
+      // Application State
+      var state = {
+        page: "explorer",        // explorer | overview | method | data | sql
+        eventId: "cpi-2026-09",
+        filterType: "all",       // all | cpi | jobs | fomc
+        hour: -48,               // -168 to 0
+        isPlaying: false,
+        playTimer: null,
+        uiState: "normal",       // normal | loading | error
+        showFanTable: false,
+        showBinTable: false,
+        threshView: "chart",     // chart | table
+        threshNorm: "normalized",// normalized | raw
+        pinnedReadout: null,
+        focusedBinIdx: 2,
+        sqlPreset: "pit"
+      };
+
+      // Parse URL parameters on load
+      function readUrlState() {
+        try {
+          var params = new URLSearchParams(window.location.search);
+          var ev = params.get("event");
+          if (ev && EVENTS_DB[ev]) {
+            state.eventId = ev;
+          }
+          var tParam = params.get("t");
+          if (tParam) {
+            if (tParam.toLowerCase() === "final" || tParam === "0" || tParam === "0h") {
+              state.hour = 0;
+            } else {
+              var parsed = parseInt(tParam.replace("h", ""), 10);
+              if (!isNaN(parsed) && parsed >= -168 && parsed <= 0) {
+                state.hour = parsed;
+              }
+            }
+          }
+          var viewParam = params.get("view");
+          if (viewParam === "table") {
+            state.threshView = "table";
+            state.showBinTable = true;
+          }
+          var pageParam = params.get("page");
+          if (pageParam && ["explorer", "overview", "method", "data", "sql"].indexOf(pageParam) !== -1) {
+            state.page = pageParam;
+          }
+        } catch (e) {}
+      }
+
+      function syncUrlState() {
+        try {
+          var params = new URLSearchParams();
+          params.set("event", state.eventId);
+          params.set("t", state.hour === 0 ? "final" : state.hour + "h");
+          params.set("view", state.threshView);
+          if (state.page !== "explorer") {
+            params.set("page", state.page);
+          }
+          var newUrl = window.location.pathname + "?" + params.toString();
+          window.history.replaceState(null, "", newUrl);
+        } catch (e) {}
+      }
+
+      // Linear interpolation between anchor snapshots (-168h, -48h, -1h, and 0)
+      function interpolateSnapshot(ev, hour) {
+        var snaps = ev.snapshots;
+        var h = Math.max(-168, Math.min(0, hour));
+        if (h >= -1) {
+          return copySnap(snaps[2], h);
+        }
+        var s0, s1;
+        if (h <= -48) {
+          s0 = snaps[0]; // -168
+          s1 = snaps[1]; // -48
+        } else {
+          s0 = snaps[1]; // -48
+          s1 = snaps[2]; // -1
+        }
+        var span = s1.hour - s0.hour;
+        var alpha = span === 0 ? 0 : (h - s0.hour) / span;
+
+        var probs = [];
+        var sum = 0;
+        for (var i = 0; i < s0.probs.length; i++) {
+          var p = s0.probs[i] + alpha * (s1.probs[i] - s0.probs[i]);
+          probs.push(p);
+          sum += p;
+        }
+        for (var j = 0; j < probs.length; j++) {
+          probs[j] = probs[j] / sum;
+        }
+
+        if (ev.release === "fomc") {
+          return {
+            hour: h,
+            probs: probs
+          };
+        }
+
+        function lerp(a, b) {
+          return a + alpha * (b - a);
+        }
+
+        return {
+          hour: h,
+          probs: probs,
+          mean: lerp(s0.mean, s1.mean),
+          sd: lerp(s0.sd, s1.sd),
+          p5: lerp(s0.p5, s1.p5),
+          p25: lerp(s0.p25, s1.p25),
+          p50: lerp(s0.p50, s1.p50),
+          p75: lerp(s0.p75, s1.p75),
+          p95: lerp(s0.p95, s1.p95)
+        };
+      }
+
+      function copySnap(s, h) {
+        var out = { hour: h, probs: s.probs.slice() };
+        if (s.mean !== undefined) {
+          out.mean = s.mean;
+          out.sd = s.sd;
+          out.p5 = s.p5;
+          out.p25 = s.p25;
+          out.p50 = s.p50;
+          out.p75 = s.p75;
+          out.p95 = s.p95;
+        }
+        return out;
+      }
+
+      // Format exact timestamp relative to release_ts
+      function formatSnapshotTimestamp(ev, hour) {
+        var base = new Date(ev.release_ts);
+        var snapTime = new Date(base.getTime() + hour * 3600 * 1000);
+        var months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+        var utcMs = snapTime.getTime() + snapTime.getTimezoneOffset() * 60000;
+        var offsetHours = ev.release_ts.indexOf("-04:00") !== -1 ? -4 : -5;
+        var etDate = new Date(utcMs + offsetHours * 3600000);
+        var mon = months[etDate.getMonth()];
+        var day = etDate.getDate();
+        var hh = String(etDate.getHours()).padStart(2, "0");
+        var mm = String(etDate.getMinutes()).padStart(2, "0");
+        var isoDate = etDate.getFullYear() + "-" + String(etDate.getMonth() + 1).padStart(2, "0") + "-" + String(day).padStart(2, "0") + "T" + hh + ":" + mm + ":00" + (offsetHours === -4 ? "-04:00" : "-05:00");
+        return {
+          short: mon + " " + day + " " + hh + ":" + mm + " ET",
+          iso: isoDate
+        };
+      }
+
+      // Theme switching
+      function setThemePreference(pref) {
+        var resolved = pref;
+        if (pref === "system") {
+          resolved = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+        }
+        document.documentElement.setAttribute("data-theme", resolved);
+        document.documentElement.setAttribute("data-theme-pref", pref);
+        try {
+          localStorage.setItem("mel-theme-pref", pref);
+        } catch (e) {}
+        var btns = document.querySelectorAll("[data-theme-set]");
+        for (var i = 0; i < btns.length; i++) {
+          var b = btns[i];
+          b.setAttribute("aria-pressed", b.getAttribute("data-theme-set") === pref ? "true" : "false");
+        }
+      }
+
+      // Render Sidebar & Mobile Event Selectors
+      function renderEventLists() {
+        var listEl = document.getElementById("desktop-event-list");
+        var mobileSelect = document.getElementById("mobile-event-select");
+        listEl.innerHTML = "";
+        mobileSelect.innerHTML = "";
+
+        for (var i = 0; i < EVENT_ORDER.length; i++) {
+          var id = EVENT_ORDER[i];
+          var ev = EVENTS_DB[id];
+          if (state.filterType !== "all" && ev.release !== state.filterType) {
+            continue;
+          }
+
+          var li = document.createElement("li");
+          li.className = "event-list-item";
+          var btn = document.createElement("button");
+          btn.type = "button";
+          btn.className = "event-item-btn" + (state.eventId === id ? " selected" : "");
+          btn.setAttribute("data-event-id", id);
+
+          var surpriseBadge = "";
+          if (ev.surprise_sd !== null && ev.surprise_sd !== undefined) {
+            var sCol = ev.surprise_sd > 0 ? "var(--surprise-up)" : (ev.surprise_sd < 0 ? "var(--surprise-down)" : "var(--text-muted)");
+            surpriseBadge = '<span class="num" style="color:' + sCol + '; font-weight:500;">' + fmtSigned(ev.surprise_sd, 1, " SD") + '</span>';
+          } else if (ev.special_state === "upcoming") {
+            surpriseBadge = '<span>Upcoming</span>';
+          } else if (ev.special_state === "shutdown") {
+            surpriseBadge = '<span>Not published</span>';
+          }
+
+          btn.innerHTML =
+            '<span class="event-item-title">' + ev.title + '</span>' +
+            '<span class="event-item-meta"><span>' + ev.typeLabel + '</span>' + surpriseBadge + '</span>';
+
+          btn.addEventListener("click", (function(targetId) {
+            return function() {
+              selectEvent(targetId);
+            };
+          })(id));
+          li.appendChild(btn);
+          listEl.appendChild(li);
+
+          var opt = document.createElement("option");
+          opt.value = id;
+          opt.textContent = ev.title;
+          if (state.eventId === id) opt.selected = true;
+          mobileSelect.appendChild(opt);
+        }
+
+        var chips = document.querySelectorAll("[data-filter]");
+        for (var c = 0; c < chips.length; c++) {
+          var isAct = chips[c].getAttribute("data-filter") === state.filterType;
+          chips[c].setAttribute("aria-pressed", isAct ? "true" : "false");
+        }
+        document.getElementById("mobile-release-filter").value = state.filterType;
+      }
+
+      function selectEvent(eventId) {
+        stopPlayback();
+        state.eventId = eventId;
+        state.pinnedReadout = null;
+        state.uiState = "normal";
+        updateUiStateButtons();
+        renderAll();
+      }
+
+      function updateUiStateButtons() {
+        var btns = document.querySelectorAll("[data-ui-state]");
+        for (var i = 0; i < btns.length; i++) {
+          var b = btns[i];
+          b.setAttribute("aria-pressed", b.getAttribute("data-ui-state") === state.uiState ? "true" : "false");
+        }
+        document.getElementById("state-loading-view").style.display = state.uiState === "loading" ? "block" : "none";
+        document.getElementById("state-error-view").style.display = state.uiState === "error" ? "block" : "none";
+        document.getElementById("state-normal-view").style.display = state.uiState === "normal" ? "block" : "none";
+      }
+
+      // Render Key Number Strip & Special Banners
+      function renderKeyStrip(ev, snap) {
+        document.getElementById("event-title-heading").textContent = ev.title;
+        document.getElementById("event-release-meta").textContent = ev.release_display;
+
+        var bannerEl = document.getElementById("special-case-banner");
+        if (ev.special_state === "shutdown") {
+          bannerEl.style.display = "block";
+          bannerEl.innerHTML = '<strong>Not published.</strong> BLS did not release October 2025 CPI during the government shutdown. Pre-release Kalshi expectation snapshots remain available below.';
+        } else if (ev.special_state === "upcoming") {
+          bannerEl.style.display = "block";
+          bannerEl.innerHTML = '<strong>Upcoming.</strong> First print due Nov 10, 08:30 ET, in 14 days. Showing the market distribution so far.';
+        } else if (ev.special_state === "sparse") {
+          bannerEl.style.display = "block";
+          bannerEl.innerHTML = '<strong>Sparse market data note:</strong> This earlier archive event listed only 3 active Kalshi strike bins (0.2%, 0.3%, 0.4%). Missing tail bins are not extrapolated or invented.';
+        } else {
+          bannerEl.style.display = "none";
+        }
+
+        var expLabel = document.getElementById("key-label-expected");
+        var expVal = document.getElementById("key-val-expected");
+        var expSub = document.getElementById("key-sub-expected");
+        var expSent = document.getElementById("key-sentence-expected");
+
+        var actVal = document.getElementById("key-val-actual");
+        var actVin = document.getElementById("key-sub-vintage");
+        var actRev = document.getElementById("key-sub-revision");
+
+        var surpVal = document.getElementById("key-val-surprise");
+        var surpSub = document.getElementById("key-sub-surprise");
+        var surpReact = document.getElementById("key-sub-reaction");
+
+        var t1hSnap = ev.snapshots[2];
+
+        if (ev.release === "fomc") {
+          expLabel.textContent = "MARKET EXPECTED (T" + MINUS + "1h)";
+          expVal.textContent = "Cut 25 (62%)";
+          expSub.textContent = "50% range: Cut 25 to Hold (93% combined)";
+          expSent.textContent = "At T" + MINUS + "1h market priced 62% Cut 25, 31% Hold";
+
+          actVal.textContent = ev.decision;
+          actVin.textContent = "ALFRED vintage " + ev.first_print_vintage;
+          actRev.textContent = "No subsequent revisions (discrete target rate)";
+
+          surpVal.className = "t-hero val-surprise-down";
+          surpVal.textContent = MINUS + "0.4 SD";
+          surpSub.textContent = "dovish vs implied mean rate path";
+          surpReact.textContent = "Release day: 2y " + MINUS + "5 bp, 10y " + MINUS + "3 bp";
+          return;
+        }
+
+        expLabel.textContent = "MARKET EXPECTED (T" + MINUS + "1h)";
+        expVal.innerHTML = heroHtml(t1hSnap.p50.toFixed(1), "% m/m");
+        expSub.textContent = "50% range " + t1hSnap.p25.toFixed(2) + " to " + t1hSnap.p75.toFixed(2);
+        expSent.textContent = "Implied mean " + t1hSnap.mean.toFixed(2) + "%, SD " + t1hSnap.sd.toFixed(2) + "%";
+
+        if (ev.special_state === "upcoming") {
+          actVal.classList.add("is-text");
+          actVal.textContent = "Due Nov 10";
+          actVin.textContent = "08:30 ET, from BLS";
+          actRev.textContent = "In 14 days";
+
+          surpVal.className = "t-hero is-text";
+          surpVal.textContent = "Pending";
+          surpSub.textContent = "computed at release";
+          surpReact.textContent = "Treasury reaction after release day";
+        } else if (ev.special_state === "shutdown") {
+          actVal.classList.add("is-text");
+          actVal.textContent = "Not published";
+          actVin.textContent = "BLS release cancelled (shutdown)";
+          actRev.textContent = "No ALFRED vintage recorded";
+
+          surpVal.className = "t-hero is-text";
+          surpVal.textContent = "N/A";
+          surpSub.textContent = "no release print published";
+          surpReact.textContent = "No release-day reaction applicable";
+        } else {
+          actVal.classList.remove("is-text");
+          actVal.innerHTML = heroHtml(ev.first_print.toFixed(1), ev.unit);
+          actVin.textContent = "ALFRED vintage " + ev.first_print_vintage;
+          actRev.textContent = ev.revisions.length ? ev.revisions[0].display : "Unrevised in subsequent vintages";
+
+          var sVal = ev.surprise_sd;
+          surpVal.className = "t-hero " + (sVal >= 0 ? "val-surprise-up" : "val-surprise-down");
+          surpVal.textContent = fmtSigned(sVal, 1, " SD");
+          surpSub.textContent = sVal > 0 ? "above implied mean" : (sVal < 0 ? "below implied mean" : "in line with implied mean");
+          surpReact.textContent = "Release day: 2y " + fmtSigned(ev.reaction_bp.dgs2, 0, " bp") + ", 10y " + fmtSigned(ev.reaction_bp.dgs10, 0, " bp");
+        }
+      }
+
+      // Update Readout & Slider Labels
+      function renderSliderAndReadout(ev, snap) {
+        var ts = formatSnapshotTimestamp(ev, state.hour);
+        var hTag = state.hour === 0 ? "Final (Release)" : "T" + MINUS + Math.abs(state.hour) + "h";
+        var asOfText = "As of " + ts.short + " (" + hTag + ")";
+
+        document.getElementById("as-of-banner-label").textContent = asOfText + ":";
+        document.getElementById("bin-asof-kicker").textContent = asOfText;
+        document.getElementById("fan-vintage-badge").textContent = "as_of: " + ts.iso;
+        document.getElementById("slider-current-readout").textContent = hTag + " (" + ts.short + ")";
+
+        var slider = document.getElementById("time-range-slider");
+        slider.value = String(state.hour);
+        slider.setAttribute("aria-valuenow", String(state.hour));
+        var ariaText = (state.hour === 0 ? "Release time (Final), " : Math.abs(state.hour) + " hours before " + ev.typeLabel + " release, ") + ts.short;
+        slider.setAttribute("aria-valuetext", ariaText);
+
+        var presets = document.querySelectorAll("[data-preset]");
+        for (var i = 0; i < presets.length; i++) {
+          var pVal = parseInt(presets[i].getAttribute("data-preset"), 10);
+          presets[i].setAttribute("aria-pressed", pVal === state.hour ? "true" : "false");
+        }
+
+        var readoutEl = document.getElementById("pinned-readout-text");
+        var unpinBtn = document.getElementById("unpin-readout-btn");
+        if (state.pinnedReadout) {
+          readoutEl.textContent = state.pinnedReadout;
+          unpinBtn.style.display = "inline-block";
+        } else {
+          unpinBtn.style.display = "none";
+          if (ev.release === "fomc") {
+            readoutEl.textContent = "Cut 25: " + Math.round(snap.probs[1] * 100) + "%, Hold: " + Math.round(snap.probs[2] * 100) + "%, Cut 50: " + Math.round(snap.probs[0] * 100) + "%, Hike 25: " + Math.round(snap.probs[3] * 100) + "%.";
+          } else {
+            readoutEl.textContent = "Implied mean " + snap.mean.toFixed(2) + "% (50% interval " + snap.p25.toFixed(2) + "% to " + snap.p75.toFixed(2) + "%, 90% interval " + snap.p5.toFixed(2) + "% to " + snap.p95.toFixed(2) + "%).";
+          }
+        }
+      }
+
+      function pinReadout(text) {
+        state.pinnedReadout = text;
+        var ev = EVENTS_DB[state.eventId];
+        var snap = interpolateSnapshot(ev, state.hour);
+        renderSliderAndReadout(ev, snap);
+      }
+
+      // Render Left Chart: Fan Chart (CPI) or Stacked Area Over Time (FOMC)
+      function renderFanOrAreaChart(ev, snap) {
+        var svg = document.getElementById("fan-svg");
+        var titleEl = document.getElementById("fan-chart-title");
+        var summaryEl = document.getElementById("fan-chart-summary");
+        var sourceEl = document.getElementById("fan-source-line");
+        var tableWrap = document.getElementById("fan-table-view");
+
+        sourceEl.textContent = ev.source_line;
+
+        if (ev.release === "fomc") {
+          titleEl.textContent = "Market probability shifted toward a 25 bp cut across the week before the decision";
+          summaryEl.textContent = "Stacked area tracks hourly probabilities from T" + MINUS + "168h to release; Cut 25 rose from 48% to 62% while Hold narrowed from 40% to 31%.";
+          renderFomcStackedArea(svg, ev, snap, tableWrap);
+          return;
+        }
+
+        titleEl.textContent = "Implied CPI expectation narrowed toward 0.3% in the final 48 hours";
+        summaryEl.textContent = "The fan narrows toward the release: the 90% range compressed from " +
+          (ev.snapshots[0].p95 - ev.snapshots[0].p5).toFixed(2) + " percentage points at T" + MINUS + "168h to " +
+          (ev.snapshots[2].p95 - ev.snapshots[2].p5).toFixed(2) + " percentage points at T" + MINUS + "1h.";
+
+        var W = 560, H = 340;
+        var padL = 44, padR = 104, padT = 20, padB = 36;
+        var plotW = W - padL - padR;
+        var plotH = H - padT - padB;
+
+        var yMin = 0.05, yMax = 0.55;
+        function xPos(h) {
+          return padL + ((h + 168) / 168) * plotW;
+        }
+        function yPos(v) {
+          return padT + plotH - ((v - yMin) / (yMax - yMin)) * plotH;
+        }
+
+        var hours = [];
+        for (var h = -168; h <= 0; h += 4) hours.push(h);
+        if (hours.indexOf(-1) === -1) hours.splice(hours.length - 1, 0, -1);
+
+        var pts = hours.map(function(hr) {
+          return interpolateSnapshot(ev, hr);
+        });
+
+        function buildAreaPath(topKey, botKey) {
+          var upper = pts.map(function(p) { return xPos(p.hour).toFixed(1) + "," + yPos(p[topKey]).toFixed(1); });
+          var lower = pts.slice().reverse().map(function(p) { return xPos(p.hour).toFixed(1) + "," + yPos(p[botKey]).toFixed(1); });
+          return "M" + upper.join(" L") + " L" + lower.join(" L") + " Z";
+        }
+
+        var path90 = buildAreaPath("p95", "p5");
+        var path50 = buildAreaPath("p75", "p25");
+        var pathMedian = "M" + pts.map(function(p) { return xPos(p.hour).toFixed(1) + "," + yPos(p.p50).toFixed(1); }).join(" L");
+
+        var yTicks = [0.1, 0.2, 0.3, 0.4, 0.5];
+        var gridHtml = "";
+        for (var i = 0; i < yTicks.length; i++) {
+          var yt = yTicks[i];
+          var yy = yPos(yt).toFixed(1);
+          gridHtml += '<line x1="' + padL + '" y1="' + yy + '" x2="' + (padL + plotW) + '" y2="' + yy + '" stroke="var(--border)" stroke-width="1"/>';
+          gridHtml += '<text x="' + (padL - 8) + '" y="' + (parseFloat(yy) + 4) + '" text-anchor="end" font-size="12" fill="var(--text-muted)" class="num">' + yt.toFixed(1) + '%</text>';
+        }
+
+        var xTicks = [
+          { h: -168, label: "T" + MINUS + "7d" },
+          { h: -120, label: "T" + MINUS + "5d" },
+          { h: -72,  label: "T" + MINUS + "3d" },
+          { h: -48,  label: "T" + MINUS + "48h" },
+          { h: -24,  label: "T" + MINUS + "1d" },
+          { h: 0,    label: "T=0" }
+        ];
+        var xAxisHtml = '<line x1="' + padL + '" y1="' + (padT + plotH) + '" x2="' + (padL + plotW) + '" y2="' + (padT + plotH) + '" stroke="var(--border-control)" stroke-width="1"/>';
+        for (var j = 0; j < xTicks.length; j++) {
+          var xt = xTicks[j];
+          var xx = xPos(xt.h).toFixed(1);
+          xAxisHtml += '<line x1="' + xx + '" y1="' + (padT + plotH) + '" x2="' + xx + '" y2="' + (padT + plotH + 5) + '" stroke="var(--border-control)" stroke-width="1"/>';
+          xAxisHtml += '<text x="' + xx + '" y="' + (padT + plotH + 20) + '" text-anchor="middle" font-size="12" fill="var(--text-muted)" class="num">' + xt.label + '</text>';
+        }
+
+        var lastSnap = pts[pts.length - 1];
+        var rx = padL + plotW + 6;
+        var directLabels =
+          '<text x="' + rx + '" y="' + (yPos(lastSnap.p95) + 4).toFixed(1) + '" font-size="12" fill="var(--text-muted)">90% band</text>' +
+          '<text x="' + rx + '" y="' + (yPos(lastSnap.p75) + 4).toFixed(1) + '" font-size="12" fill="var(--market)">50% band</text>' +
+          '<text x="' + rx + '" y="' + (yPos(lastSnap.p50) + 4).toFixed(1) + '" font-size="12" font-weight="500" fill="var(--median)">Median ' + lastSnap.p50.toFixed(2) + '%</text>';
+
+        var relX = xPos(0).toFixed(1);
+        var releaseLineHtml =
+          '<line x1="' + relX + '" y1="' + padT + '" x2="' + relX + '" y2="' + (padT + plotH) + '" stroke="var(--border-control)" stroke-width="1.5" stroke-dasharray="4,3"/>' +
+          '<text x="' + (parseFloat(relX) - 4) + '" y="' + (padT + 12) + '" text-anchor="end" font-size="12" fill="var(--text-muted)">Release 08:30 ET</text>';
+
+        var actualHtml = "";
+        if (ev.first_print !== null) {
+          var ay = yPos(ev.first_print).toFixed(1);
+          actualHtml +=
+            '<line x1="' + padL + '" y1="' + ay + '" x2="' + relX + '" y2="' + ay + '" stroke="var(--actual)" stroke-width="1.5"/>' +
+            '<circle cx="' + relX + '" cy="' + ay + '" r="4.5" fill="var(--actual)"/>' +
+            '<text x="' + (padL + 6) + '" y="' + (parseFloat(ay) - 6) + '" font-size="12" font-weight="500" fill="var(--actual)">First print ' + ev.first_print.toFixed(1) + '%</text>';
+        }
+
+        var revHtml = "";
+        if (ev.revisions && ev.revisions.length > 0) {
+          var rv = ev.revisions[0];
+          var ry = yPos(rv.value).toFixed(1);
+          revHtml +=
+            '<line x1="' + (parseFloat(relX) - 28) + '" y1="' + ry + '" x2="' + relX + '" y2="' + ry + '" stroke="var(--revision)" stroke-width="1.5" stroke-dasharray="3,3"/>' +
+            '<circle cx="' + relX + '" cy="' + ry + '" r="5" fill="var(--bg)" stroke="var(--revision)" stroke-width="1.75" stroke-dasharray="2,2"/>' +
+            '<text x="' + rx + '" y="' + (parseFloat(ry) + 16) + '" font-size="12" fill="var(--revision)">Rev ' + rv.value.toFixed(1) + '% (Nov 13)</text>';
+        }
+
+        var curX = xPos(state.hour).toFixed(1);
+        var curY = yPos(snap.p50).toFixed(1);
+        var cursorHtml =
+          '<line x1="' + curX + '" y1="' + padT + '" x2="' + curX + '" y2="' + (padT + plotH) + '" stroke="var(--accent)" stroke-width="1" stroke-opacity="0.7"/>' +
+          '<circle cx="' + curX + '" cy="' + curY + '" r="4" fill="var(--accent)"/>';
+
+        svg.setAttribute("viewBox", "0 0 " + W + " " + H);
+        svg.innerHTML =
+          gridHtml +
+          xAxisHtml +
+          '<path d="' + path90 + '" fill="var(--band-90)"/>' +
+          '<path d="' + path50 + '" fill="var(--band-50)"/>' +
+          '<path d="' + pathMedian + '" fill="none" stroke="var(--median)" stroke-width="2.25"/>' +
+          releaseLineHtml +
+          actualHtml +
+          revHtml +
+          cursorHtml +
+          directLabels +
+          '<rect x="' + padL + '" y="' + padT + '" width="' + plotW + '" height="' + plotH + '" fill="transparent" id="fan-hit-rect" style="cursor:ew-resize;"/>';
+
+        var hitRect = document.getElementById("fan-hit-rect");
+        if (hitRect) {
+          var scrubFromEvent = function(clientX, pin) {
+            var rect = svg.getBoundingClientRect();
+            var rel = (clientX - rect.left) / rect.width;
+            var svgX = rel * W;
+            var ratio = Math.max(0, Math.min(1, (svgX - padL) / plotW));
+            var hr = Math.round(-168 + ratio * 168);
+            state.hour = hr;
+            var sNow = interpolateSnapshot(ev, hr);
+            if (pin) {
+              state.pinnedReadout = "Pinned " + fmtHourLabel(hr) + ": median " + sNow.p50.toFixed(2) + "%, 50% band " + sNow.p25.toFixed(2) + "% to " + sNow.p75.toFixed(2) + "%, 90% band " + sNow.p5.toFixed(2) + "% to " + sNow.p95.toFixed(2) + "%.";
+            }
+            renderAll();
+          };
+          hitRect.addEventListener("click", function(e) {
+            scrubFromEvent(e.clientX, true);
+          });
+        }
+
+        var rowsHtml = "";
+        for (var k = 0; k < ev.snapshots.length; k++) {
+          var s = ev.snapshots[k];
+          rowsHtml +=
+            "<tr>" +
+            '<td class="mono">' + s.t.replace("-", MINUS) + "</td>" +
+            '<td class="r">' + s.mean.toFixed(2) + "</td>" +
+            '<td class="r">' + s.sd.toFixed(2) + "</td>" +
+            '<td class="r">' + s.p5.toFixed(2) + "</td>" +
+            '<td class="r">' + s.p25.toFixed(2) + "</td>" +
+            '<td class="r">' + s.p50.toFixed(2) + "</td>" +
+            '<td class="r">' + s.p75.toFixed(2) + "</td>" +
+            '<td class="r">' + s.p95.toFixed(2) + "</td>" +
+            "</tr>";
+        }
+        tableWrap.innerHTML =
+          '<table class="mel-table" aria-label="Fan chart percentile snapshots">' +
+          "<thead><tr><th>Snapshot</th><th class='r'>Mean (%)</th><th class='r'>SD (%)</th><th class='r'>p5 (%)</th><th class='r'>p25 (%)</th><th class='r'>p50 (%)</th><th class='r'>p75 (%)</th><th class='r'>p95 (%)</th></tr></thead>" +
+          "<tbody>" + rowsHtml + "</tbody></table>";
+      }
+
+      // Page D: FOMC Stacked Area Over Time
+      function renderFomcStackedArea(svg, ev, snap, tableWrap) {
+        var W = 560, H = 340;
+        var padL = 44, padR = 104, padT = 20, padB = 36;
+        var plotW = W - padL - padR;
+        var plotH = H - padT - padB;
+
+        function xPos(h) { return padL + ((h + 168) / 168) * plotW; }
+        function yPos(p) { return padT + plotH - p * plotH; }
+
+        var hours = [-168, -120, -84, -48, -24, -1, 0];
+        var snaps = hours.map(function(h) { return interpolateSnapshot(ev, h); });
+
+        var colors = ["var(--fomc-1)", "var(--fomc-2)", "var(--fomc-3)", "var(--fomc-4)"];
+        var areasHtml = "";
+        for (var idx = 0; idx < 4; idx++) {
+          var topPts = [];
+          var botPts = [];
+          for (var s = 0; s < snaps.length; s++) {
+            var cumPrev = 0;
+            for (var m = 0; m < idx; m++) cumPrev += snaps[s].probs[m];
+            var cumNext = cumPrev + snaps[s].probs[idx];
+            topPts.push(xPos(hours[s]).toFixed(1) + "," + yPos(cumNext).toFixed(1));
+            botPts.unshift(xPos(hours[s]).toFixed(1) + "," + yPos(cumPrev).toFixed(1));
+          }
+          var d = "M" + topPts.join(" L") + " L" + botPts.join(" L") + " Z";
+          areasHtml += '<path d="' + d + '" fill="' + colors[idx] + '" stroke="var(--bg)" stroke-width="1"/>';
+        }
+
+        var finalProbs = snaps[snaps.length - 1].probs;
+        var cum = 0;
+        var labelsHtml = "";
+        for (var c = 0; c < 4; c++) {
+          var mid = cum + finalProbs[c] / 2;
+          cum += finalProbs[c];
+          var ly = yPos(mid);
+          if (c === 3) ly -= 6;
+          labelsHtml += '<text x="' + (padL + plotW + 6) + '" y="' + (ly + 4).toFixed(1) + '" font-size="12" fill="var(--text)">' +
+            ev.outcomes[c] + " (" + Math.round(finalProbs[c] * 100) + '%)</text>';
+        }
+
+        var yTicks = [0, 0.25, 0.5, 0.75, 1.0];
+        var yHtml = "";
+        for (var t = 0; t < yTicks.length; t++) {
+          var yy = yPos(yTicks[t]).toFixed(1);
+          yHtml += '<text x="' + (padL - 8) + '" y="' + (parseFloat(yy) + 4) + '" text-anchor="end" font-size="12" fill="var(--text-muted)" class="num">' + Math.round(yTicks[t] * 100) + '%</text>';
+        }
+
+        var curX = xPos(state.hour).toFixed(1);
+        var cursorHtml = '<line x1="' + curX + '" y1="' + padT + '" x2="' + curX + '" y2="' + (padT + plotH) + '" stroke="var(--actual)" stroke-width="2"/>';
+
+        svg.setAttribute("viewBox", "0 0 " + W + " " + H);
+        svg.innerHTML = yHtml + areasHtml + cursorHtml + labelsHtml;
+
+        var rows = "";
+        for (var r = 0; r < ev.snapshots.length; r++) {
+          var sr = ev.snapshots[r];
+          rows += "<tr><td class='mono'>" + sr.t.replace("-", MINUS) + "</td>" +
+            "<td class='r'>" + Math.round(sr.probs[0] * 100) + "%</td>" +
+            "<td class='r'>" + Math.round(sr.probs[1] * 100) + "%</td>" +
+            "<td class='r'>" + Math.round(sr.probs[2] * 100) + "%</td>" +
+            "<td class='r'>" + Math.round(sr.probs[3] * 100) + "%</td></tr>";
+        }
+        tableWrap.innerHTML =
+          '<table class="mel-table" aria-label="FOMC outcome probabilities over time">' +
+          "<thead><tr><th>Snapshot</th><th class='r'>Cut 50 (%)</th><th class='r'>Cut 25 (%)</th><th class='r'>Hold (%)</th><th class='r'>Hike 25 (%)</th></tr></thead>" +
+          "<tbody>" + rows + "</tbody></table>";
+      }
+
+      // Render Right Chart: Bin Probability Chart (CPI) or 100% Stacked Horizontal Bar (FOMC)
+      function renderBinOrFomcBarChart(ev, snap) {
+        var svg = document.getElementById("bin-svg");
+        var titleEl = document.getElementById("bin-chart-title");
+        var summaryEl = document.getElementById("bin-chart-summary");
+        var sourceEl = document.getElementById("bin-source-line");
+        var tableWrap = document.getElementById("bin-table-view");
+        var isMobile = window.innerWidth < 640;
+
+        sourceEl.textContent = ev.source_line;
+
+        if (ev.release === "fomc") {
+          titleEl.textContent = "Discrete FOMC rate decision probabilities (100% stacked bar)";
+          summaryEl.textContent = "Market assigned " + Math.round(snap.probs[1] * 100) + "% to Cut 25 and " + Math.round(snap.probs[2] * 100) + "% to Hold; actual Decision (Cut 25) is outlined.";
+          renderFomcStackedBar(svg, ev, snap, tableWrap);
+          return;
+        }
+
+        var bins = ev.bins;
+        var probs = snap.probs;
+        var ghostProbs = ev.snapshots[0].probs;
+
+        var maxIdx = 0;
+        for (var i = 1; i < probs.length; i++) {
+          if (probs[i] > probs[maxIdx]) maxIdx = i;
+        }
+        var modePct = Math.round(probs[maxIdx] * 100);
+        var weekAgoPct = Math.round(ghostProbs[maxIdx] * 100);
+        var hLabel = state.hour === 0 ? "Final (T" + MINUS + "1h expectation)" : "T" + MINUS + Math.abs(state.hour) + "h";
+
+        titleEl.textContent = "Market assigned " + modePct + "% to " + bins[maxIdx].toFixed(1) + "% m/m";
+        summaryEl.textContent = "At " + hLabel + " the market put " + modePct + "% on " + bins[maxIdx].toFixed(1) + "% m/m, compared with " + weekAgoPct + "% a week earlier (dashed outline).";
+
+        var W = 340, H = 300;
+        svg.setAttribute("viewBox", "0 0 " + W + " " + H);
+
+        if (isMobile) {
+          var padL = 56, padR = 56, padT = 24, padB = 28;
+          var plotW = W - padL - padR;
+          var plotH = H - padT - padB;
+          var rowH = plotH / bins.length;
+          var barH = Math.min(34, rowH * 0.62);
+          var maxP = 0.65;
+
+          var barsHtml = "";
+          for (var m = 0; m < bins.length; m++) {
+            var yCenter = padT + m * rowH + rowH / 2;
+            var by = (yCenter - barH / 2).toFixed(1);
+            var bw = ((probs[m] / maxP) * plotW).toFixed(1);
+            var gw = ((ghostProbs[m] / maxP) * plotW).toFixed(1);
+            var isActualBin = (state.hour === 0 && ev.first_print !== null && Math.abs(bins[m] - ev.first_print) < 0.001);
+
+            barsHtml += '<rect x="' + padL + '" y="' + by + '" width="' + gw + '" height="' + barH.toFixed(1) + '" fill="none" stroke="var(--ghost)" stroke-width="1.5" stroke-dasharray="3,3"/>';
+            barsHtml += '<rect class="bin-bar-interactive" data-bin-idx="' + m + '" x="' + padL + '" y="' + by + '" width="' + bw + '" height="' + barH.toFixed(1) + '" fill="var(--market)" opacity="0.9" style="cursor:pointer;"/>';
+            if (isActualBin) {
+              barsHtml += '<rect x="' + (padL - 2) + '" y="' + (parseFloat(by) - 2) + '" width="' + (parseFloat(bw) + 4) + '" height="' + (barH + 4).toFixed(1) + '" fill="none" stroke="var(--actual)" stroke-width="2.5"/>';
+            }
+            barsHtml += '<text x="' + (padL - 8) + '" y="' + (yCenter + 4).toFixed(1) + '" text-anchor="end" font-size="13" font-weight="500" fill="var(--text)" class="num">' + bins[m].toFixed(1) + '%</text>';
+            var pctTxt = Math.round(probs[m] * 100) + "%" + (isActualBin ? " (First print)" : "");
+            barsHtml += '<text x="' + (padL + Math.max(parseFloat(bw), parseFloat(gw)) + 8).toFixed(1) + '" y="' + (yCenter + 4).toFixed(1) + '" font-size="13" font-weight="500" fill="var(--text)" class="num">' + pctTxt + '</text>';
+          }
+          svg.innerHTML = barsHtml;
+        } else {
+          var padL2 = 40, padR2 = 20, padT2 = 28, padB2 = 42;
+          var plotW2 = W - padL2 - padR2;
+          var plotH2 = H - padT2 - padB2;
+          var colW = plotW2 / bins.length;
+          var barW = Math.min(48, colW * 0.62);
+          var maxP2 = 0.65;
+
+          var vHtml = '<line x1="' + padL2 + '" y1="' + (padT2 + plotH2) + '" x2="' + (padL2 + plotW2) + '" y2="' + (padT2 + plotH2) + '" stroke="var(--border-control)" stroke-width="1"/>';
+          var yGrid = [0.2, 0.4, 0.6];
+          for (var yg = 0; yg < yGrid.length; yg++) {
+            var gy = (padT2 + plotH2 - (yGrid[yg] / maxP2) * plotH2).toFixed(1);
+            vHtml += '<line x1="' + padL2 + '" y1="' + gy + '" x2="' + (padL2 + plotW2) + '" y2="' + gy + '" stroke="var(--border)" stroke-width="1"/>';
+            vHtml += '<text x="' + (padL2 - 6) + '" y="' + (parseFloat(gy) + 4) + '" text-anchor="end" font-size="12" fill="var(--text-muted)" class="num">' + Math.round(yGrid[yg] * 100) + '%</text>';
+          }
+
+          for (var b = 0; b < bins.length; b++) {
+            var xCenter = padL2 + b * colW + colW / 2;
+            var bx = (xCenter - barW / 2).toFixed(1);
+            var bh = ((probs[b] / maxP2) * plotH2).toFixed(1);
+            var by2 = (padT2 + plotH2 - parseFloat(bh)).toFixed(1);
+
+            var gh = ((ghostProbs[b] / maxP2) * plotH2).toFixed(1);
+            var gy2 = (padT2 + plotH2 - parseFloat(gh)).toFixed(1);
+
+            var isAct = (ev.first_print !== null && Math.abs(bins[b] - ev.first_print) < 0.001 && state.hour === 0);
+
+            vHtml += '<rect class="bin-bar-interactive" data-bin-idx="' + b + '" x="' + bx + '" y="' + by2 + '" width="' + barW.toFixed(1) + '" height="' + bh + '" fill="var(--market)" opacity="0.9" style="cursor:pointer;"/>';
+            vHtml += '<rect x="' + bx + '" y="' + gy2 + '" width="' + barW.toFixed(1) + '" height="' + gh + '" fill="none" stroke="var(--ghost)" stroke-width="1.5" stroke-dasharray="3,3" pointer-events="none"/>';
+
+            if (isAct) {
+              vHtml += '<rect x="' + (parseFloat(bx) - 2) + '" y="' + (parseFloat(by2) - 2) + '" width="' + (barW + 4).toFixed(1) + '" height="' + (parseFloat(bh) + 4).toFixed(1) + '" fill="none" stroke="var(--actual)" stroke-width="2.5" pointer-events="none"/>';
+              vHtml += '<text x="' + xCenter.toFixed(1) + '" y="' + (Math.min(parseFloat(by2), parseFloat(gy2)) - 22).toFixed(1) + '" text-anchor="middle" font-size="12" font-weight="600" fill="var(--actual)">First print</text>';
+            }
+
+            var topY = Math.min(parseFloat(by2), parseFloat(gy2)) - 6;
+            vHtml += '<text x="' + xCenter.toFixed(1) + '" y="' + topY.toFixed(1) + '" text-anchor="middle" font-size="13" font-weight="500" fill="var(--text)" class="num">' + Math.round(probs[b] * 100) + '%</text>';
+            vHtml += '<text x="' + xCenter.toFixed(1) + '" y="' + (padT2 + plotH2 + 20) + '" text-anchor="middle" font-size="12" fill="var(--text)" class="num">' + bins[b].toFixed(1) + '%</text>';
+          }
+
+          vHtml += '<text x="' + (padL2 + plotW2) + '" y="' + (padT2 + 12) + '" text-anchor="end" font-size="12" fill="var(--text-muted)">Dashed outline = T' + MINUS + '7d distribution</text>';
+          svg.innerHTML = vHtml;
+        }
+
+        var barEls = svg.querySelectorAll(".bin-bar-interactive");
+        for (var bi = 0; bi < barEls.length; bi++) {
+          barEls[bi].addEventListener("click", function(e) {
+            e.stopPropagation();
+            var idx = parseInt(this.getAttribute("data-bin-idx"), 10);
+            var bVal = bins[idx].toFixed(1) + "% m/m";
+            var pNow = Math.round(probs[idx] * 100) + "%";
+            var pGhost = Math.round(ghostProbs[idx] * 100) + "%";
+            pinReadout("Pinned bin " + bVal + ": " + pNow + " implied probability (was " + pGhost + " at T" + MINUS + "7d).");
+          });
+        }
+
+        var tRows = "";
+        for (var r = 0; r < bins.length; r++) {
+          var diff = (probs[r] - ghostProbs[r]) * 100;
+          tRows += "<tr>" +
+            '<td class="r">' + bins[r].toFixed(1) + '%</td>' +
+            '<td class="r">' + (probs[r] * 100).toFixed(1) + '%</td>' +
+            '<td class="r">' + (ghostProbs[r] * 100).toFixed(1) + '%</td>' +
+            '<td class="r">' + fmtSigned(diff, 1, " pp") + '</td>' +
+            "</tr>";
+        }
+        tableWrap.innerHTML =
+          '<table class="mel-table" aria-label="Outcome bin probabilities">' +
+          "<thead><tr><th class='r'>Bin (% m/m)</th><th class='r'>Selected (%)</th><th class='r'>T&#8722;7d (%)</th><th class='r'>Change (pp)</th></tr></thead>" +
+          "<tbody>" + tRows + "</tbody></table>";
+      }
+
+      // Page D: FOMC 100% Stacked Horizontal Bar
+      function renderFomcStackedBar(svg, ev, snap, tableWrap) {
+        var W = 440, H = 260;
+        svg.setAttribute("viewBox", "0 0 " + W + " " + H);
+        var padL = 20, padR = 20;
+        var barW = W - padL - padR;
+        var barY = 76, barH = 56;
+
+        var colors = ["var(--fomc-1)", "var(--fomc-2)", "var(--fomc-3)", "var(--fomc-4)"];
+        var textColors = ["var(--fomc-text-1)", "var(--fomc-text-2)", "var(--fomc-text-3)", "var(--fomc-text-4)"];
+
+        var curX = padL;
+        var html = "";
+        for (var i = 0; i < ev.outcomes.length; i++) {
+          var p = snap.probs[i];
+          var segW = p * barW;
+          var isDecision = (ev.outcomes[i] === ev.decision);
+
+          html += '<rect class="fomc-seg" data-fomc-idx="' + i + '" x="' + curX.toFixed(1) + '" y="' + barY + '" width="' + segW.toFixed(1) + '" height="' + barH + '" fill="' + colors[i] + '" stroke="var(--bg)" stroke-width="1.5" style="cursor:pointer;"/>';
+
+          if (isDecision) {
+            html += '<rect x="' + (curX + 1.5).toFixed(1) + '" y="' + (barY - 4) + '" width="' + Math.max(0, segW - 3).toFixed(1) + '" height="' + (barH + 8) + '" fill="none" stroke="var(--actual)" stroke-width="2.5"/>';
+            html += '<text x="' + (curX + segW / 2).toFixed(1) + '" y="' + (barY - 12) + '" text-anchor="middle" font-size="12" font-weight="600" fill="var(--actual)">Decision: ' + ev.decision + '</text>';
+          }
+
+          var centerSeg = curX + segW / 2;
+          if (segW >= 54) {
+            html += '<text x="' + centerSeg.toFixed(1) + '" y="' + (barY + 24) + '" text-anchor="middle" font-size="12" font-weight="600" fill="' + textColors[i] + '">' + ev.outcomes[i] + '</text>';
+            html += '<text x="' + centerSeg.toFixed(1) + '" y="' + (barY + 42) + '" text-anchor="middle" font-size="12" fill="' + textColors[i] + '" class="num">' + Math.round(p * 100) + '%</text>';
+          } else {
+            var calloutY = (i === 0) ? (barY + barH + 26) : (barY + barH + 44);
+            var anchor = (i === 0) ? "start" : "end";
+            var lx = (i === 0) ? curX : (curX + segW);
+            html += '<line x1="' + centerSeg.toFixed(1) + '" y1="' + (barY + barH) + '" x2="' + centerSeg.toFixed(1) + '" y2="' + (calloutY - 12) + '" stroke="var(--border-control)" stroke-width="1"/>';
+            html += '<text x="' + lx.toFixed(1) + '" y="' + calloutY + '" text-anchor="' + anchor + '" font-size="12" fill="var(--text)" class="num">' + ev.outcomes[i] + ': ' + Math.round(p * 100) + '%</text>';
+          }
+
+          curX += segW;
+        }
+
+        svg.innerHTML = html;
+
+        var segs = svg.querySelectorAll(".fomc-seg");
+        for (var s = 0; s < segs.length; s++) {
+          segs[s].addEventListener("click", function() {
+            var idx = parseInt(this.getAttribute("data-fomc-idx"), 10);
+            pinReadout("Pinned FOMC outcome " + ev.outcomes[idx] + ": " + Math.round(snap.probs[idx] * 100) + "% implied probability.");
+          });
+        }
+
+        var tRows = "";
+        for (var k = 0; k < ev.outcomes.length; k++) {
+          tRows += "<tr><td>" + ev.outcomes[k] + (ev.outcomes[k] === ev.decision ? " (Decision)" : "") + "</td><td class='r'>" + (snap.probs[k] * 100).toFixed(1) + "%</td></tr>";
+        }
+        tableWrap.innerHTML =
+          '<table class="mel-table" aria-label="FOMC discrete probabilities">' +
+          "<thead><tr><th>Outcome</th><th class='r'>Implied Probability (%)</th></tr></thead>" +
+          "<tbody>" + tRows + "</tbody></table>";
+      }
+
+      // Render Secondary Threshold Step Chart P(X > k)
+      function renderThresholdSection(ev, snap) {
+        var svg = document.getElementById("threshold-svg");
+        var tableWrap = document.getElementById("threshold-table-box");
+        var chartBox = document.getElementById("threshold-chart-box");
+        var normNote = document.getElementById("threshold-norm-note");
+        var isRaw = state.threshNorm === "raw";
+
+        chartBox.style.display = state.threshView === "chart" ? "block" : "none";
+        tableWrap.style.display = state.threshView === "table" ? "block" : "none";
+
+        var labels = [];
+        var survival = [];
+        var binMasses = snap.probs.slice();
+
+        if (ev.release === "fomc") {
+          labels = ["Cut 50", "Cut 25", "Hold", "Hike 25"];
+        } else {
+          for (var b = 0; b < ev.bins.length; b++) {
+            labels.push("> " + (ev.bins[b] - 0.05).toFixed(2) + "%");
+          }
+        }
+
+        var rem = 1.0;
+        for (var i = 0; i < binMasses.length; i++) {
+          var sVal = isRaw ? Math.min(1.0, rem * 1.024) : rem;
+          survival.push(Math.max(0, sVal));
+          rem -= binMasses[i];
+        }
+
+        normNote.textContent = isRaw
+          ? "Showing Raw Kalshi midpoint survival ladder (unnormalized sum: 102.4%)"
+          : "Showing Normalized monotone survival function (sum of bin differences = 100.0%)";
+
+        var W = 760, H = 240;
+        var padL = 48, padR = 32, padT = 20, padB = 36;
+        var plotW = W - padL - padR;
+        var plotH = H - padT - padB;
+
+        function xStep(idx) {
+          return padL + (idx / Math.max(1, survival.length - 1)) * plotW;
+        }
+        function yStep(p) {
+          return padT + plotH - (p / 1.05) * plotH;
+        }
+
+        var html = "";
+        var yTicks = [0, 0.25, 0.5, 0.75, 1.0];
+        for (var yt = 0; yt < yTicks.length; yt++) {
+          var yy = yStep(yTicks[yt]).toFixed(1);
+          html += '<line x1="' + padL + '" y1="' + yy + '" x2="' + (padL + plotW) + '" y2="' + yy + '" stroke="var(--border)" stroke-width="1"/>';
+          html += '<text x="' + (padL - 8) + '" y="' + (parseFloat(yy) + 4) + '" text-anchor="end" font-size="12" fill="var(--text-muted)" class="num">' + Math.round(yTicks[yt] * 100) + '%</text>';
+        }
+
+        var pathParts = [];
+        for (var s = 0; s < survival.length; s++) {
+          var sx = xStep(s).toFixed(1);
+          var sy = yStep(survival[s]).toFixed(1);
+          if (s === 0) {
+            pathParts.push("M" + sx + "," + sy);
+          } else {
+            var prevY = yStep(survival[s - 1]).toFixed(1);
+            pathParts.push("L" + sx + "," + prevY);
+            pathParts.push("L" + sx + "," + sy);
+          }
+        }
+        html += '<path d="' + pathParts.join(" ") + '" fill="none" stroke="var(--market)" stroke-width="2.25"/>';
+
+        for (var d = 0; d < survival.length; d++) {
+          var dx = xStep(d).toFixed(1);
+          var dy = yStep(survival[d]).toFixed(1);
+          html += '<circle class="thresh-dot" data-thresh-idx="' + d + '" cx="' + dx + '" cy="' + dy + '" r="5" fill="var(--market)" stroke="var(--bg)" stroke-width="1.5" style="cursor:pointer;"/>';
+          html += '<text x="' + dx + '" y="' + (parseFloat(dy) - 10).toFixed(1) + '" text-anchor="middle" font-size="12" font-weight="500" fill="var(--text)" class="num">' + Math.round(survival[d] * 100) + '%</text>';
+          html += '<text x="' + dx + '" y="' + (padT + plotH + 20) + '" text-anchor="middle" font-size="12" fill="var(--text-muted)" class="num">' + labels[d] + '</text>';
+        }
+
+        svg.setAttribute("viewBox", "0 0 " + W + " " + H);
+        svg.innerHTML = html;
+
+        var dots = svg.querySelectorAll(".thresh-dot");
+        for (var di = 0; di < dots.length; di++) {
+          dots[di].addEventListener("click", function() {
+            var idx = parseInt(this.getAttribute("data-thresh-idx"), 10);
+            var nextS = (idx + 1 < survival.length) ? survival[idx + 1] : 0;
+            var diffP = Math.round((survival[idx] - nextS) * 100);
+            pinReadout("Strike " + labels[idx] + ": P(X > k) = " + Math.round(survival[idx] * 100) + "%. Adjacent drop = " + diffP + "% bin probability.");
+          });
+        }
+
+        var tRows = "";
+        for (var r = 0; r < survival.length; r++) {
+          var nextVal = (r + 1 < survival.length) ? survival[r + 1] : 0;
+          var binDiff = Math.max(0, survival[r] - nextVal);
+          tRows += "<tr>" +
+            "<td class='mono'>" + labels[r] + "</td>" +
+            "<td class='r'>" + (survival[r] * 100).toFixed(1) + "%</td>" +
+            "<td class='r'>" + (nextVal * 100).toFixed(1) + "%</td>" +
+            "<td class='r'>" + (binDiff * 100).toFixed(1) + "%</td>" +
+            "</tr>";
+        }
+        tableWrap.innerHTML =
+          '<table class="mel-table" aria-label="Threshold survival probabilities and adjacent differences">' +
+          "<thead><tr><th>Strike Threshold (k)</th><th class='r'>P(X &gt; k_i) (%)</th><th class='r'>P(X &gt; k_{i+1}) (%)</th><th class='r'>Implied Bin Diff (%)</th></tr></thead>" +
+          "<tbody>" + tRows + "</tbody></table>";
+      }
+
+      // Render Page B: Overview (Surprise Strip + Small Multiples + Mobile Sparkline Rows)
+      function renderOverviewPage() {
+        var stripSvg = document.getElementById("surprise-strip-svg");
+        var W = 800, H = 100;
+        stripSvg.setAttribute("viewBox", "0 0 " + W + " " + H);
+
+        var padL = 60, padR = 60, midY = 50;
+        var plotW = W - padL - padR;
+        function xSd(sd) {
+          return padL + ((sd + 2.0) / 4.0) * plotW;
+        }
+
+        var sHtml = '<line x1="' + padL + '" y1="' + midY + '" x2="' + (padL + plotW) + '" y2="' + midY + '" stroke="var(--border-control)" stroke-width="1.5"/>';
+        var ticks = [-2.0, -1.0, 0.0, 1.0, 2.0];
+        for (var i = 0; i < ticks.length; i++) {
+          var tx = xSd(ticks[i]).toFixed(1);
+          sHtml += '<line x1="' + tx + '" y1="' + (midY - 6) + '" x2="' + tx + '" y2="' + (midY + 6) + '" stroke="var(--border-control)" stroke-width="1"/>';
+          sHtml += '<text x="' + tx + '" y="' + (midY + 24) + '" text-anchor="middle" font-size="12" fill="var(--text-muted)" class="num">' + fmtSigned(ticks[i], 1, " SD") + '</text>';
+        }
+
+        for (var eIdx = 0; eIdx < EVENT_ORDER.length; eIdx++) {
+          var ev = EVENTS_DB[EVENT_ORDER[eIdx]];
+          if (ev.surprise_sd === null || ev.surprise_sd === undefined) continue;
+          var cx = xSd(ev.surprise_sd).toFixed(1);
+          var col = ev.surprise_sd > 0 ? "var(--surprise-up)" : (ev.surprise_sd < 0 ? "var(--surprise-down)" : "var(--actual)");
+          sHtml += '<g class="surprise-dot-group" data-open-event="' + ev.id + '" style="cursor:pointer;">' +
+            '<circle cx="' + cx + '" cy="' + midY + '" r="7" fill="' + col + '" stroke="var(--bg)" stroke-width="1.5"/>' +
+            '<text x="' + cx + '" y="' + (midY - 14) + '" text-anchor="middle" font-size="12" font-weight="500" fill="' + col + '" class="num">' + ev.title.split(",")[0] + " (" + fmtSigned(ev.surprise_sd, 1, " SD") + ')</text>' +
+            '</g>';
+        }
+        stripSvg.innerHTML = sHtml;
+
+        var dotGroups = stripSvg.querySelectorAll("[data-open-event]");
+        for (var dg = 0; dg < dotGroups.length; dg++) {
+          dotGroups[dg].addEventListener("click", function() {
+            var target = this.getAttribute("data-open-event");
+            state.page = "explorer";
+            selectEvent(target);
+          });
+        }
+
+        var gridEl = document.getElementById("overview-small-multiples");
+        var mobEl = document.getElementById("overview-mobile-rows");
+        gridEl.innerHTML = "";
+        mobEl.innerHTML = "";
+
+        for (var k = 0; k < EVENT_ORDER.length; k++) {
+          var item = EVENTS_DB[EVENT_ORDER[k]];
+          var snapT1 = item.snapshots[2];
+
+          var miniBars = "";
+          var nBins = snapT1.probs.length;
+          for (var b = 0; b < nBins; b++) {
+            var bx = 10 + b * (140 / nBins);
+            var bw = (140 / nBins) - 4;
+            var bh = Math.round(snapT1.probs[b] * 48);
+            var by = 54 - bh;
+            miniBars += '<rect x="' + bx.toFixed(1) + '" y="' + by + '" width="' + bw.toFixed(1) + '" height="' + bh + '" fill="var(--market)"/>';
+          }
+
+          var statusLine = "";
+          if (item.special_state === "upcoming") {
+            statusLine = '<span class="t-micro" style="color:var(--accent);">Next release: Nov 10, 08:30 ET | Implied mean 0.31%</span>';
+          } else if (item.special_state === "shutdown") {
+            statusLine = '<span class="t-micro" style="color:var(--text-muted);">Not published (government shutdown)</span>';
+          } else if (item.release === "fomc") {
+            statusLine = '<span class="t-micro num">First print: <strong>Cut 25</strong> | Surprise: <span style="color:var(--surprise-down);">' + MINUS + '0.4 SD</span></span>';
+          } else {
+            var sCol2 = item.surprise_sd > 0 ? "var(--surprise-up)" : "var(--text)";
+            statusLine = '<span class="t-micro num">First print: <strong>' + item.first_print.toFixed(1) + '%</strong> | Surprise: <strong style="color:' + sCol2 + ';">' + fmtSigned(item.surprise_sd, 1, " SD") + '</strong></span>';
+          }
+
+          var tile = document.createElement("button");
+          tile.type = "button";
+          tile.className = "small-multiple-tile";
+          tile.innerHTML =
+            '<div><div class="t-label">' + item.title + '</div><div class="t-micro" style="color:var(--text-muted);">' + item.release_display + '</div></div>' +
+            '<svg viewBox="0 0 160 60" style="width:100%; height:60px; border-bottom:1px solid var(--border);">' + miniBars + '</svg>' +
+            '<div>' + statusLine + '</div>';
+
+          tile.addEventListener("click", (function(id) {
+            return function() {
+              state.page = "explorer";
+              selectEvent(id);
+            };
+          })(item.id));
+          gridEl.appendChild(tile);
+
+          var rowBtn = document.createElement("button");
+          rowBtn.type = "button";
+          rowBtn.className = "sparkline-row";
+          rowBtn.innerHTML =
+            '<div><div class="t-label">' + item.title + '</div><div class="t-micro" style="color:var(--text-muted);">' + item.typeLabel + '</div></div>' +
+            '<svg viewBox="0 0 160 60" style="width:96px; height:36px;">' + miniBars + '</svg>' +
+            '<div class="t-micro num" style="text-align:right;">' + (item.first_print !== null ? item.first_print + " (" + fmtSigned(item.surprise_sd, 1, " SD") + ")" : item.first_print_vintage) + '</div>';
+          rowBtn.addEventListener("click", (function(id) {
+            return function() {
+              state.page = "explorer";
+              selectEvent(id);
+            };
+          })(item.id));
+          mobEl.appendChild(rowBtn);
+        }
+      }
+
+      // Render Page Data & Page SQL
+      function renderDataAndSqlPages() {
+        var wrap = document.getElementById("full-archive-table-wrap");
+        var cpi = EVENTS_DB["cpi-2026-09"];
+        var rows = "";
+        for (var i = 0; i < cpi.snapshots.length; i++) {
+          var s = cpi.snapshots[i];
+          rows += "<tr>" +
+            "<td class='mono'>cpi-2026-09</td>" +
+            "<td class='mono'>" + s.t.replace("-", MINUS) + "</td>" +
+            "<td class='r'>" + s.mean.toFixed(2) + "</td>" +
+            "<td class='r'>" + s.sd.toFixed(2) + "</td>" +
+            "<td class='r'>" + (s.probs[0] * 100).toFixed(0) + "% / " + (s.probs[1] * 100).toFixed(0) + "% / " + (s.probs[2] * 100).toFixed(0) + "% / " + (s.probs[3] * 100).toFixed(0) + "% / " + (s.probs[4] * 100).toFixed(0) + "%</td>" +
+            "<td class='r'>0.4% (2026-10-14)</td>" +
+            "<td class='r'>0.3% (2026-11-13)</td>" +
+            "</tr>";
+        }
+        wrap.innerHTML =
+          '<table class="mel-table" aria-label="Full point-in-time archive">' +
+          "<thead><tr><th>Event ID</th><th>Snapshot</th><th class='r'>Mean (%)</th><th class='r'>SD (%)</th><th class='r'>Bins (0.1 to 0.5%)</th><th class='r'>First Print (Vintage)</th><th class='r'>Revision (Vintage)</th></tr></thead>" +
+          "<tbody>" + rows + "</tbody></table>";
+
+        var sqlMap = {
+          pit: "SELECT\n  e.event_id,\n  s.snapshot_offset,\n  s.mean_pct,\n  s.sd_pct,\n  s.p25_pct,\n  s.p50_pct,\n  s.p75_pct\nFROM kalshi_hourly_snapshots s\nJOIN macro_events e ON e.event_id = s.event_id\nWHERE e.event_id = 'cpi-2026-09'\n  AND s.known_from <= TIMESTAMP '2026-10-12 08:30:00-04'\nORDER BY s.snapshot_hour ASC;",
+          surprise: "SELECT\n  v.event_id,\n  v.value AS first_print,\n  v.vintage_date,\n  s.mean_pct AS expected_t_minus_1h,\n  ROUND((v.value - s.mean_pct) / s.sd_pct, 2) AS surprise_sd\nFROM alfred_vintages v\nJOIN kalshi_hourly_snapshots s\n  ON s.event_id = v.event_id AND s.snapshot_offset = '-1h'\nWHERE v.event_id = 'cpi-2026-09'\n  AND v.vintage_Order = 1;",
+          fomc: "SELECT\n  outcome_label,\n  prob_t_minus_1h,\n  CASE WHEN outcome_label = actual_decision THEN 'Decision' ELSE '' END AS status\nFROM fomc_discrete_snapshots\nWHERE title = 'FOMC, December 2026'\n  AND snapshot_offset = '-1h';"
+        };
+        document.getElementById("sql-code-display").textContent = sqlMap[state.sqlPreset];
+        document.getElementById("sql-result-preview").innerHTML = wrap.innerHTML;
+      }
+
+      // CSV Download Trigger
+      function downloadCsv() {
+        var ev = EVENTS_DB[state.eventId];
+        var lines = ["event_id,title,snapshot_t,mean,sd,p5,p25,p50,p75,p95,first_print,first_print_vintage,surprise_sd,note"];
+        if (ev.release === "fomc") {
+          lines = ["event_id,title,snapshot_t,cut_50,cut_25,hold,hike_25,decision,note"];
+          for (var f = 0; f < ev.snapshots.length; f++) {
+            var sf = ev.snapshots[f];
+            lines.push([ev.id, '"' + ev.title + '"', sf.t, sf.probs[0], sf.probs[1], sf.probs[2], sf.probs[3], ev.decision, "Illustrative data"].join(","));
+          }
+        } else {
+          for (var i = 0; i < ev.snapshots.length; i++) {
+            var s = ev.snapshots[i];
+            lines.push([ev.id, '"' + ev.title + '"', s.t, s.mean, s.sd, s.p5, s.p25, s.p50, s.p75, s.p95, ev.first_print, ev.first_print_vintage, ev.surprise_sd, "Illustrative data"].join(","));
+          }
+        }
+        var blob = new Blob([lines.join("\n")], { type: "text/csv;charset=utf-8;" });
+        var url = URL.createObjectURL(blob);
+        var a = document.createElement("a");
+        a.href = url;
+        a.download = ev.id + "-illustrative-snapshots.csv";
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      }
+
+      // Playback logic (Static first, opt-in Play, 250ms per step, stops at end, respects prefers-reduced-motion)
+      function togglePlayback() {
+        var reduced = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+        if (reduced) {
+          if (state.hour >= 0) {
+            state.hour = -168;
+          } else {
+            state.hour = Math.min(0, state.hour + 12);
+          }
+          renderAll();
+          return;
+        }
+        if (state.isPlaying) {
+          stopPlayback();
+        } else {
+          if (state.hour >= 0) {
+            state.hour = -168;
+          }
+          state.isPlaying = true;
+          document.getElementById("play-pause-btn").textContent = "Pause";
+          if (state.playTimer) clearInterval(state.playTimer);
+          state.playTimer = setInterval(function() {
+            if (state.hour >= 0) {
+              stopPlayback();
+              return;
+            }
+            state.hour = Math.min(0, state.hour + 4);
+            renderAll();
+            if (state.hour >= 0) {
+              stopPlayback();
+            }
+          }, 250);
+        }
+      }
+
+      function stopPlayback() {
+        state.isPlaying = false;
+        if (state.playTimer) {
+          clearInterval(state.playTimer);
+          state.playTimer = null;
+        }
+        var btn = document.getElementById("play-pause-btn");
+        if (btn) btn.textContent = "Play";
+      }
+
+      // Illustrative release-day returns (%) of the SPDR sector ETFs and SPY, keyed by event id.
+      // Events without a published print have no reaction.
+      var SECTOR_NAMES = {
+        SPY: "S&P 500", XLK: "Technology", XLC: "Communication", XLY: "Discretionary",
+        XLP: "Staples", XLE: "Energy", XLF: "Financials", XLV: "Health Care",
+        XLI: "Industrials", XLB: "Materials", XLRE: "Real Estate", XLU: "Utilities"
+      };
+      var SECTOR_REACTION = {
+        "cpi-2026-09": { SPY: -0.8, XLK: -1.4, XLC: -0.9, XLY: -1.1, XLP: -0.2, XLE: 0.3, XLF: 0.4, XLV: -0.3, XLI: -0.5, XLB: -0.6, XLRE: -1.6, XLU: -1.2 },
+        "fomc-2026-12": { SPY: 0.6, XLK: 0.9, XLC: 0.6, XLY: 0.8, XLP: 0.1, XLE: -0.3, XLF: -0.2, XLV: 0.2, XLI: 0.4, XLB: 0.5, XLRE: 1.1, XLU: 0.7 },
+        "cpi-2024-05-sparse": { SPY: 0.1, XLK: 0.2, XLC: 0.1, XLY: 0.0, XLP: -0.1, XLE: -0.3, XLF: 0.2, XLV: 0.1, XLI: 0.1, XLB: -0.2, XLRE: 0.3, XLU: 0.2 }
+      };
+
+      function renderSectorReaction(ev) {
+        var list = document.getElementById("sector-bars");
+        var titleEl = document.getElementById("reaction-chart-title");
+        var summaryEl = document.getElementById("reaction-chart-summary");
+        var yieldsEl = document.getElementById("reaction-yields");
+        var data = SECTOR_REACTION[ev.id];
+
+        if (!data || !ev.reaction_bp) {
+          titleEl.textContent = "No release-day reaction yet";
+          summaryEl.textContent = ev.special_state === "shutdown"
+            ? "The release was never published, so there is no release-day market reaction to show."
+            : "Sector and Treasury moves appear after the release day closes.";
+          yieldsEl.innerHTML = "";
+          list.innerHTML = "";
+          return;
+        }
+
+        yieldsEl.innerHTML =
+          '<span><span class="yield-label">2y yield</span> ' + fmtSigned(ev.reaction_bp.dgs2, 0, " bp") + "</span>" +
+          '<span><span class="yield-label">10y yield</span> ' + fmtSigned(ev.reaction_bp.dgs10, 0, " bp") + "</span>";
+
+        var sectors = Object.keys(data).filter(function(k) { return k !== "SPY"; });
+        sectors.sort(function(a, b) { return data[b] - data[a]; });
+        var rows = ["SPY"].concat(sectors);
+        var maxAbs = rows.reduce(function(m, k) { return Math.max(m, Math.abs(data[k])); }, 0.1);
+
+        var best = sectors[0], worst = sectors[sectors.length - 1];
+        var fell = data[worst] < 0 && Math.abs(data[worst]) >= Math.abs(data[best]);
+        titleEl.textContent = fell
+          ? SECTOR_NAMES[worst] + " led the decline; " + SECTOR_NAMES[best] + " held up best"
+          : SECTOR_NAMES[best] + " led the gains; " + SECTOR_NAMES[worst] + " lagged";
+        summaryEl.textContent = "S&P 500 " + fmtSigned(data.SPY, 1, "%") + " on release day. Best: " +
+          SECTOR_NAMES[best] + " " + fmtSigned(data[best], 1, "%") + ". Worst: " +
+          SECTOR_NAMES[worst] + " " + fmtSigned(data[worst], 1, "%") + ".";
+
+        list.innerHTML = rows.map(function(k) {
+          var v = data[k];
+          var width = (Math.abs(v) / maxAbs * 50).toFixed(1);
+          var side = v >= 0 ? "left: 50%;" : "right: 50%;";
+          return '<li class="sector-row' + (k === "SPY" ? " is-benchmark" : "") + '">' +
+            '<span class="sector-name"><span class="sector-ticker">' + k + "</span> " + SECTOR_NAMES[k] + "</span>" +
+            '<span class="sector-track" aria-hidden="true"><span class="sector-bar ' + (v >= 0 ? "is-up" : "is-down") +
+            '" style="' + side + " width: " + width + '%;"></span></span>' +
+            '<span class="sector-value num">' + fmtSigned(v, 1, "%") + "</span></li>";
+        }).join("");
+      }
+
+      // Master Render
+      function renderAll() {
+        var pages = ["explorer", "overview", "method", "data", "sql"];
+        for (var p = 0; p < pages.length; p++) {
+          var sec = document.getElementById("page-" + pages[p]);
+          if (sec) sec.style.display = (state.page === pages[p]) ? "block" : "none";
+        }
+        var navBtns = document.querySelectorAll("[data-nav]");
+        for (var n = 0; n < navBtns.length; n++) {
+          var isCur = navBtns[n].getAttribute("data-nav") === state.page;
+          if (isCur) {
+            navBtns[n].setAttribute("aria-current", "page");
+          } else {
+            navBtns[n].removeAttribute("aria-current");
+          }
+        }
+
+        var ev = EVENTS_DB[state.eventId];
+        var snap = interpolateSnapshot(ev, state.hour);
+
+        renderEventLists();
+        renderKeyStrip(ev, snap);
+        renderSliderAndReadout(ev, snap);
+        renderFanOrAreaChart(ev, snap);
+        renderBinOrFomcBarChart(ev, snap);
+        renderThresholdSection(ev, snap);
+        renderSectorReaction(ev);
+        renderOverviewPage();
+        renderDataAndSqlPages();
+        syncUrlState();
+      }
+
+      // Event Listeners Initialization
+      function initListeners() {
+        var themeBtns = document.querySelectorAll("[data-theme-set]");
+        for (var i = 0; i < themeBtns.length; i++) {
+          themeBtns[i].addEventListener("click", function() {
+            setThemePreference(this.getAttribute("data-theme-set"));
+          });
+        }
+        var initPref = document.documentElement.getAttribute("data-theme-pref") || "system";
+        setThemePreference(initPref);
+
+        var navBtns = document.querySelectorAll("[data-nav]");
+        for (var j = 0; j < navBtns.length; j++) {
+          navBtns[j].addEventListener("click", function() {
+            stopPlayback();
+            state.page = this.getAttribute("data-nav");
+            document.getElementById("mobile-nav-drawer").classList.remove("open");
+            document.getElementById("mobile-menu-toggle").setAttribute("aria-expanded", "false");
+            renderAll();
+          });
+        }
+
+        document.getElementById("logo-home-link").addEventListener("click", function(e) {
+          e.preventDefault();
+          stopPlayback();
+          state.page = "overview";
+          renderAll();
+        });
+
+        document.getElementById("mobile-menu-toggle").addEventListener("click", function() {
+          var drawer = document.getElementById("mobile-nav-drawer");
+          var isOpen = drawer.classList.toggle("open");
+          this.setAttribute("aria-expanded", isOpen ? "true" : "false");
+        });
+
+        var filterChips = document.querySelectorAll("[data-filter]");
+        for (var f = 0; f < filterChips.length; f++) {
+          filterChips[f].addEventListener("click", function() {
+            state.filterType = this.getAttribute("data-filter");
+            renderEventLists();
+          });
+        }
+
+        document.getElementById("mobile-release-filter").addEventListener("change", function() {
+          state.filterType = this.value;
+          renderEventLists();
+        });
+        document.getElementById("mobile-event-select").addEventListener("change", function() {
+          selectEvent(this.value);
+        });
+
+        var quickBtns = document.querySelectorAll("[data-quick-event]");
+        for (var q = 0; q < quickBtns.length; q++) {
+          quickBtns[q].addEventListener("click", function() {
+            selectEvent(this.getAttribute("data-quick-event"));
+          });
+        }
+
+        var stateBtns = document.querySelectorAll("[data-ui-state]");
+        for (var u = 0; u < stateBtns.length; u++) {
+          stateBtns[u].addEventListener("click", function() {
+            state.uiState = this.getAttribute("data-ui-state");
+            updateUiStateButtons();
+          });
+        }
+        document.getElementById("error-retry-btn").addEventListener("click", function() {
+          state.uiState = "normal";
+          updateUiStateButtons();
+        });
+
+        var slider = document.getElementById("time-range-slider");
+        slider.addEventListener("input", function() {
+          stopPlayback();
+          state.hour = parseInt(this.value, 10);
+          renderAll();
+        });
+
+        var presets = document.querySelectorAll("[data-preset]");
+        for (var p = 0; p < presets.length; p++) {
+          presets[p].addEventListener("click", function() {
+            stopPlayback();
+            state.hour = parseInt(this.getAttribute("data-preset"), 10);
+            renderAll();
+          });
+        }
+
+        document.getElementById("play-pause-btn").addEventListener("click", togglePlayback);
+
+        document.getElementById("toggle-fan-table-btn").addEventListener("click", function() {
+          state.showFanTable = !state.showFanTable;
+          document.getElementById("fan-table-view").style.display = state.showFanTable ? "block" : "none";
+          this.textContent = state.showFanTable ? "Hide data table" : "Show data table";
+          this.setAttribute("aria-expanded", state.showFanTable ? "true" : "false");
+        });
+        document.getElementById("toggle-bin-table-btn").addEventListener("click", function() {
+          state.showBinTable = !state.showBinTable;
+          document.getElementById("bin-table-view").style.display = state.showBinTable ? "block" : "none";
+          this.textContent = state.showBinTable ? "Hide data table" : "Show data table";
+          this.setAttribute("aria-expanded", state.showBinTable ? "true" : "false");
+        });
+
+        var tvBtns = document.querySelectorAll("[data-thresh-view]");
+        for (var tv = 0; tv < tvBtns.length; tv++) {
+          tvBtns[tv].addEventListener("click", function() {
+            state.threshView = this.getAttribute("data-thresh-view");
+            for (var k = 0; k < tvBtns.length; k++) {
+              tvBtns[k].setAttribute("aria-pressed", tvBtns[k] === this ? "true" : "false");
+            }
+            renderAll();
+          });
+        }
+        var tnBtns = document.querySelectorAll("[data-thresh-norm]");
+        for (var tn = 0; tn < tnBtns.length; tn++) {
+          tnBtns[tn].addEventListener("click", function() {
+            state.threshNorm = this.getAttribute("data-thresh-norm");
+            for (var k = 0; k < tnBtns.length; k++) {
+              tnBtns[k].setAttribute("aria-pressed", tnBtns[k] === this ? "true" : "false");
+            }
+            renderAll();
+          });
+        }
+
+        document.getElementById("unpin-readout-btn").addEventListener("click", function() {
+          state.pinnedReadout = null;
+          renderAll();
+        });
+        document.addEventListener("keydown", function(e) {
+          if (e.key === "Escape" && state.pinnedReadout) {
+            state.pinnedReadout = null;
+            renderAll();
+          }
+        });
+
+        document.getElementById("fan-svg").addEventListener("keydown", function(e) {
+          if (e.key === "ArrowLeft" || e.key === "ArrowRight") {
+            e.preventDefault();
+            stopPlayback();
+            var delta = e.key === "ArrowRight" ? 1 : -1;
+            state.hour = Math.max(-168, Math.min(0, state.hour + delta));
+            renderAll();
+          }
+        });
+        document.getElementById("bin-svg").addEventListener("keydown", function(e) {
+          if (e.key === "ArrowLeft" || e.key === "ArrowRight") {
+            e.preventDefault();
+            var ev = EVENTS_DB[state.eventId];
+            var snap = interpolateSnapshot(ev, state.hour);
+            var len = ev.release === "fomc" ? ev.outcomes.length : ev.bins.length;
+            var delta = e.key === "ArrowRight" ? 1 : -1;
+            state.focusedBinIdx = (state.focusedBinIdx + delta + len) % len;
+            if (ev.release === "fomc") {
+              pinReadout("Selected FOMC outcome " + ev.outcomes[state.focusedBinIdx] + ": " + Math.round(snap.probs[state.focusedBinIdx] * 100) + "% probability.");
+            } else {
+              pinReadout("Selected bin " + ev.bins[state.focusedBinIdx].toFixed(1) + "% m/m: " + Math.round(snap.probs[state.focusedBinIdx] * 100) + "% probability.");
+            }
+          }
+        });
+
+        document.getElementById("download-csv-btn").addEventListener("click", downloadCsv);
+        document.getElementById("data-page-csv-btn").addEventListener("click", downloadCsv);
+
+        var sqlBtns = document.querySelectorAll(".sql-preset-btn");
+        for (var sb = 0; sb < sqlBtns.length; sb++) {
+          sqlBtns[sb].addEventListener("click", function() {
+            state.sqlPreset = this.getAttribute("data-sql");
+            for (var k = 0; k < sqlBtns.length; k++) {
+              sqlBtns[k].setAttribute("aria-pressed", sqlBtns[k] === this ? "true" : "false");
+            }
+            renderDataAndSqlPages();
+          });
+        }
+
+        window.addEventListener("resize", function() {
+          var ev = EVENTS_DB[state.eventId];
+          var snap = interpolateSnapshot(ev, state.hour);
+          renderBinOrFomcBarChart(ev, snap);
+        });
+      }
+
+      readUrlState();
+      initListeners();
+      renderAll();
+    })();
+  </script>
+</body>
+</html>
