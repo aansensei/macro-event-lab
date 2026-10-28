@@ -4,6 +4,7 @@ import { loadEvent } from "../data/load";
 import type { EventFile, ManifestEvent } from "../data/types";
 import {
   binLabel,
+  fixed,
   formatEt,
   formatValue,
   hourLabel,
@@ -21,8 +22,11 @@ import {
   releaseWhen,
   snapshotAt,
 } from "../lib/snapshots";
+import { oddsSeries } from "../lib/charts";
 import { BinChart } from "./BinChart";
 import { KeyStrip } from "./KeyStrip";
+import { FanChart, OddsChart } from "./OverTimeChart";
+import { ThresholdChart, type ThresholdMode } from "./ThresholdChart";
 import { TimeControls } from "./TimeControls";
 
 const PLAY_STEP_HOURS = 4;
@@ -59,6 +63,8 @@ export function Explorer({ entry, dataThrough, initialHour, onHourChange }: Prop
   const [hovered, setHovered] = useState<string | null>(null);
   const [playing, setPlaying] = useState(false);
   const [showTable, setShowTable] = useState(false);
+  const [thresholdMode, setThresholdMode] = useState<ThresholdMode>("fit");
+  const [showThresholdTable, setShowThresholdTable] = useState(false);
   const firstHour = useRef(initialHour);
 
   useEffect(() => {
@@ -215,6 +221,32 @@ export function Explorer({ entry, dataThrough, initialHour, onHourChange }: Prop
     : "";
   const source = ev.first_print_source === "alfred" ? "first print from ALFRED" : "outcome from the Kalshi settlement";
 
+  const isFomc = ev.series === "KXFED";
+  const earliest = snapshotAt(ev.snapshots, max);
+  const width = (v: number) => (ev.unit === "jobs" ? formatValue(v, ev.unit) : `${fixed(v, 2)} pp`);
+  let timeTitle = "How the market's view moved over the final week";
+  let timeSummary = "";
+  if (isFomc && anchor) {
+    const anchorMode = anchor.bins[modeIndex(anchor.bins)];
+    const series = oddsSeries(ev.snapshots).find((s) => anchorMode && s.key === `${anchorMode[0]}|${anchorMode[1]}`);
+    const start = series?.points.find((pt) => pt[1] !== null)?.[1];
+    if (anchorMode && start !== undefined && start !== null) {
+      const label = binLabel(anchorMode, ev.unit, ev.resolution);
+      timeTitle = `Odds on ${label} ${anchorMode[2] >= start ? "rose" : "fell"} from ${pct(start)} to ${pct(anchorMode[2])}`;
+    }
+    timeSummary = "Each line is one rate outcome that reached 10% at some hour, from its first listing to the close.";
+  } else if (earliest && anchor && earliest.p05 !== null && earliest.p95 !== null && anchor.p05 !== null && anchor.p95 !== null) {
+    const w0 = earliest.p95 - earliest.p05;
+    const w1 = anchor.p95 - anchor.p05;
+    timeTitle = `90% range ${w1 <= w0 ? "narrowed" : "widened"} from ${width(w0)} to ${width(w1)}`;
+    if (earliest.p50 !== null && anchor.p50 !== null) {
+      timeSummary = `The median moved from ${precise(earliest.p50)} at ${hourLabel(earliest.h)} to ${precise(anchor.p50)} at ${hourLabel(anchor.h)}.`;
+    }
+  }
+
+  const survival = snap?.survival ?? [];
+  const adjusted = survival.filter(([, raw, fit]) => Math.abs(raw - fit) > 0.0005).length;
+
   return (
     <div>
       {heading}
@@ -246,7 +278,41 @@ export function Explorer({ entry, dataThrough, initialHour, onHourChange }: Prop
         )}
       </div>
 
-      <figure className="chart-figure" aria-labelledby="bin-chart-title">
+      <div className="main-chart-row">
+      <figure className="chart-figure chart-col-time" aria-labelledby="time-chart-title">
+        <div className="chart-header">
+          <h2 className="t-h3" id="time-chart-title">{timeTitle}</h2>
+        </div>
+        <p className="chart-summary num">{timeSummary} Click or drag on the chart to move in time.</p>
+        {isFomc ? (
+          <OddsChart
+            snaps={ev.snapshots} h={hour} maxH={max} minH={min}
+            unit={ev.unit} resolution={ev.resolution}
+            onHour={(next) => { setPlaying(false); setHour(next); }}
+          />
+        ) : (
+          <FanChart
+            snaps={ev.snapshots} h={hour} maxH={max} minH={min} unit={ev.unit}
+            firstPrint={status === "published" ? ev.first_print : null}
+            onHour={(next) => { setPlaying(false); setHour(next); }}
+          />
+        )}
+        <div className="chart-footer">
+          <div className="chart-footer-top t-micro">
+            <span>Source: Kalshi {ev.event_ticker}, hourly snapshots</span>
+          </div>
+          <details className="how-to-read">
+            <summary>How to read this chart</summary>
+            <p>
+              {isFomc
+                ? "Each line follows the probability of one rate outcome across the final week, ordered from the lowest rate up. A line starts when Kalshi first listed that outcome. The vertical line marks the selected hour."
+                : "The dark line is the implied median for every hour of the final week. The darker band holds the middle 50% of outcomes and the lighter band the middle 90%. The dashed line is the number first published. The vertical line marks the selected hour."}
+            </p>
+          </details>
+        </div>
+      </figure>
+
+      <figure className="chart-figure chart-col-bin" aria-labelledby="bin-chart-title">
         <div className="chart-header">
           <div>
             <div className="t-micro chart-kicker">{asOf}</div>
@@ -311,6 +377,7 @@ export function Explorer({ entry, dataThrough, initialHour, onHourChange }: Prop
           </details>
         </div>
       </figure>
+      </div>
 
       <TimeControls
         h={hour}
@@ -324,6 +391,84 @@ export function Explorer({ entry, dataThrough, initialHour, onHourChange }: Prop
         }}
         onPlay={togglePlay}
       />
+
+      <figure className="chart-figure" aria-labelledby="threshold-chart-title">
+        <div className="chart-header chart-header-wrap">
+          <div>
+            <div className="t-micro chart-kicker">{asOf}</div>
+            <h2 className="t-h3" id="threshold-chart-title">Probability above each strike, P(X &gt; k)</h2>
+          </div>
+          <div className="chart-tools">
+            <div className="toggle-pair" role="group" aria-label="Fitted or raw probabilities">
+              {(["fit", "raw"] as const).map((m) => (
+                <button key={m} type="button" aria-pressed={thresholdMode === m} onClick={() => setThresholdMode(m)}>
+                  {m === "fit" ? "Fit" : "Raw"}
+                </button>
+              ))}
+            </div>
+            <button
+              type="button" className="text-btn" aria-expanded={showThresholdTable}
+              onClick={() => setShowThresholdTable(!showThresholdTable)}
+            >
+              {showThresholdTable ? "Hide data table" : "Show data table"}
+            </button>
+          </div>
+        </div>
+        <p className="chart-summary num">
+          {thresholdMode === "fit"
+            ? `The fit never rises from one strike to the next, and its drops are the bars above. ${
+                adjusted === 0
+                  ? "At this hour it matches the raw price at every strike."
+                  : `At this hour it moved ${adjusted} of ${survival.length} strikes away from the raw price.`
+              }`
+            : "Raw prices of each \"above k\" contract at this hour, before the fit. The dashed line is the fit."}
+        </p>
+        <ThresholdChart survival={survival} unit={ev.unit} mode={thresholdMode} />
+        {showThresholdTable && (
+          <div className="data-table-wrap">
+            <table className="mel-table">
+              <caption className="sr-only">Raw and fitted probability above each strike at {hourLabel(hour)}</caption>
+              <thead>
+                <tr>
+                  <th>Strike</th>
+                  <th className="r">Raw</th>
+                  <th className="r">Fit</th>
+                </tr>
+              </thead>
+              <tbody>
+                {survival.map(([k, raw, fit]) => (
+                  <tr key={k}>
+                    <td className="num">Above {formatValue(k, ev.unit)}</td>
+                    <td className="r">{pct(raw, 1)}</td>
+                    <td className="r">{pct(fit, 1)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+        <div className="chart-footer">
+          <details className="how-to-read">
+            <summary>How to read this chart</summary>
+            <p>
+              Kalshi lists contracts that pay if the number comes out above a strike k, so each price
+              is a probability P(X &gt; k). Raw prices can rise from one strike to the next, which no real
+              distribution allows. The fit, a weighted isotonic regression that trusts tighter quotes
+              more, removes those rises. The probability of a bin is the drop between two neighbouring
+              strikes.
+            </p>
+          </details>
+        </div>
+      </figure>
+
+      <section className="chart-figure reaction-soon" aria-labelledby="reaction-title">
+        <div className="section-kicker">Market reaction on release day</div>
+        <h2 className="t-h3" id="reaction-title">Coming with the next data update</h2>
+        <p className="chart-summary">
+          Treasury yields (2 and 10 year) and sector ETF returns on the day of each release will appear
+          here once that data is part of the pipeline.
+        </p>
+      </section>
     </div>
   );
 }
