@@ -8,16 +8,16 @@ Macro Event Lab is an automated, point-in-time data pipeline that:
 2. Recovers the market-implied probability distribution of each release.
 3. Compares it with the number actually published at the time (ALFRED vintages, not today's revised data).
 4. Measures how Treasury yields and sector stocks reacted to the surprise.
-5. Serves everything on a fully interactive website (coming in week 4).
+5. Serves everything on a fully interactive website.
 
-**Status:** week 1, ingestion. See [ROADMAP.md](ROADMAP.md).
+**Status:** the pipeline (ingestion, point-in-time tables, implied distributions, surprises) and the website's Event Explorer, Method and About pages run locally. Publishing waits on written permission from Kalshi for its market data. Treasury yields and sector reactions come next. See [ROADMAP.md](ROADMAP.md).
 
 ## Repo layout
 
 | Folder | What | Stack |
 | --- | --- | --- |
 | [`pipeline/`](pipeline) | Ingestion, point-in-time tables, analytics, tests | Python, Polars, DuckDB, Parquet |
-| [`web/`](web) | Fully interactive website (week 4) | React, TypeScript, DuckDB-WASM, Plotly |
+| [`web/`](web) | Interactive website: Event Explorer, Method, About | React, TypeScript, Vite, hand-drawn SVG charts |
 | [`api/`](api) | MCP server for as-of-date questions (Spring 2027) | FastAPI, MCP |
 | `data/` | raw / silver / gold tables, shared by pipeline and web (not committed) | |
 
@@ -29,7 +29,7 @@ Official numbers get revised. Backtesting with today's revised values leaks info
 
 ```
 Kalshi REST ─┐                    ┌─ silver/kalshi_markets.parquet
-ALFRED API ──┼─► raw (bronze) ──► ├─ silver/kalshi_candles.parquet ──► gold (week 3+) ──► web (DuckDB-WASM)
+ALFRED API ──┼─► raw (bronze) ──► ├─ silver/kalshi_candles.parquet ──► gold ──► web JSON ──► website
              │   gzipped JSON,    └─ silver/alfred_observations.parquet
              │   content-addressed
              └── _manifest.jsonl (what, when, from where; API keys redacted)
@@ -46,7 +46,7 @@ ALFRED API ──┼─► raw (bronze) ──► ├─ silver/kalshi_candles.p
 | [Kalshi API](https://docs.kalshi.com) | Markets and hourly candles for CPI (`KXCPI`), payrolls (`KXPAYROLLS`), Fed rate (`KXFED`), GDP (`KXGDP`) | Public REST, no key |
 | [ALFRED](https://alfred.stlouisfed.org) | Every vintage of CPI, core CPI, CPI shelter, payrolls, unemployment, real GDP | Free FRED API key |
 
-Raw data stays local (not committed). Only derived tables will be published.
+Raw data stays local (not committed). Kalshi's Developer Agreement and Data Terms of Use require written permission before anything derived from its market data is published, so nothing Kalshi-derived is public yet.
 
 ## Quickstart (Windows PowerShell)
 
