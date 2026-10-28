@@ -13,7 +13,7 @@ __pycache__/
 .env
 
 # Data: raw API responses stay private (terms of use); only derived gold tables get published later
-data/
+/data/
 
 # Notebooks
 .ipynb_checkpoints/
@@ -21,6 +21,8 @@ data/
 # Web build
 web/node_modules/
 web/dist/
+# market-derived JSON copied by `npm run sync-data`; published only after a terms review
+web/public/data/
 
 # OS
 .DS_Store

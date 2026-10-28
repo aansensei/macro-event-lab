@@ -66,6 +66,15 @@ pytest pipeline
 
 macOS / Linux: `source .venv/bin/activate` and `cp .env.example .env`.
 
+Website (after `build`; needs Node 24):
+
+```powershell
+cd web
+npm ci
+npm run sync-data
+npm run dev
+```
+
 ## Commands
 
 | Command | Does |

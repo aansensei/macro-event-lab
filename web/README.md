@@ -1,10 +1,32 @@
-# Website (tuần 4)
+# Website
 
-React + TypeScript (Vite) + DuckDB-WASM + Plotly.js. Website đọc các bảng **gold** dạng Parquet và chạy truy vấn ngay trong trình duyệt, nên không cần server.
+React + TypeScript, built with Vite into static files. The first view reads the prebuilt JSON the pipeline writes to `data/web/` (a manifest plus one file per event), so it needs no server and no query engine.
 
-Bắt đầu ở tuần 4:
+## Run it locally
 
 ```bash
-npm create vite@latest . -- --template react-ts
-npm install @duckdb/duckdb-wasm plotly.js-dist-min
+python -m macro_event_lab build   # from the repo root: writes data/web/
+cd web
+npm ci
+npm run sync-data                 # copies data/web into public/data (gitignored)
+npm run dev
 ```
+
+## Scripts
+
+| Script | Does |
+| --- | --- |
+| `npm run dev` | Development server |
+| `npm run build` | Type check, then build static files into `dist/` |
+| `npm run typecheck` | TypeScript check only |
+| `npm test` | Unit tests (Vitest) |
+| `npm run sync-data` | Copy `data/web` (or `$MEL_DATA_DIR/web`) into `public/data` |
+
+## Layout
+
+- `src/data/types.ts`: shapes of the JSON files, matching `pipeline/src/macro_event_lab/web_export.py`.
+- `src/data/load.ts`: fetches and validates the JSON; a wrong or outdated file fails with the name of the bad field.
+- `prototype/`: the static design prototype the site is being built from.
+- `DESIGN_RESEARCH.md`, `DESIGN_BRIEF.md`: design research and the brief behind the prototype.
+
+`public/data/` is never committed: data derived from market prices is published only after a review of the data providers' terms.
