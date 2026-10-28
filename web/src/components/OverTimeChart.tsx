@@ -4,6 +4,7 @@ import type { Snapshot } from "../data/types";
 import { dayTicks, fanDomain, fanSegments, niceTicks, oddsSeries, type Quantiles } from "../lib/charts";
 import { MINUS, binLabel, fixed, formatValue, pct } from "../lib/format";
 import { snapshotAt } from "../lib/snapshots";
+import { useTween } from "./useTween";
 import { useWidth } from "./useWidth";
 
 const PAD_L = 48;
@@ -28,6 +29,8 @@ function TimeFrame({ maxH, minH, h, padR, label, onHour, children }: FrameProps)
   const plotH = height - PAD_T - PAD_B;
   const x = (hour: number) => PAD_L + (maxH > 0 ? (maxH - hour) / maxH : 1) * plotW;
   const clamp = (hour: number) => Math.min(maxH, Math.max(minH, hour));
+  // the hour line glides to a new hour instead of jumping
+  const cursor = useTween([h], String(maxH))[0] ?? h;
 
   function scrub(e: PointerEvent<SVGSVGElement>) {
     const box = e.currentTarget.getBoundingClientRect();
@@ -43,7 +46,12 @@ function TimeFrame({ maxH, minH, h, padR, label, onHour, children }: FrameProps)
     onHour(clamp(next));
   }
 
-  const ticks = dayTicks(maxH).filter((_, i, all) => width >= 480 || i % 2 === 0 || i === all.length - 1);
+  // day ticks from the close backwards, each at least 48px from the last one kept, so labels never touch
+  const ticks: number[] = [];
+  for (const t of [...dayTicks(maxH)].reverse()) {
+    const last = ticks[ticks.length - 1];
+    if (last === undefined || x(last) - x(t) >= 48) ticks.push(t);
+  }
 
   return (
     <div ref={ref} className="chart-box">
@@ -70,12 +78,12 @@ function TimeFrame({ maxH, minH, h, padR, label, onHour, children }: FrameProps)
           }}
         >
           {ticks.map((t) => (
-            <text key={t} x={x(t)} y={height - 8} textAnchor="middle" fontSize="12" fill="var(--text-muted)" className="num">
+            <text key={t} x={t === 0 ? x(t) + 6 : x(t)} y={height - 8} textAnchor={t === 0 ? "end" : "middle"} fontSize="12" fill="var(--text-muted)" className="num">
               {t === 0 ? "Close" : `T${MINUS}${t / 24}d`}
             </text>
           ))}
           {children({ width, plotW, plotH, height, x })}
-          <line x1={x(h)} x2={x(h)} y1={PAD_T} y2={PAD_T + plotH} stroke="var(--text)" strokeWidth={1} opacity={0.5} />
+          <line x1={x(cursor)} x2={x(cursor)} y1={PAD_T} y2={PAD_T + plotH} stroke="var(--text)" strokeWidth={1} opacity={0.5} />
         </svg>
       )}
     </div>
@@ -113,6 +121,8 @@ export function FanChart({ snaps, h, maxH, minH, unit, firstPrint, onHour }: Fan
   const yTicks = niceTicks(lo, hi, 4);
   const step = yTicks.length > 1 ? (yTicks[1] as number) - (yTicks[0] as number) : 1;
   const selected = snapshotAt(snaps, h);
+  // the median dot glides along with the hour line
+  const [dotH, dotV] = useTween(selected && selected.p50 !== null ? [selected.h, selected.p50] : [], "fan");
   const printLabel = firstPrint === null ? "" : `First print ${formatValue(firstPrint, unit)}`;
 
   return (
@@ -156,8 +166,8 @@ export function FanChart({ snaps, h, maxH, minH, unit, firstPrint, onHour }: Fan
                 </text>
               </>
             )}
-            {selected && selected.p50 !== null && (
-              <circle cx={x(selected.h)} cy={y(selected.p50)} r={4} fill="var(--median)" stroke="var(--bg)" strokeWidth={2} />
+            {dotH !== undefined && dotV !== undefined && (
+              <circle cx={x(dotH)} cy={y(dotV)} r={4} fill="var(--median)" stroke="var(--bg)" strokeWidth={2} />
             )}
           </>
         );

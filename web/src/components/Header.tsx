@@ -44,7 +44,13 @@ function ThemeSwitch() {
           type="button"
           className="theme-btn"
           aria-pressed={pref === p}
-          onClick={() => setPref(p)}
+          onClick={() => {
+            // colors cross-fade for a moment after a click, not on the first paint
+            const root = document.documentElement;
+            root.classList.add("theme-switching");
+            window.setTimeout(() => root.classList.remove("theme-switching"), 350);
+            setPref(p);
+          }}
         >
           {p[0]?.toUpperCase() + p.slice(1)}
         </button>
@@ -55,6 +61,7 @@ function ThemeSwitch() {
 
 const PAGES: [Page, string][] = [
   ["events", "Events"],
+  ["method", "Method"],
   ["about", "About"],
 ];
 
@@ -62,24 +69,22 @@ export function Header({ page, onNavigate }: { page: Page; onNavigate: (p: Page)
   return (
     <header className="site-header">
       <div className="header-inner">
-        <div className="header-left">
-          <a className="logo-slot" href="./" aria-label="Macro Event Lab home">
-            <img src={`${import.meta.env.BASE_URL}logo.png`} alt="Macro Event Lab" width="70" height="36" />
-          </a>
-          <nav className="header-nav" aria-label="Primary navigation">
-            {PAGES.map(([p, label]) => (
-              <button
-                key={p}
-                type="button"
-                className="nav-btn"
-                aria-current={page === p ? "page" : undefined}
-                onClick={() => onNavigate(p)}
-              >
-                {label}
-              </button>
-            ))}
-          </nav>
-        </div>
+        <a className="logo-slot" href="./" aria-label="Macro Event Lab home">
+          <img src={`${import.meta.env.BASE_URL}logo.png`} alt="Macro Event Lab" width="70" height="36" />
+        </a>
+        <nav className="header-nav" aria-label="Primary navigation">
+          {PAGES.map(([p, label]) => (
+            <button
+              key={p}
+              type="button"
+              className="nav-btn"
+              aria-current={page === p ? "page" : undefined}
+              onClick={() => onNavigate(p)}
+            >
+              {label}
+            </button>
+          ))}
+        </nav>
         <ThemeSwitch />
       </div>
     </header>

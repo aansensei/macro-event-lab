@@ -2,6 +2,7 @@ import type { KeyboardEvent } from "react";
 
 import type { Bin } from "../data/types";
 import { MINUS } from "../lib/format";
+import { useTween } from "./useTween";
 import { useWidth } from "./useWidth";
 
 interface Props {
@@ -32,7 +33,11 @@ function pctLabel(p: number): string {
 export function BinChart({ bins, labels, ghost, firstPrintIndex, activeIndex, onHover, onPin }: Props) {
   const [ref, width] = useWidth<HTMLDivElement>();
   const n = bins.length;
-  const yMax = axisMax([...bins.map((b) => b[2]), ...ghost.filter((g): g is number => g !== null)]);
+  const targetMax = axisMax([...bins.map((b) => b[2]), ...ghost.filter((g): g is number => g !== null)]);
+  // bars and the axis glide together while the hour changes; another set of bins redraws at once
+  const tweened = useTween([...bins.map((b) => b[2]), targetMax], bins.map((b) => `${b[0]}|${b[1]}`).join(";"));
+  const shown = tweened.slice(0, n);
+  const yMax = tweened[n] ?? targetMax;
   const hasGhost = ghost.some((g) => g !== null);
   const maxChars = Math.max(1, ...labels.map((l) => l.length));
 
@@ -70,9 +75,9 @@ export function BinChart({ bins, labels, ghost, firstPrintIndex, activeIndex, on
     const height = padT + plotH + padB;
     const barW = Math.min(44, colW * 0.72);
     const y = (p: number) => padT + plotH - (p / yMax) * plotH;
-    const gridStep = yMax > 0.5 ? 0.2 : 0.1;
+    const gridStep = targetMax > 0.5 ? 0.2 : 0.1;
     const grid = [];
-    for (let k = 1; k * gridStep <= yMax + 1e-9; k++) grid.push(k * gridStep);
+    for (let k = 1; k * gridStep <= targetMax + 1e-9; k++) grid.push(k * gridStep);
 
     content = (
       <svg {...svgProps} width={width} height={height} viewBox={`0 0 ${width} ${height}`}>
@@ -90,19 +95,20 @@ export function BinChart({ bins, labels, ghost, firstPrintIndex, activeIndex, on
           </text>
         )}
         {bins.map((b, i) => {
+          const p = shown[i] ?? b[2];
           const cx = padL + i * colW + colW / 2;
           const x = cx - barW / 2;
           const g = ghost[i] ?? null;
-          const top = Math.min(y(b[2]), g === null ? Infinity : y(g));
+          const top = Math.min(y(p), g === null ? Infinity : y(g));
           const isPrint = i === firstPrintIndex;
-          const showValue = colW >= 26 && b[2] >= 0.005;
+          const showValue = colW >= 26 && p >= 0.005;
           const labelY = padT + plotH + 18;
           return (
             <g key={`${b[0]}|${b[1]}`}>
               {i === activeIndex && (
                 <rect x={padL + i * colW} y={padT - 8} width={colW} height={plotH + 8} fill="var(--accent-tint)" />
               )}
-              <rect x={x} y={y(b[2])} width={barW} height={padT + plotH - y(b[2])} fill="var(--market)" opacity={0.9} />
+              <rect x={x} y={y(p)} width={barW} height={padT + plotH - y(p)} fill="var(--market)" opacity={0.9} />
               {g !== null && (
                 <rect
                   x={x} y={y(g)} width={barW} height={padT + plotH - y(g)}
@@ -112,7 +118,7 @@ export function BinChart({ bins, labels, ghost, firstPrintIndex, activeIndex, on
               {isPrint && (
                 <>
                   <rect
-                    x={x - 2} y={y(b[2]) - 2} width={barW + 4} height={padT + plotH - y(b[2]) + 2}
+                    x={x - 2} y={y(p) - 2} width={barW + 4} height={padT + plotH - y(p) + 2}
                     fill="none" stroke="var(--actual)" strokeWidth={2.5}
                   />
                   <text x={cx} y={top - (showValue ? 22 : 6)} textAnchor="middle" fontSize="12" fontWeight="600" fill="var(--actual)">
@@ -122,7 +128,7 @@ export function BinChart({ bins, labels, ghost, firstPrintIndex, activeIndex, on
               )}
               {showValue && (
                 <text x={cx} y={top - 6} textAnchor="middle" fontSize="12" fontWeight="500" fill="var(--text)" className="num">
-                  {pctLabel(b[2])}
+                  {pctLabel(p)}
                 </text>
               )}
               {rotate ? (
@@ -148,8 +154,10 @@ export function BinChart({ bins, labels, ghost, firstPrintIndex, activeIndex, on
       </svg>
     );
   } else if (width > 0 && n > 0) {
-    const padL = Math.min(120, maxChars * 7 + 10);
-    const padR = 92;
+    // very narrow screens drop the "first print" words beside the value; the bold label and frame still mark it
+    const narrow = width < 360;
+    const padL = Math.min(narrow ? 92 : 120, maxChars * 7 + 10);
+    const padR = narrow ? 40 : 92;
     const padT = hasGhost ? 26 : 4;
     const rowH = 24;
     const barH = 14;
@@ -165,6 +173,7 @@ export function BinChart({ bins, labels, ghost, firstPrintIndex, activeIndex, on
           </text>
         )}
         {bins.map((b, i) => {
+          const p = shown[i] ?? b[2];
           const cy = padT + i * rowH + rowH / 2;
           const g = ghost[i] ?? null;
           const isPrint = i === firstPrintIndex;
@@ -177,7 +186,7 @@ export function BinChart({ bins, labels, ghost, firstPrintIndex, activeIndex, on
               >
                 {labels[i]}
               </text>
-              <rect x={padL} y={cy - barH / 2} width={w(b[2])} height={barH} fill="var(--market)" opacity={0.9} />
+              <rect x={padL} y={cy - barH / 2} width={w(p)} height={barH} fill="var(--market)" opacity={0.9} />
               {g !== null && (
                 <rect
                   x={padL} y={cy - barH / 2} width={w(g)} height={barH}
@@ -186,16 +195,16 @@ export function BinChart({ bins, labels, ghost, firstPrintIndex, activeIndex, on
               )}
               {isPrint && (
                 <rect
-                  x={padL} y={cy - barH / 2 - 2} width={w(b[2]) + 2} height={barH + 4}
+                  x={padL} y={cy - barH / 2 - 2} width={w(p) + 2} height={barH + 4}
                   fill="none" stroke="var(--actual)" strokeWidth={2}
                 />
               )}
               <text
-                x={padL + Math.max(w(b[2]), g === null ? 0 : w(g)) + 6} y={cy + 4}
+                x={padL + Math.max(w(p), g === null ? 0 : w(g)) + 6} y={cy + 4}
                 fontSize="12" fill="var(--text)" className="num" fontWeight={isPrint ? 600 : 400}
               >
-                {pctLabel(b[2])}
-                {isPrint ? " first print" : ""}
+                {pctLabel(p)}
+                {isPrint && !narrow ? " first print" : ""}
               </text>
               <rect
                 className="bin-hit" x={0} y={cy - rowH / 2} width={width} height={rowH}

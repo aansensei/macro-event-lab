@@ -1,14 +1,15 @@
 import { describe, expect, it } from "vitest";
 
-import { ABOUT_SEARCH, parseUrlState, urlSearch } from "./url";
+import { pageSearch, parseUrlState, urlSearch } from "./url";
 
 describe("url state", () => {
   it("round trips an event and hour on the events page", () => {
     expect(parseUrlState(urlSearch("kxcpi-26sep", 48))).toEqual({ page: "events", event: "kxcpi-26sep", h: 48 });
   });
 
-  it("reads the about page", () => {
-    expect(parseUrlState(ABOUT_SEARCH).page).toBe("about");
+  it("reads the method and about pages", () => {
+    expect(parseUrlState(pageSearch("about")).page).toBe("about");
+    expect(parseUrlState(pageSearch("method")).page).toBe("method");
     expect(parseUrlState("?page=unknown").page).toBe("events");
   });
 

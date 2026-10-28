@@ -28,9 +28,9 @@ export function TimeControls({ h, ts, max, min, playing, onHour, onPlay }: Props
       </button>
       <div className="slider-wrap">
         <div className="slider-top-labels">
-          <span>{hourLabel(max)}</span>
+          <span className="slider-end">{hourLabel(max)}</span>
           <span className="num slider-current">{hourLabel(h)}{when && ` (${when})`}</span>
-          <span>{hourLabel(min)}</span>
+          <span className="slider-end">{hourLabel(min)}</span>
         </div>
         <label htmlFor="time-range-slider" className="sr-only">Hours before the market closes</label>
         <input

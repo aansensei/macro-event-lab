@@ -144,7 +144,7 @@ export function Explorer({ entry, dataThrough, initialHour, onHourChange }: Prop
 
   if (load.kind === "loading" || (event && (h === null || !bounds))) {
     return (
-      <div aria-live="polite">
+      <div className="page-fade" aria-live="polite">
         {heading}
         <p className="t-label">Loading event data</p>
         <div className="skeleton-box" style={{ height: 112, marginBottom: 24 }} />
@@ -155,7 +155,7 @@ export function Explorer({ entry, dataThrough, initialHour, onHourChange }: Prop
 
   if (load.kind === "error") {
     return (
-      <div>
+      <div className="page-fade">
         {heading}
         <div className="state-banner" role="alert">
           <h2 className="t-h3" style={{ marginBottom: 8 }}>This event could not be loaded</h2>
@@ -248,7 +248,7 @@ export function Explorer({ entry, dataThrough, initialHour, onHourChange }: Prop
   const adjusted = survival.filter(([, raw, fit]) => Math.abs(raw - fit) > 0.0005).length;
 
   return (
-    <div>
+    <div className="page-fade">
       {heading}
 
       {status === "upcoming" && (

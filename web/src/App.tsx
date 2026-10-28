@@ -4,10 +4,11 @@ import { About } from "./components/About";
 import { EventList, type Filter } from "./components/EventList";
 import { Explorer } from "./components/Explorer";
 import { Header } from "./components/Header";
+import { Method } from "./components/Method";
 import { loadManifest } from "./data/load";
 import type { Manifest } from "./data/types";
 import { formatEtDate } from "./lib/format";
-import { ABOUT_SEARCH, parseUrlState, urlSearch, type Page } from "./lib/url";
+import { pageSearch, parseUrlState, urlSearch, type Page } from "./lib/url";
 
 type State =
   | { kind: "loading" }
@@ -23,9 +24,9 @@ export function App() {
   const [initialHour, setInitialHour] = useState<number | null>(fromUrl.h);
   const [page, setPage] = useState<Page>(fromUrl.page);
 
-  // the events page writes its own link as the hour changes; the about page has a fixed one
+  // the events page writes its own link as the hour changes; the other pages have fixed ones
   function navigate(next: Page) {
-    if (next === "about") window.history.replaceState(null, "", ABOUT_SEARCH);
+    if (next !== "events") window.history.replaceState(null, "", pageSearch(next));
     setInitialHour(null);
     setPage(next);
     window.scrollTo(0, 0);
@@ -64,6 +65,7 @@ export function App() {
     <>
       <Header page={page} onNavigate={navigate} />
       <main className="main-container" id="app-main">
+        {page === "method" && <Method />}
         {page === "about" && <About />}
         {page === "events" && state.kind === "loading" && <p className="t-label">Loading events</p>}
         {page === "events" && state.kind === "error" && (

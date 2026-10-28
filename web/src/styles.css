@@ -127,8 +127,14 @@ button, input, select { font-family: inherit; font-size: inherit; color: inherit
   .logo-slot { height: 36px; }
 }
 
-.header-left { display: flex; align-items: center; gap: 20px; min-width: 0; }
-.header-nav { display: flex; gap: 2px; }
+/* logo, menu and theme switch share one row; under 480px (small phones, foldable cover screens) the menu takes its own row */
+.header-inner { flex-wrap: wrap; column-gap: 20px; row-gap: 0; }
+.header-nav { display: flex; gap: 2px; margin-right: auto; }
+@media (max-width: 479px) {
+  .logo-slot { order: 1; }
+  .theme-group { order: 2; }
+  .header-nav { order: 3; flex-basis: 100%; margin: 0 0 4px -4px; }
+}
 /* navigation is plain text; the current page is underlined in the accent color */
 .nav-btn {
   background: transparent;
@@ -150,7 +156,6 @@ button, input, select { font-family: inherit; font-size: inherit; color: inherit
   text-underline-offset: 8px;
 }
 @media (max-width: 479px) {
-  .header-left { gap: 8px; }
   .nav-btn { padding: 6px 4px; }
   .theme-btn { min-width: 0; padding: 4px 6px; }
 }
@@ -206,6 +211,29 @@ button, input, select { font-family: inherit; font-size: inherit; color: inherit
   }
   .event-sidebar:hover { scrollbar-color: var(--border-control) transparent; }
 }
+/* a window spanned across two screens (Surface Duo, unfolded dual-screen phones) puts the event list on the left screen and the event on the right, with nothing under the hinge */
+@media (horizontal-viewport-segments: 2) {
+  .main-container { max-width: none; padding-left: 24px; padding-right: 24px; }
+  .explorer-layout {
+    grid-template-columns: calc(env(viewport-segment-width 0 0) - 48px) minmax(0, 1fr);
+    column-gap: calc(env(viewport-segment-left 1 0) - env(viewport-segment-right 0 0) + 48px);
+    align-items: start;
+  }
+  .event-sidebar {
+    display: block;
+    position: sticky;
+    top: 88px;
+    max-height: calc(100vh - 112px);
+    overflow-y: auto;
+  }
+  .mobile-event-selectors { display: none; }
+  .main-chart-row { grid-template-columns: minmax(0, 1fr); }
+}
+/* a phone folded into a top and bottom half keeps the header and controls off the fold by scrolling as one column */
+@media (vertical-viewport-segments: 2) {
+  .time-control-bar { position: static; }
+}
+
 .filter-chips { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 8px; }
 .chip-btn {
   background-color: transparent;
@@ -503,6 +531,21 @@ table.mel-table .r { text-align: right; font-variant-numeric: tabular-nums linin
 .slider-current { color: var(--text); font-weight: 500; }
 input[type="range"].time-slider { width: 100%; height: 24px; accent-color: var(--accent); cursor: pointer; margin: 0; }
 .preset-chips { display: flex; gap: 4px; flex-wrap: wrap; }
+/* on phones the sticky bar stays short: presets scroll in one row and the end labels give way to the current hour */
+@media (max-width: 639px) {
+  .play-btn { min-width: 60px; padding: 6px 12px; }
+  .slider-wrap { flex-basis: 140px; }
+  .preset-chips { flex-wrap: nowrap; overflow-x: auto; width: 100%; scrollbar-width: none; }
+  .preset-chips .chip-btn { flex: none; min-height: 36px; padding: 4px 10px; }
+}
+@media (max-width: 379px) {
+  .slider-end { display: none; }
+  .slider-top-labels { justify-content: center; }
+}
+/* short screens (phones in landscape, foldables in tent mode) keep the bar in the page flow so it never covers the charts */
+@media (max-height: 560px) {
+  .time-control-bar { position: static; }
+}
 
 .skeleton-box { background-color: var(--surface-hover); border-radius: 6px; }
 
@@ -519,6 +562,39 @@ input[type="range"].time-slider { width: 100%; height: 24px; accent-color: var(-
   line-height: 16px;
   color: var(--text-muted);
 }
+
+/* the method page is a 640px reading column with notes beside it from 1024px */
+.method-layout { display: grid; grid-template-columns: minmax(0, 1fr); gap: 24px; }
+@media (min-width: 1024px) {
+  .method-layout { grid-template-columns: minmax(0, 640px) 260px; gap: 48px; align-items: start; }
+}
+.method-article { max-width: 640px; }
+.method-article > p { margin: 0 0 16px 0; }
+.method-article > .about-lead { margin-bottom: 24px; }
+.method-article h2 { margin: 32px 0 12px 0; padding-top: 16px; border-top: 1px solid var(--border); }
+.method-figure { margin: 24px 0; }
+/* the timeline keeps readable 12px labels on phones by scrolling sideways instead of shrinking */
+.method-diagram-wrap { overflow-x: auto; margin-top: 8px; }
+.method-diagram { width: 100%; min-width: 540px; height: auto; display: block; }
+.code-block {
+  background-color: var(--surface);
+  border-radius: 8px;
+  padding: 16px;
+  overflow-x: auto;
+  font-family: "IBM Plex Mono", ui-monospace, monospace;
+  font-size: 13px;
+  line-height: 20px;
+  margin: 16px 0;
+}
+.sidenote-box {
+  font-size: 13px;
+  line-height: 19px;
+  color: var(--text-muted);
+  border-left: 2px solid var(--border);
+  padding-left: 12px;
+  margin: 12px 0 20px 0;
+}
+.sidenote-box strong { color: var(--text); }
 
 /* the about page is one 760px reading column; rows pair a short label with its explanation */
 .t-h2 { font-size: 24px; line-height: 30px; font-weight: 500; margin: 0; }
@@ -584,6 +660,22 @@ input[type="range"].time-slider { width: 100%; height: 24px; accent-color: var(-
   clip: rect(0, 0, 0, 0);
   white-space: nowrap;
   border: 0;
+}
+
+/* motion: pages and events fade up into place, controls ease their colors, and a theme change cross-fades */
+@keyframes page-in {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: none; }
+}
+.page-fade { animation: page-in 0.32s cubic-bezier(0.2, 0.7, 0.2, 1) both; }
+details[open] > :not(summary) { animation: page-in 0.22s ease-out both; }
+button, a, .event-item-btn, .chip-btn, .nav-btn, .theme-btn, .toggle-pair button {
+  transition: background-color 0.18s ease, color 0.18s ease, text-decoration-color 0.18s ease, opacity 0.18s ease;
+}
+.play-btn { transition: background-color 0.18s ease, transform 0.12s ease; }
+.play-btn:active { transform: scale(0.97); }
+html.theme-switching *, html.theme-switching *::before, html.theme-switching *::after {
+  transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease, fill 0.3s ease, stroke 0.3s ease !important;
 }
 
 @media (prefers-reduced-motion: reduce) {

@@ -39,7 +39,7 @@ function Rows({ rows }: { rows: [string, string][] }) {
 
 export function About() {
   return (
-    <article className="about-page">
+    <article className="about-page page-fade">
       <h1 className="t-h1">About Macro Event Lab</h1>
       <p className="about-lead">
         Macro Event Lab shows what prediction markets expected before each US CPI report, jobs report,

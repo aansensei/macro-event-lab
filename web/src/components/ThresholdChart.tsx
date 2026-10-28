@@ -1,5 +1,6 @@
 import type { SurvivalPoint } from "../data/types";
 import { formatValue, pct } from "../lib/format";
+import { useTween } from "./useTween";
 import { useWidth } from "./useWidth";
 
 export type ThresholdMode = "fit" | "raw";
@@ -23,14 +24,21 @@ export function ThresholdChart({ survival, unit, mode }: Props) {
   const plotW = Math.max(40, width - PAD_L - PAD_R);
   const colW = n > 0 ? plotW / n : plotW;
   const rotate = Math.max(1, ...labels.map((l) => l.length)) * CHAR_PX > colW - 4;
-  const padB = rotate ? 14 + Math.max(...labels.map((l) => l.length)) * CHAR_PX * 0.72 : 26;
+  const padB = rotate ? 20 + Math.max(...labels.map((l) => l.length)) * CHAR_PX * 0.72 : 26;
   const plotH = 180;
   const height = PAD_T + plotH + padB;
   const x = (i: number) => PAD_L + i * colW + colW / 2;
   const y = (p: number) => PAD_T + plotH - Math.min(1, Math.max(0, p)) * plotH;
   const main = mode === "fit" ? 2 : 1;
   const other = mode === "fit" ? 1 : 2;
-  const line = (col: 1 | 2) => survival.map((s, i) => `${x(i).toFixed(1)},${y(s[col]).toFixed(1)}`).join(" ");
+  // both lines glide when the hour or the Fit/Raw choice changes; a new set of strikes redraws at once
+  const tweened = useTween(
+    [...survival.map((s) => s[main]), ...survival.map((s) => s[other])],
+    survival.map((s) => s[0]).join(","),
+  );
+  const mainVals = tweened.slice(0, n);
+  const otherVals = tweened.slice(n);
+  const line = (vals: number[]) => vals.map((v, i) => `${x(i).toFixed(1)},${y(v).toFixed(1)}`).join(" ");
 
   return (
     <div ref={ref} className="chart-box">
@@ -47,18 +55,18 @@ export function ThresholdChart({ survival, unit, mode }: Props) {
               </text>
             </g>
           ))}
-          <polyline points={line(other)} fill="none" stroke="var(--ghost)" strokeWidth={1} strokeDasharray="3 3" />
-          <polyline points={line(main)} fill="none" stroke="var(--market)" strokeWidth={2} />
+          <polyline points={line(otherVals)} fill="none" stroke="var(--ghost)" strokeWidth={1} strokeDasharray="3 3" />
+          <polyline points={line(mainVals)} fill="none" stroke="var(--market)" strokeWidth={2} />
           {survival.map((s, i) => (
             <g key={s[0]}>
               <circle
-                cx={x(i)} cy={y(s[main])} r={3.5}
+                cx={x(i)} cy={y(mainVals[i] ?? s[main])} r={3.5}
                 fill={mode === "fit" ? "var(--market)" : "var(--bg)"} stroke="var(--market)" strokeWidth={1.5}
               />
               {rotate ? (
                 <text
-                  x={x(i)} y={PAD_T + plotH + 12} textAnchor="end" fontSize="12" fill="var(--text)" className="num"
-                  transform={`rotate(-40 ${x(i)} ${PAD_T + plotH + 12})`}
+                  x={x(i)} y={PAD_T + plotH + 18} textAnchor="end" fontSize="12" fill="var(--text)" className="num"
+                  transform={`rotate(-40 ${x(i)} ${PAD_T + plotH + 18})`}
                 >
                   {labels[i]}
                 </text>
