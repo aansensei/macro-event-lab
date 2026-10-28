@@ -15,7 +15,9 @@ from datetime import datetime
 import duckdb
 import polars as pl
 
-QUARTERLY_SERIES = ("GDPC1",)  # every other ALFRED series here is monthly
+QUARTERLY_SERIES = ("GDPC1",)
+# daily market series skip weekends and holidays by design, so they have no expected calendar
+DAILY_SERIES = ("DGS2", "DGS10")  # every other ALFRED series here is monthly
 
 
 @dataclass(frozen=True)
@@ -94,6 +96,7 @@ def _duplicates(table: str, keys: list[str]) -> Check:
 
 
 _quarterly = ", ".join(f"'{s}'" for s in QUARTERLY_SERIES)
+_daily = ", ".join(f"'{s}'" for s in DAILY_SERIES)
 
 CHECKS: list[Check] = [
     Check(
@@ -101,12 +104,13 @@ CHECKS: list[Check] = [
         severity="warn",
         description=(
             "every month (quarter for GDP) between a series' first and last observation has a "
-            "value in the current vintage"
+            "value in the current vintage; daily yields are not checked"
         ),
         sql=f"""
             WITH cur AS (
                 SELECT series_id, observation_date, value
-                FROM alfred_observations WHERE realtime_end IS NULL
+                FROM alfred_observations
+                WHERE realtime_end IS NULL AND series_id NOT IN ({_daily})
             ),
             expected AS (
                 SELECT series_id,

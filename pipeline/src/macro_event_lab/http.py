@@ -7,6 +7,8 @@ from typing import Any
 
 import httpx
 
+from macro_event_lab.raw_store import redact
+
 USER_AGENT = "macro-event-lab/0.1 (student research project; github.com/aansensei)"
 RETRY_STATUS = {429, 500, 502, 503, 504}
 
@@ -18,10 +20,12 @@ class RateLimitedClient:
         requests_per_second: float,
         max_retries: int = 5,
         timeout: float = 30.0,
+        transport: httpx.BaseTransport | None = None,
     ) -> None:
         self._client = httpx.Client(
             base_url=base_url,
             timeout=timeout,
+            transport=transport,
             headers={"User-Agent": USER_AGENT, "Accept": "application/json"},
         )
         self._min_interval = 1.0 / requests_per_second
@@ -50,7 +54,14 @@ class RateLimitedClient:
                 delay = float(retry_after) if retry_after and retry_after.isdigit() else 2**attempt
                 time.sleep(delay)
                 continue
-            response.raise_for_status()
+            if response.is_error:
+                # the request URL carries API keys, so the error names the path and redacted params
+                raise httpx.HTTPStatusError(
+                    f"HTTP {response.status_code} for {path} with params {redact(params)}: "
+                    f"{response.text[:300]}",
+                    request=response.request,
+                    response=response,
+                )
             return response
         raise RuntimeError("unreachable")
 

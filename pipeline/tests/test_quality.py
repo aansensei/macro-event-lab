@@ -82,6 +82,20 @@ def test_clean_data_passes_every_check():
     assert {name: r.status for name, r in results.items()} == dict.fromkeys(results, "PASS")
 
 
+def test_daily_yields_with_weekend_and_holiday_gaps_are_not_missing_months():
+    results = _by_name(_con(
+        _observations([
+            ("DGS10", date(2026, 7, 2), 4.21),  # Friday
+            ("DGS10", date(2026, 7, 3), None),  # holiday, published as "."
+            ("DGS10", date(2026, 7, 6), 4.18),  # Monday after a weekend
+            ("DGS2", date(2026, 7, 2), 3.80), ("DGS2", date(2026, 8, 3), 3.71),
+        ]),
+        _markets([("KXCPI-26OCT-T0.3", "greater", 0.3)]),
+        _candles([("KXCPI-26OCT-T0.3", 1, 0.40, 0.42, None)]),
+    ))
+    assert results["missing_observations"].status == "PASS"
+
+
 def test_each_check_flags_exactly_the_planted_rows():
     results = _by_name(_con(
         _observations([
