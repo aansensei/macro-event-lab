@@ -1,6 +1,9 @@
-// The selected event and hour live in the query string so any view can be shared as a link.
+// The page, selected event and hour live in the query string so any view can be shared as a link.
+
+export type Page = "events" | "about";
 
 export interface UrlState {
+  page: Page;
   event: string | null;
   h: number | null;
 }
@@ -13,6 +16,7 @@ export function parseUrlState(search: string): UrlState {
   const raw = params.get("h");
   const h = raw !== null && /^\d+$/.test(raw) ? Number(raw) : null;
   return {
+    page: params.get("page") === "about" ? "about" : "events",
     event: event && /^[a-z0-9-]+$/.test(event) ? event : null,
     h: h !== null && h <= MAX_HOURS ? h : null,
   };
@@ -21,3 +25,5 @@ export function parseUrlState(search: string): UrlState {
 export function urlSearch(event: string, h: number): string {
   return `?${new URLSearchParams({ event, h: String(h) }).toString()}`;
 }
+
+export const ABOUT_SEARCH = "?page=about";

@@ -1,12 +1,13 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 
+import { About } from "./components/About";
 import { EventList, type Filter } from "./components/EventList";
 import { Explorer } from "./components/Explorer";
 import { Header } from "./components/Header";
 import { loadManifest } from "./data/load";
 import type { Manifest } from "./data/types";
 import { formatEtDate } from "./lib/format";
-import { parseUrlState, urlSearch } from "./lib/url";
+import { ABOUT_SEARCH, parseUrlState, urlSearch, type Page } from "./lib/url";
 
 type State =
   | { kind: "loading" }
@@ -20,6 +21,15 @@ export function App() {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [filter, setFilter] = useState<Filter>("all");
   const [initialHour, setInitialHour] = useState<number | null>(fromUrl.h);
+  const [page, setPage] = useState<Page>(fromUrl.page);
+
+  // the events page writes its own link as the hour changes; the about page has a fixed one
+  function navigate(next: Page) {
+    if (next === "about") window.history.replaceState(null, "", ABOUT_SEARCH);
+    setInitialHour(null);
+    setPage(next);
+    window.scrollTo(0, 0);
+  }
 
   useEffect(() => {
     loadManifest()
@@ -52,16 +62,17 @@ export function App() {
 
   return (
     <>
-      <Header />
+      <Header page={page} onNavigate={navigate} />
       <main className="main-container" id="app-main">
-        {state.kind === "loading" && <p className="t-label">Loading events</p>}
-        {state.kind === "error" && (
+        {page === "about" && <About />}
+        {page === "events" && state.kind === "loading" && <p className="t-label">Loading events</p>}
+        {page === "events" && state.kind === "error" && (
           <div className="state-banner" role="alert">
             <h1 className="t-h3" style={{ marginBottom: 8 }}>The event list could not be loaded</h1>
             <p>{state.message}</p>
           </div>
         )}
-        {state.kind === "ready" && entry && (
+        {page === "events" && state.kind === "ready" && entry && (
           <div className="explorer-layout">
             <EventList
               events={events}
@@ -88,7 +99,10 @@ export function App() {
         <div className="footer-inner">
           <div><strong>Macro Event Lab</strong> | What markets expected before each macro release</div>
           {dataThrough && <div>Data through {formatEtDate(dataThrough)}</div>}
-          <div>Market prices: Kalshi. First prints: ALFRED, Federal Reserve Bank of St. Louis.</div>
+          <div>
+            Market prices: Kalshi. First prints: ALFRED, Federal Reserve Bank of St. Louis. Not affiliated
+            with either.
+          </div>
           <div>&copy; 2026 Cao Thien An Nguyen</div>
         </div>
       </footer>

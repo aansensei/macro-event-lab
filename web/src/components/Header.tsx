@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
 
+import type { Page } from "../lib/url";
+
 type ThemePref = "system" | "light" | "dark";
 
 const STORAGE_KEY = "mel-theme-pref";
@@ -51,13 +53,33 @@ function ThemeSwitch() {
   );
 }
 
-export function Header() {
+const PAGES: [Page, string][] = [
+  ["events", "Events"],
+  ["about", "About"],
+];
+
+export function Header({ page, onNavigate }: { page: Page; onNavigate: (p: Page) => void }) {
   return (
     <header className="site-header">
       <div className="header-inner">
-        <a className="logo-slot" href="./" aria-label="Macro Event Lab home">
-          <img src={`${import.meta.env.BASE_URL}logo.png`} alt="Macro Event Lab" width="70" height="36" />
-        </a>
+        <div className="header-left">
+          <a className="logo-slot" href="./" aria-label="Macro Event Lab home">
+            <img src={`${import.meta.env.BASE_URL}logo.png`} alt="Macro Event Lab" width="70" height="36" />
+          </a>
+          <nav className="header-nav" aria-label="Primary navigation">
+            {PAGES.map(([p, label]) => (
+              <button
+                key={p}
+                type="button"
+                className="nav-btn"
+                aria-current={page === p ? "page" : undefined}
+                onClick={() => onNavigate(p)}
+              >
+                {label}
+              </button>
+            ))}
+          </nav>
+        </div>
         <ThemeSwitch />
       </div>
     </header>
