@@ -16,8 +16,10 @@
   --ghost: #77849b;
   --surprise-up: #b45309;
   --surprise-down: #5b21b6;
+  color-scheme: light;
 }
 html[data-theme="dark"] {
+  color-scheme: dark;
   --bg: #0a0f1a;
   --surface: #111827;
   --surface-hover: #172033;
@@ -157,7 +159,10 @@ button, input, select { font-family: inherit; font-size: inherit; color: inherit
     max-height: calc(100vh - 128px);
     overflow-y: auto;
     padding-right: 4px;
+    scrollbar-width: thin;
+    scrollbar-color: var(--border) transparent;
   }
+  .event-sidebar:hover { scrollbar-color: var(--border-control) transparent; }
 }
 .filter-chips { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 8px; }
 .chip-btn {
@@ -289,17 +294,16 @@ button, input, select { font-family: inherit; font-size: inherit; color: inherit
 @media (min-width: 1280px) {
   .t-hero { font-size: 52px; line-height: 58px; }
 }
-/* the number never breaks; a long unit caption drops below it instead of running into the next column */
+/* the number never breaks; a long unit caption drops just below it instead of running into the next column */
+.t-hero:has(.hero-num) { display: flex; flex-wrap: wrap; align-items: baseline; column-gap: 0.3em; }
 .hero-num { white-space: nowrap; }
 .hero-unit {
-  display: inline-block;
   white-space: nowrap;
   font-size: 0.42em;
   font-weight: 500;
   letter-spacing: 0;
   color: var(--text-muted);
-  margin-left: 0.3em;
-  line-height: 1;
+  line-height: 1.2;
 }
 .t-hero.is-text { font-size: 26px; line-height: 32px; white-space: normal; }
 @media (min-width: 640px) {

@@ -221,7 +221,8 @@ export function Explorer({ entry, dataThrough, initialHour, onHourChange }: Prop
 
       {status === "upcoming" && (
         <div className="state-banner">
-          <strong>Upcoming.</strong> The number is due {when.date}, {when.time}. Snapshots run through{" "}
+          <strong>Upcoming.</strong> The {entry.series === "KXFED" ? "decision" : "number"} is due {when.date},{" "}
+          {when.time}. Snapshots run through{" "}
           {hourLabel(min)}, the last hour in the current data.
         </div>
       )}
