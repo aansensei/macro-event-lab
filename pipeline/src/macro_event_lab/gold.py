@@ -307,6 +307,36 @@ def latest_per_release(prints: pl.DataFrame) -> pl.DataFrame:
     )
 
 
+def settled_from_results(markets: pl.DataFrame) -> pl.DataFrame:
+    """Per event: the outcome implied by which "above k" contracts resolved yes and which no.
+
+    The highest yes strike and the lowest no strike bracket the outcome in (yes, no]. When they
+    are exactly one resolution step apart the outcome is the no strike; a wider gap, or a ladder
+    that resolved all yes or all no, leaves it unknown. This reads events whose expiration_value
+    Kalshi stored as text, such as "Above 3.50%" or "Yes".
+    """
+    resolved = pl.col("result").is_in(["yes", "no"])
+    step = pl.col("series_ticker").replace_strict(RESOLUTION, default=None, return_dtype=pl.Float64)
+    return (
+        markets.filter(
+            (pl.col("strike_type") == "greater") & pl.col("floor_strike").is_not_null() & resolved
+        )
+        .group_by("series_ticker", "event_ticker")
+        .agg(
+            yes_strike=pl.col("floor_strike").filter(pl.col("result") == "yes").max(),
+            no_strike=pl.col("floor_strike").filter(pl.col("result") == "no").min(),
+        )
+        .with_columns(
+            from_results=pl.when(
+                ((pl.col("no_strike") - pl.col("yes_strike")) - step).abs() < 1e-9 * step
+            )
+            .then(pl.col("no_strike"))
+            .otherwise(None)
+        )
+        .select("event_ticker", "from_results")
+    )
+
+
 def event_surprises(
     markets: pl.DataFrame, observations: pl.DataFrame, stats: pl.DataFrame
 ) -> pl.DataFrame:
@@ -317,7 +347,8 @@ def event_surprises(
     matched on the period the ticker names (match_method "reference_period"), so a release a
     shutdown pushed back weeks still finds its event; a ticker that names no period falls back
     to the first release within RELEASE_MATCH_DAYS of the close ("release_window"). FOMC
-    events, with no ALFRED series here, take Kalshi's settled value.
+    events, with no ALFRED series here, take Kalshi's settled value: the numeric
+    expiration_value, or the value the strike results imply when Kalshi stored it as text.
     """
     events = (
         markets.with_columns(
@@ -334,6 +365,9 @@ def event_surprises(
             close=pl.col("close_time").mode().max(),
             settled_value=pl.col("settled").drop_nulls().mode().max(),
         )
+        .join(settled_from_results(markets), on="event_ticker", how="left")
+        .with_columns(settled_value=pl.coalesce("settled_value", "from_results"))
+        .drop("from_results")
         .with_columns(
             close_date=pl.col("close").dt.convert_time_zone(RELEASE_TZ).dt.date(),
             reference_period=pl.struct("series_ticker", "event_ticker").map_elements(

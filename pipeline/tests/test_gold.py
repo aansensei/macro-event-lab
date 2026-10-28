@@ -59,7 +59,7 @@ CLOSE = datetime(2026, 10, 14, 12, 29, tzinfo=UTC)
 MARKET_SCHEMA = {
     "series_ticker": pl.String, "event_ticker": pl.String, "ticker": pl.String,
     "strike_type": pl.String, "floor_strike": pl.Float64, "close_time": pl.Datetime("us", "UTC"),
-    "expiration_value": pl.String,
+    "expiration_value": pl.String, "result": pl.String,
 }
 PRICE_SCHEMA = {
     "ticker": pl.String, "end_period_ts": pl.Datetime("us", "UTC"), "price": pl.Float64,
@@ -68,7 +68,7 @@ PRICE_SCHEMA = {
 
 
 def _markets(strikes: dict[str, float]) -> pl.DataFrame:
-    rows = [("KXCPI", "E", t, "greater", k, CLOSE, None) for t, k in strikes.items()]
+    rows = [("KXCPI", "E", t, "greater", k, CLOSE, None, None) for t, k in strikes.items()]
     return pl.DataFrame(rows, schema=MARKET_SCHEMA, orient="row")
 
 
@@ -300,8 +300,51 @@ def test_a_skipped_month_leaves_the_next_first_print_empty():
 
 def _event_markets(rows: list[tuple[str, str, datetime, str | None]]) -> pl.DataFrame:
     # (series_ticker, event_ticker, close_time, expiration_value)
-    data = [(s, e, f"{e}-T", "greater", 0.0, c, v) for s, e, c, v in rows]
+    data = [(s, e, f"{e}-T", "greater", 0.0, c, v, None) for s, e, c, v in rows]
     return pl.DataFrame(data, schema=MARKET_SCHEMA, orient="row")
+
+
+def _fomc_ladder(event: str, value: str, yes_up_to: float | None) -> list[tuple]:
+    # KXFED strikes 3.25 to 4.25; markets at or below yes_up_to resolved yes (rate above the strike)
+    close = datetime(2026, 1, 28, 18, 55, tzinfo=UTC)
+    return [
+        ("KXFED", event, f"{event}-T{k:.2f}", "greater", k, close, value,
+         "yes" if yes_up_to is not None and k <= yes_up_to else "no")
+        for k in (3.25, 3.50, 3.75, 4.00, 4.25)
+    ]
+
+
+def test_descriptive_fomc_settlements_are_read_from_the_strike_results():
+    rows = (
+        _fomc_ladder("FED-JAN", "Above 3.50%", 3.50)  # yes up to 3.50, no from 3.75: 3.75
+        + _fomc_ladder("FED-MAR", "Yes", 3.25)  # yes up to 3.25, no from 3.50: 3.50
+        + _fomc_ladder("FED-TOP", "Yes", 4.25)  # every strike yes: above the ladder, unknown
+        + _fomc_ladder("FED-NUM", "3.75", 3.25)  # a numeric value wins over the results
+    )
+    markets = pl.DataFrame(rows, schema=MARKET_SCHEMA, orient="row")
+    stats = pl.DataFrame(
+        {"event_ticker": [], "hours_before_close": [], "mean": [], "sd": []},
+        schema={"event_ticker": pl.String, "hours_before_close": pl.Int64,
+                "mean": pl.Float64, "sd": pl.Float64},
+    )
+
+    out = event_surprises(markets, _observations([]), stats)
+    value = dict(zip(out["event_ticker"].to_list(), out["first_print"].to_list(), strict=True))
+
+    assert value == {"FED-JAN": 3.75, "FED-MAR": 3.50, "FED-TOP": None, "FED-NUM": 3.75}
+
+
+def test_strike_results_with_a_gap_wider_than_one_step_give_no_value():
+    rows = [
+        r for r in _fomc_ladder("FED-GAP", "Yes", 3.25) if not r[2].endswith("T3.50")
+    ]  # yes at 3.25, next no at 3.75: 3.50 or 3.75, not one value
+    markets = pl.DataFrame(rows, schema=MARKET_SCHEMA, orient="row")
+    stats = pl.DataFrame(
+        {"event_ticker": ["FED-GAP"], "hours_before_close": [1], "mean": [3.5], "sd": [0.1]}
+    )
+    row = event_surprises(markets, _observations([]), stats).row(0, named=True)
+    assert row["first_print"] is None
+    assert row["settled_value"] is None
 
 
 def test_event_surprise_matches_releases_and_falls_back_for_fomc():

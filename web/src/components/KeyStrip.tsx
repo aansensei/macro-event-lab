@@ -93,7 +93,7 @@ export function KeyStrip({ event, status, anchor }: Props) {
               {signed(event.surprise_sd, 1, " SD")}
             </div>
             <div className="key-sub">
-              {event.surprise_sd > 0 ? "above" : event.surprise_sd < 0 ? "below" : "in line with"} the
+              {Math.abs(event.surprise_sd) < 0.05 ? "in line with" : event.surprise_sd > 0 ? "above" : "below"} the
               T&#8722;1h implied mean
             </div>
             <div className="key-sub-micro num">Print minus mean: {formatDelta(event.surprise, unit)}</div>
