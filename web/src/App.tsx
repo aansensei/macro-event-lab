@@ -1,17 +1,25 @@
-// Wave 1 shell: proves the real JSON loads and validates. The Event Explorer replaces it.
+import { useCallback, useEffect, useMemo, useState } from "react";
 
-import { useEffect, useState } from "react";
-
+import { EventList, type Filter } from "./components/EventList";
+import { Explorer } from "./components/Explorer";
+import { Header } from "./components/Header";
 import { loadManifest } from "./data/load";
 import type { Manifest } from "./data/types";
+import { formatEtDate } from "./lib/format";
+import { parseUrlState, urlSearch } from "./lib/url";
 
 type State =
   | { kind: "loading" }
   | { kind: "error"; message: string }
   | { kind: "ready"; manifest: Manifest };
 
+const fromUrl = parseUrlState(window.location.search);
+
 export function App() {
   const [state, setState] = useState<State>({ kind: "loading" });
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [filter, setFilter] = useState<Filter>("all");
+  const [initialHour, setInitialHour] = useState<number | null>(fromUrl.h);
 
   useEffect(() => {
     loadManifest()
@@ -19,31 +27,71 @@ export function App() {
       .catch((err: Error) => setState({ kind: "error", message: err.message }));
   }, []);
 
+  // newest first, as the list shows them
+  const events = useMemo(
+    () => (state.kind === "ready" ? [...state.manifest.events].reverse() : []),
+    [state],
+  );
+
+  // the shared link wins; otherwise the newest event that already has a surprise to show
+  useEffect(() => {
+    if (events.length === 0 || selectedId !== null) return;
+    const linked = events.find((e) => e.id === fromUrl.event);
+    setSelectedId((linked ?? events.find((e) => e.surprise_sd !== null) ?? events[0])?.id ?? null);
+  }, [events, selectedId]);
+
+  const onHourChange = useCallback(
+    (h: number) => {
+      if (selectedId) window.history.replaceState(null, "", urlSearch(selectedId, h));
+    },
+    [selectedId],
+  );
+
+  const entry = events.find((e) => e.id === selectedId);
+  const dataThrough = state.kind === "ready" ? state.manifest.data_through : null;
+
   return (
-    <main style={{ maxWidth: 760, margin: "0 auto", padding: 24, fontFamily: "system-ui" }}>
-      <h1>Macro Event Lab</h1>
-      {state.kind === "loading" && <p>Loading event data</p>}
-      {state.kind === "error" && (
-        <p role="alert">
-          {state.message}. Build the data with <code>python -m macro_event_lab build</code>, then
-          run <code>npm run sync-data</code>.
-        </p>
-      )}
-      {state.kind === "ready" && (
-        <>
-          <p>
-            {state.manifest.events.length} events, data through {state.manifest.data_through}.
-          </p>
-          <ul>
-            {state.manifest.events.slice(-10).reverse().map((e) => (
-              <li key={e.id}>
-                {e.title}: first print {e.first_print ?? "not published"}, surprise{" "}
-                {e.surprise_sd === null ? "n/a" : `${e.surprise_sd.toFixed(2)} SD`}
-              </li>
-            ))}
-          </ul>
-        </>
-      )}
-    </main>
+    <>
+      <Header />
+      <main className="main-container" id="app-main">
+        {state.kind === "loading" && <p className="t-label">Loading events</p>}
+        {state.kind === "error" && (
+          <div className="state-banner" role="alert">
+            <h1 className="t-h3" style={{ marginBottom: 8 }}>The event list could not be loaded</h1>
+            <p>{state.message}</p>
+          </div>
+        )}
+        {state.kind === "ready" && entry && (
+          <div className="explorer-layout">
+            <EventList
+              events={events}
+              dataThrough={dataThrough}
+              selectedId={entry.id}
+              filter={filter}
+              onFilter={setFilter}
+              onSelect={(id) => {
+                setInitialHour(null);
+                setSelectedId(id);
+              }}
+            />
+            <Explorer
+              key={entry.id}
+              entry={entry}
+              dataThrough={dataThrough}
+              initialHour={initialHour}
+              onHourChange={onHourChange}
+            />
+          </div>
+        )}
+      </main>
+      <footer className="site-footer">
+        <div className="footer-inner">
+          <div><strong>Macro Event Lab</strong> | What markets expected before each macro release</div>
+          {dataThrough && <div>Data through {formatEtDate(dataThrough)}</div>}
+          <div>Market prices: Kalshi. First prints: ALFRED, Federal Reserve Bank of St. Louis.</div>
+          <div>&copy; 2026 Cao Thien An Nguyen</div>
+        </div>
+      </footer>
+    </>
   );
 }
