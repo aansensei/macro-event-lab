@@ -89,6 +89,11 @@ export function binLabel(bin: Bin, unit: string | null, resolution: number | nul
   return `${f(lo + resolution)} to ${f(hi)}`;
 }
 
+// a yield change in whole basis points, always signed: "+6 bp", "−2 bp"; FRED yields have two decimals
+export function formatBp(v: number): string {
+  return signed(v, 0, " bp");
+}
+
 export function pct(p: number, digits = 0): string {
   return `${(p * 100).toFixed(digits)}%`;
 }

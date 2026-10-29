@@ -442,8 +442,25 @@ button, input, select { font-family: inherit; font-size: inherit; color: inherit
   color: var(--text-muted);
   margin-bottom: 4px;
 }
-.reaction-soon { border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); padding: 16px 0; }
-.reaction-soon .chart-summary { margin-bottom: 0; }
+.reaction-block { border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); padding: 16px 0; }
+/* the two yield changes read as one large pair, signs always printed */
+.yield-pair {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 32px;
+  font-size: 22px;
+  line-height: 28px;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  margin: 4px 0 12px 0;
+}
+.yield-label {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.07em;
+  color: var(--text-muted);
+  margin-right: 8px;
+}
 .chart-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; margin-bottom: 8px; }
 .chart-kicker { color: var(--accent); font-weight: 500; }
 .chart-summary {

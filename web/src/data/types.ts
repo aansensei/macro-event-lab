@@ -22,6 +22,14 @@ export interface Snapshot {
   survival: SurvivalPoint[];
 }
 
+// change in the 2 and 10 year Treasury yields on the release day, in basis points
+export interface Reaction {
+  date: string;
+  prev_date: string | null;
+  dgs2_bp: number | null;
+  dgs10_bp: number | null;
+}
+
 export type FirstPrintSource = "alfred" | "kalshi";
 export type MatchMethod = "reference_period" | "release_window";
 
@@ -42,6 +50,7 @@ export interface EventFile {
   settled_value: number | null;
   surprise: number | null;
   surprise_sd: number | null;
+  reaction: Reaction | null;
   snapshots: Snapshot[];
 }
 

@@ -4,6 +4,7 @@ import {
   MINUS,
   binLabel,
   fixed,
+  formatBp,
   formatDelta,
   formatEt,
   formatEtDate,
@@ -42,6 +43,12 @@ describe("values by unit", () => {
     expect(unitParts("% m/m")).toEqual({ lead: "%", rest: "m/m" });
     expect(unitParts("jobs")).toEqual({ lead: "", rest: "jobs" });
     expect(unitParts(null)).toEqual({ lead: "", rest: "" });
+  });
+
+  it("signs yield changes in basis points", () => {
+    expect(formatBp(6)).toBe("+6 bp");
+    expect(formatBp(-2)).toBe(`${MINUS}2 bp`);
+    expect(formatBp(0.2)).toBe("0 bp");
   });
 
   it("formats surprises in points or thousands of jobs", () => {

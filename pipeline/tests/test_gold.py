@@ -20,6 +20,7 @@ from macro_event_lab.gold import (
     isotonic_decreasing,
     latest_per_release,
     reference_period_from_event,
+    release_reactions,
     with_week_ago,
 )
 
@@ -426,3 +427,67 @@ def test_shutdown_delays_match_by_period_and_unnamed_tickers_fall_back_to_the_wi
     assert (cpi["match_method"], cpi["release_date"], cpi["reference_period"]) == (
         "release_window", d(2025, 10, 24), d(2025, 9, 1)
     )
+
+
+def _yields(rows: list[tuple[str, date, float | None]]) -> pl.DataFrame:
+    # daily closes in the current vintage, known from their own date
+    return _observations([(s, d, v, d, None) for s, d, v in rows])
+
+
+REACTION_EVENT_SCHEMA = {
+    "event_ticker": pl.String, "first_print_source": pl.String, "first_print": pl.Float64,
+    "release_date": pl.Date, "close": pl.Datetime("us", "UTC"),
+}
+
+
+def test_release_day_yield_changes_in_basis_points():
+    d = date
+    closes = _yields([
+        ("DGS2", d(2026, 10, 13), 4.76), ("DGS2", d(2026, 10, 14), 4.82),
+        ("DGS10", d(2026, 10, 13), 5.15), ("DGS10", d(2026, 10, 14), 5.19),
+        ("DGS2", d(2026, 9, 15), 3.60), ("DGS2", d(2026, 9, 16), 3.55),
+        ("DGS10", d(2026, 9, 15), 4.10), ("DGS10", d(2026, 9, 16), 4.08),
+        # Friday holiday: Monday's change is measured from Thursday
+        ("DGS2", d(2026, 7, 2), 3.90), ("DGS2", d(2026, 7, 3), None), ("DGS2", d(2026, 7, 6), 3.95),
+        ("DGS10", d(2026, 7, 2), 4.30), ("DGS10", d(2026, 7, 3), None),
+        ("DGS10", d(2026, 7, 6), 4.28),
+    ])
+    events = pl.DataFrame([
+        ("CPI-SEP", "alfred", 0.6, d(2026, 10, 14), datetime(2026, 10, 14, 12, 29, tzinfo=UTC)),
+        ("FED-SEP", "kalshi", 4.0, None, datetime(2026, 9, 16, 17, 55, tzinfo=UTC)),
+        ("JOBS-JUN", "alfred", 1e5, d(2026, 7, 6), datetime(2026, 7, 6, 12, 29, tzinfo=UTC)),
+        ("CPI-OCT", "alfred", None, None, datetime(2026, 11, 13, 13, 29, tzinfo=UTC)),
+        # never printed, but ALFRED lists the empty month on the next release's date
+        ("CPI-OCT25", "alfred", None, d(2026, 10, 14), datetime(2025, 11, 13, 13, 29, tzinfo=UTC)),
+    ], schema=REACTION_EVENT_SCHEMA, orient="row")
+
+    out = {r["event_ticker"]: r for r in release_reactions(events, closes).iter_rows(named=True)}
+
+    cpi = out["CPI-SEP"]
+    assert (cpi["reaction_date"], cpi["reaction_prev_date"]) == (d(2026, 10, 14), d(2026, 10, 13))
+    assert cpi["dgs2_change_bp"] == pytest.approx(6.0)
+    assert cpi["dgs10_change_bp"] == pytest.approx(4.0)
+    fed = out["FED-SEP"]  # the decision day is the close's New York date
+    assert fed["reaction_date"] == d(2026, 9, 16)
+    assert fed["dgs2_change_bp"] == pytest.approx(-5.0)
+    assert fed["dgs10_change_bp"] == pytest.approx(-2.0)
+    jobs = out["JOBS-JUN"]
+    assert jobs["reaction_prev_date"] == d(2026, 7, 2)
+    assert jobs["dgs2_change_bp"] == pytest.approx(5.0)
+    assert jobs["dgs10_change_bp"] == pytest.approx(-2.0)
+    assert "CPI-OCT" not in out
+    assert "CPI-OCT25" not in out  # another release's reaction is not borrowed
+
+
+def test_release_on_a_market_holiday_has_no_change():
+    d = date
+    closes = _yields([
+        ("DGS2", d(2026, 7, 2), 3.90), ("DGS2", d(2026, 7, 3), None),
+        ("DGS10", d(2026, 7, 2), 4.30), ("DGS10", d(2026, 7, 3), None),
+    ])
+    events = pl.DataFrame(
+        [("JOBS-JUN", "alfred", 1e5, d(2026, 7, 3), datetime(2026, 7, 3, 12, 29, tzinfo=UTC))],
+        schema=REACTION_EVENT_SCHEMA, orient="row",
+    )
+    row = release_reactions(events, closes).row(0, named=True)
+    assert row["dgs2_change_bp"] is None and row["dgs10_change_bp"] is None

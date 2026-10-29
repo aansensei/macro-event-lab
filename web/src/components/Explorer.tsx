@@ -25,6 +25,7 @@ import {
 import { oddsSeries } from "../lib/charts";
 import { BinChart } from "./BinChart";
 import { KeyStrip } from "./KeyStrip";
+import { ReactionBlock } from "./ReactionBlock";
 import { FanChart, OddsChart } from "./OverTimeChart";
 import { ThresholdChart, type ThresholdMode } from "./ThresholdChart";
 import { TimeControls } from "./TimeControls";
@@ -461,14 +462,7 @@ export function Explorer({ entry, dataThrough, initialHour, onHourChange }: Prop
         </div>
       </figure>
 
-      <section className="chart-figure reaction-soon" aria-labelledby="reaction-title">
-        <div className="section-kicker">Market reaction on release day</div>
-        <h2 className="t-h3" id="reaction-title">Coming with the next data update</h2>
-        <p className="chart-summary">
-          Treasury yields (2 and 10 year) and sector ETF returns on the day of each release will appear
-          here once that data is part of the pipeline.
-        </p>
-      </section>
+      <ReactionBlock reaction={ev.reaction} status={status} isFomc={isFomc} />
     </div>
   );
 }

@@ -514,6 +514,63 @@ def implied_distributions(
     return survival, bins
 
 
+REACTION_SERIES = {"DGS2": "dgs2_change_bp", "DGS10": "dgs10_change_bp"}
+
+
+def release_reactions(events: pl.DataFrame, observations: pl.DataFrame) -> pl.DataFrame:
+    """Per event: the change in the 2 and 10 year yields on the day of the release, in bp.
+
+    CPI, jobs and GDP react on their release date (08:30 ET, before the market opens); FOMC
+    events on the New York date of the market close, the decision day. The change is that day's
+    close minus the last close before it, so a holiday before the release is skipped. Events
+    never published are left out, even when ALFRED lists their empty month on a later release's
+    date; a release on a market holiday has no change.
+    """
+    base = (
+        events.with_columns(
+            reaction_date=pl.when(pl.col("first_print_source") == "kalshi")
+            .then(pl.col("close").dt.convert_time_zone(RELEASE_TZ).dt.date())
+            .when(pl.col("first_print").is_not_null())
+            .then(pl.col("release_date"))
+            .otherwise(None)
+        )
+        .filter(pl.col("reaction_date").is_not_null())
+        .select("event_ticker", "reaction_date")
+        .with_columns(day_before=pl.col("reaction_date") - pl.duration(days=1))
+        .sort("day_before")
+    )
+    out = base.select("event_ticker", "reaction_date")
+    for series_id, column in REACTION_SERIES.items():
+        closes = (
+            observations.filter(
+                (pl.col("series_id") == series_id)
+                & pl.col("realtime_end").is_null()
+                & pl.col("value").is_not_null()
+            )
+            .select("observation_date", "value")
+            .sort("observation_date")
+        )
+        on_day = base.join(
+            closes, left_on="reaction_date", right_on="observation_date", how="left"
+        ).select("event_ticker", on_day="value")
+        before = base.join_asof(
+            closes.rename({"observation_date": "prev_date", "value": "prev_value"}),
+            left_on="day_before", right_on="prev_date", strategy="backward",
+        ).select("event_ticker", "prev_date", "prev_value")
+        change = on_day.join(before, on="event_ticker").select(
+            "event_ticker",
+            pl.col("prev_date").alias(f"{series_id}_prev_date"),
+            ((pl.col("on_day") - pl.col("prev_value")) * 100).round(1).alias(column),
+        )
+        out = out.join(change, on="event_ticker", how="left")
+    return out.select(
+        "event_ticker",
+        "reaction_date",
+        pl.col("DGS10_prev_date").alias("reaction_prev_date"),
+        *REACTION_SERIES.values(),
+    )
+
+
 def build_gold(paths: Paths) -> dict[str, int]:
     candles = pl.read_parquet(paths.silver / "kalshi_candles.parquet")
     markets = pl.read_parquet(paths.silver / "kalshi_markets.parquet")
@@ -522,12 +579,15 @@ def build_gold(paths: Paths) -> dict[str, int]:
     prices = contract_prices(candles)
     survival, bins = implied_distributions(markets, prices)
     stats = implied_stats(bins)
+    surprises = event_surprises(markets, observations, stats)
     tables = {
         "contract_prices": prices,
         "implied_survival": survival,
         "implied_bins": with_week_ago(bins),
         "implied_stats": stats,
-        "event_surprise": event_surprises(markets, observations, stats),
+        "event_surprise": surprises.join(
+            release_reactions(surprises, observations), on="event_ticker", how="left"
+        ),
     }
     for name, df in tables.items():
         df.write_parquet(paths.gold / f"{name}.parquet", compression="zstd")

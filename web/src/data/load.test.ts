@@ -88,6 +88,21 @@ describe("parseEvent", () => {
   it("rejects an unknown first print source", () => {
     expect(() => parseEvent({ ...event, first_print_source: "guess" })).toThrow(DataError);
   });
+
+  it("reads the release-day yield reaction", () => {
+    const reaction = { date: "2026-10-14", prev_date: "2026-10-13", dgs2_bp: 6, dgs10_bp: 4 };
+    expect(parseEvent({ ...event, reaction }).reaction).toEqual(reaction);
+  });
+
+  it("treats a missing or null reaction as none", () => {
+    expect(parseEvent(event).reaction).toBeNull();
+    expect(parseEvent({ ...event, reaction: null }).reaction).toBeNull();
+  });
+
+  it("names a malformed reaction field", () => {
+    const reaction = { date: "2026-10-14", prev_date: null, dgs2_bp: "six", dgs10_bp: 4 };
+    expect(() => parseEvent({ ...event, reaction })).toThrow("event.reaction.dgs2_bp");
+  });
 });
 
 describe("loading over fetch", () => {

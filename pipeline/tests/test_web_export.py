@@ -46,12 +46,16 @@ def _gold(tmp_path) -> Paths:
         "match_method": "reference_period", "first_print": 0.6, "first_print_source": "alfred",
         "settled_value": 0.6, "mean_t1h": 0.571, "sd_t1h": 0.123,
         "surprise": 0.029, "surprise_sd": 0.2357723577,
+        "reaction_date": date(2026, 10, 14), "reaction_prev_date": date(2026, 10, 13),
+        "dgs2_change_bp": 6.0, "dgs10_change_bp": 4.0,
     }, {
         "series_ticker": "KXCPI", "event_ticker": "KXCPI-27JAN",
         "close": CLOSE + timedelta(days=90), "release_date": None,
         "reference_period": date(2027, 1, 1), "match_method": "reference_period",
         "first_print": None, "first_print_source": "alfred", "settled_value": None,
         "mean_t1h": None, "sd_t1h": None, "surprise": None, "surprise_sd": None,
+        "reaction_date": None, "reaction_prev_date": None,
+        "dgs2_change_bp": None, "dgs10_change_bp": None,
     }], schema_overrides={"close": TS}).write_parquet(paths.gold / "event_surprise.parquet")
 
     keys = {"series_ticker": "KXCPI", "event_ticker": "KXCPI-26SEP"}
@@ -97,6 +101,9 @@ def test_build_web_writes_manifest_and_event_files(tmp_path):
     assert sum(p for _, _, p in first["bins"]) == pytest.approx(1.0)
     assert event["surprise_sd"] == 0.235772  # rounded to 6 digits
     assert (event["unit"], event["resolution"]) == ("% m/m", 0.1)
+    assert event["reaction"] == {
+        "date": "2026-10-14", "prev_date": "2026-10-13", "dgs2_bp": 6.0, "dgs10_bp": 4.0,
+    }
 
 
 def test_build_web_is_byte_identical_when_rebuilt(tmp_path):

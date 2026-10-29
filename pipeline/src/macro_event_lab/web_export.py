@@ -107,6 +107,13 @@ def event_payload(
         "settled_value": _num(event["settled_value"]),
         "surprise": _num(event["surprise"]),
         "surprise_sd": _num(event["surprise_sd"]),
+        # yield changes on the release day in basis points; null without a release day
+        "reaction": None if event.get("reaction_date") is None else {
+            "date": _iso(event["reaction_date"]),
+            "prev_date": _iso(event["reaction_prev_date"]),
+            "dgs2_bp": _num(event["dgs2_change_bp"]),
+            "dgs10_bp": _num(event["dgs10_change_bp"]),
+        },
         # bins: [lower, upper, probability], null marks an open end;
         # survival: [strike k, raw contract price, isotonic P(X > k)]
         "snapshots": snapshots,

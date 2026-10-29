@@ -7,6 +7,7 @@ import {
   type EventFile,
   type Manifest,
   type ManifestEvent,
+  type Reaction,
   type Snapshot,
   type SurvivalPoint,
 } from "./types";
@@ -113,6 +114,18 @@ function parseSnapshot(value: unknown, where: string): Snapshot {
   };
 }
 
+// files written before release-day reactions existed have no "reaction" key; that reads as none
+function parseReaction(value: unknown, where: string): Reaction | null {
+  if (value === undefined || value === null) return null;
+  const o = obj(value, where);
+  return {
+    date: str(o, "date", where),
+    prev_date: strOrNull(o, "prev_date", where),
+    dgs2_bp: numOrNull(o, "dgs2_bp", where),
+    dgs10_bp: numOrNull(o, "dgs10_bp", where),
+  };
+}
+
 function parseManifestEvent(value: unknown, where: string): ManifestEvent {
   const o = obj(value, where);
   return {
@@ -169,6 +182,7 @@ export function parseEvent(value: unknown): EventFile {
     settled_value: numOrNull(o, "settled_value", "event"),
     surprise: numOrNull(o, "surprise", "event"),
     surprise_sd: numOrNull(o, "surprise_sd", "event"),
+    reaction: parseReaction(o.reaction, "event.reaction"),
     snapshots: list(o, "snapshots", "event").map((s, i) =>
       parseSnapshot(s, `event.snapshots[${i}]`),
     ),

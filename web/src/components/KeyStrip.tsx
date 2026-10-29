@@ -1,5 +1,6 @@
 import type { EventFile, Snapshot } from "../data/types";
 import {
+  formatBp,
   formatDelta,
   formatNumber,
   formatValue,
@@ -97,6 +98,11 @@ export function KeyStrip({ event, status, anchor }: Props) {
               T&#8722;1h implied mean
             </div>
             <div className="key-sub-micro num">Print minus mean: {formatDelta(event.surprise, unit)}</div>
+            {event.reaction?.dgs2_bp != null && event.reaction.dgs10_bp != null && (
+              <div className="key-sub-micro num">
+                Release day: 2y {formatBp(event.reaction.dgs2_bp)}, 10y {formatBp(event.reaction.dgs10_bp)}
+              </div>
+            )}
           </>
         ) : (
           <>
