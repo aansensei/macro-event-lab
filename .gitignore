@@ -35,3 +35,6 @@ ehthumbs.db
 # Local working files: research notes and generated reports
 research_notes/
 reports/
+
+# Personal plan with timelines, kept on this machine only
+/ROADMAP.md
