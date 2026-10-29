@@ -59,16 +59,27 @@ export function About() {
       <section className="about-section" aria-labelledby="about-author">
         <h2 className="t-h2" id="about-author">Author</h2>
         <div className="author-card">
-          <div className="author-photo" role="img" aria-label="Photo to be added">Photo TBA</div>
+          <img
+            className="author-photo"
+            src={`${import.meta.env.BASE_URL}author.jpg`}
+            alt="Avatar of Cao Thien An Nguyen"
+            width="96"
+            height="96"
+            draggable={false}
+          />
           <div>
-            <p className="author-name">An Nguyen</p>
-            <p className="author-role">Role and school: TBA</p>
-            <p className="author-bio">Short bio: TBA</p>
+            <p className="author-name">Cao Thien An Nguyen</p>
+            <p className="author-role">Data Science and Economics, University of Wisconsin-Madison</p>
+            <p className="author-bio">
+              From Ho Chi Minh City, Vietnam, now in Madison. I blend economics with data science to
+              turn raw data into stories about the economy that anyone can follow.
+            </p>
             <dl className="author-links">
+              <div><dt>Portfolio</dt><dd><a href="https://aansensei.dev">aansensei.dev</a></dd></div>
+              <div><dt>LinkedIn</dt><dd><a href="https://www.linkedin.com/in/cao-thien-an-nguyen">in/cao-thien-an-nguyen</a></dd></div>
+              <div><dt>GitHub</dt><dd><a href="https://github.com/aansensei">github.com/aansensei</a></dd></div>
+              <div><dt>Email</dt><dd><a href="mailto:cnguyen49@wisc.edu">cnguyen49@wisc.edu</a></dd></div>
               <div><dt>Code</dt><dd><a href={REPO}>github.com/aansensei/macro-event-lab</a></dd></div>
-              <div><dt>Portfolio</dt><dd className="tba">TBA</dd></div>
-              <div><dt>LinkedIn</dt><dd className="tba">TBA</dd></div>
-              <div><dt>Email</dt><dd className="tba">TBA</dd></div>
             </dl>
           </div>
         </div>

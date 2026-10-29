@@ -93,6 +93,16 @@ a:hover { text-decoration: underline; }
 
 button, input, select { font-family: inherit; font-size: inherit; color: inherit; }
 
+/* interface chrome never gets text-selected or flashes on tap; reading text (plain words, method, glossary) stays selectable */
+html { -webkit-tap-highlight-color: transparent; }
+button, summary, .site-header, .site-footer, .event-sidebar, .select, .time-control-bar, .chart-svg,
+.key-label, .section-kicker, .chart-kicker, .slider-top-labels, .verdict, .calibration, .toggle-pair,
+.preset-chips, .filter-chips, .readout-unpin, .text-btn, .logo-slot, .footer-link, .term, .scatter-dot {
+  -webkit-user-select: none;
+  user-select: none;
+}
+img { -webkit-user-drag: none; }
+
 .site-header {
   border-bottom: 1px solid var(--border);
   background-color: var(--bg);
@@ -673,18 +683,67 @@ input[type="range"].time-slider {
 
 .skeleton-box { background-color: var(--surface-hover); border-radius: 6px; }
 
-.site-footer { border-top: 1px solid var(--border); margin-top: 80px; padding: 24px 16px; }
-.footer-inner {
+/* footer: brand and tagline beside three short columns, then a ruled bottom line; columns fold to two, then one */
+.site-footer {
+  border-top: 1px solid var(--border);
+  margin-top: 96px;
+  padding: 48px 16px 24px;
+  background-color: var(--surface);
+  color: var(--text-muted);
+  font-size: 14px;
+  line-height: 22px;
+}
+.footer-grid {
   max-width: 1200px;
   margin: 0 auto;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 32px;
+}
+@media (min-width: 640px) {
+  .site-footer { padding: 56px 24px 24px; }
+  .footer-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (min-width: 1024px) {
+  .site-footer { padding: 64px 32px 28px; }
+  .footer-grid { grid-template-columns: minmax(0, 1.6fr) repeat(3, minmax(0, 1fr)); gap: 48px; }
+}
+.footer-brand img { height: 28px; width: auto; display: block; }
+.footer-brand p { margin: 14px 0 0 0; max-width: 34ch; }
+.footer-col { display: flex; flex-direction: column; align-items: flex-start; gap: 6px; }
+.footer-col p { margin: 0; }
+.footer-head {
+  margin: 0 0 6px 0;
+  font-size: 12px;
+  line-height: 16px;
+  font-weight: 600;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--text);
+}
+.footer-link {
+  padding: 0;
+  border: none;
+  background: none;
+  font-size: 14px;
+  line-height: 22px;
+  color: var(--text-muted);
+  text-decoration: none;
+  cursor: pointer;
+  transition: color 0.18s ease;
+}
+.footer-link:hover { color: var(--accent); text-decoration: none; }
+.footer-bottom {
+  max-width: 1200px;
+  margin: 40px auto 0;
+  padding-top: 20px;
+  border-top: 1px solid var(--border);
   display: flex;
   flex-wrap: wrap;
   justify-content: space-between;
-  align-items: center;
-  gap: 12px;
+  gap: 8px 24px;
   font-size: 12px;
-  line-height: 16px;
-  color: var(--text-muted);
+  line-height: 18px;
 }
 
 /* the method page is a 640px reading column with notes beside it from 1024px */
@@ -846,7 +905,7 @@ input[type="range"].time-slider {
 }
 .about-rows dt { font-weight: 600; }
 .about-rows dd { margin: 0; color: var(--text-muted); line-height: 26px; }
-/* author profile: dashed boxes mark what is still to be added */
+/* author profile: a round avatar ringed in the accent beside name, role, bio and links */
 .author-card {
   display: grid;
   grid-template-columns: 96px 1fr;
@@ -863,12 +922,12 @@ input[type="range"].time-slider {
   width: 96px;
   height: 96px;
   border-radius: 50%;
-  border: 1px dashed var(--border-control);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 12px;
-  color: var(--text-muted);
+  object-fit: cover;
+  border: 2px solid var(--accent);
+  padding: 3px;
+  background-color: var(--bg);
+  -webkit-user-select: none;
+  user-select: none;
 }
 .author-name { font-size: 22px; line-height: 28px; font-weight: 600; letter-spacing: -0.01em; margin: 0; }
 .author-role, .author-bio { margin: 6px 0 0 0; color: var(--text-muted); }
@@ -876,7 +935,6 @@ input[type="range"].time-slider {
 .author-links > div { display: grid; grid-template-columns: 88px 1fr; gap: 12px; font-size: 15px; }
 .author-links dt { color: var(--text-muted); }
 .author-links dd { margin: 0; overflow-wrap: anywhere; }
-.author-links dd.tba { color: var(--text-muted); }
 .about-note { margin-top: 16px; color: var(--text-muted); }
 .faq-list details { border-top: 1px solid var(--border); padding: 14px 0; }
 .faq-list details:last-child { border-bottom: 1px solid var(--border); }

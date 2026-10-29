@@ -4,12 +4,12 @@ import { About } from "./components/About";
 import { Compare } from "./components/Compare";
 import { EventList, type Filter } from "./components/EventList";
 import { Explorer } from "./components/Explorer";
+import { Footer } from "./components/Footer";
 import { Glossary } from "./components/Glossary";
 import { Header } from "./components/Header";
 import { Method } from "./components/Method";
 import { loadManifest } from "./data/load";
 import type { Manifest } from "./data/types";
-import { formatEtDate } from "./lib/format";
 import { pageSearch, parseUrlState, urlSearch, type Page } from "./lib/url";
 
 type State =
@@ -101,17 +101,7 @@ export function App() {
           </div>
         )}
       </main>
-      <footer className="site-footer">
-        <div className="footer-inner">
-          <div><strong>Macro Event Lab</strong> | What markets expected before each macro release</div>
-          {dataThrough && <div>Data through {formatEtDate(dataThrough)}</div>}
-          <div>
-            Market prices: Kalshi. First prints: ALFRED, Federal Reserve Bank of St. Louis. Not affiliated
-            with either.
-          </div>
-          <div>&copy; 2026 Cao Thien An Nguyen</div>
-        </div>
-      </footer>
+      <Footer dataThrough={dataThrough} onNavigate={navigate} />
     </>
   );
 }
