@@ -2,9 +2,20 @@ import { ExternalLink } from "./ExternalLink";
 
 const REPO = "https://github.com/aansensei/macro-event-lab";
 
+const QUESTIONS = [
+  "What did the market expect an hour before the number came out, and how sure was it?",
+  "How did that view move during the final week before the release?",
+  "How big was the surprise, measured against the market's own uncertainty instead of a single guess?",
+  "Did bond yields move the way the surprise suggested?",
+  "Across every release, were the markets well calibrated, and did they beat simply repeating the last number?",
+];
+
 const WHY: [string, string][] = [
   ["Numbers as they were known", "Official figures get revised. Judging a forecast against today's revised number uses information nobody had on release day, so every value here carries the moment it became public, and every chart can be replayed hour by hour."],
   ["The whole distribution", "A prediction market prices every outcome, not one consensus number. That shows how sure the market was, how that certainty changed in the week before a release, and how large the surprise really was."],
+  ["Checked, not just shown", "A forecast is only useful if it can be checked. Every release is scored with the tools professional forecasters use, Brier score, CRPS and PIT, and compared with a naive guess, so the site says where markets were right and where they were not."],
+  ["Readable without an economics degree", "Each event opens with a plain words reading built from its own numbers, and every technical term links to the Glossary."],
+  ["Honest about gaps", "When something cannot be measured, such as a release cancelled by the 2025 shutdown or an early market with a single contract, the page explains why instead of filling the gap."],
   ["An engineering project", "Behind the site is an automated, tested data pipeline that collects public market and economic data and rebuilds every table from the raw responses it saved."],
 ];
 
@@ -58,6 +69,35 @@ export function About() {
         GDP release and Fed decision, and how that compared with the number first published.
       </p>
 
+      <section className="about-section" aria-labelledby="about-idea">
+        <h2 className="t-h2" id="about-idea">The idea</h2>
+        <div className="idea-text">
+          <p>
+            Every month the economy gets a report card: a CPI print, a jobs number, a GDP estimate, a Fed
+            decision. Headlines call each one a beat or a miss, but against what? Usually a single consensus
+            figure from a survey taken days earlier, compared with a number that is often revised later
+            anyway.
+          </p>
+          <p>
+            Prediction markets offer something richer. On Kalshi, traders buy and sell contracts such as
+            "CPI above 0.3%" at many thresholds at once. Read together, those prices form a full probability
+            distribution of what the market expected, updated every hour. Macro Event Lab rebuilds that
+            distribution for every release since mid 2021, lines it up with the number first published,
+            and checks how the bond market reacted.
+          </p>
+          <p>
+            I built it to practise the whole path from raw data to a public product: collecting data
+            carefully, modelling it honestly, and explaining the result so anyone can follow it.
+          </p>
+        </div>
+        <h3 className="idea-kicker">Questions it answers</h3>
+        <ul className="idea-questions">
+          {QUESTIONS.map((q) => (
+            <li key={q}>{q}</li>
+          ))}
+        </ul>
+      </section>
+
       <section className="about-section" aria-labelledby="about-howto">
         <h2 className="t-h2" id="about-howto">How to use this site</h2>
         <ol className="howto-steps">
@@ -71,7 +111,7 @@ export function About() {
       </section>
 
       <section className="about-section" aria-labelledby="about-why">
-        <h2 className="t-h2" id="about-why">Why it exists</h2>
+        <h2 className="t-h2" id="about-why">Why it is built this way</h2>
         <Rows rows={WHY} />
       </section>
 
