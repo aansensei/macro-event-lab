@@ -9,13 +9,14 @@ import {
   unitParts,
 } from "../lib/format";
 import { releaseWhen, type EventStatus } from "../lib/snapshots";
+import { CountUp } from "./CountUp";
 import { Term } from "./Term";
 
 function Hero({ value, unit, className }: { value: number; unit: string | null; className: string }) {
   const { lead, rest } = unitParts(unit);
   return (
     <div className={`t-hero ${className}`}>
-      <span className="hero-num">{formatNumber(value, unit)}{lead}</span>
+      <span className="hero-num"><CountUp value={value} format={(v) => formatNumber(v, unit)} />{lead}</span>
       {rest && <span className="hero-unit">{rest}</span>}
     </div>
   );
@@ -101,7 +102,7 @@ export function KeyStrip({ event, status, anchor }: Props) {
         {event.surprise_sd !== null && event.surprise !== null ? (
           <>
             <div className={`t-hero ${event.surprise_sd >= 0 ? "val-surprise-up" : "val-surprise-down"}`}>
-              {signed(event.surprise_sd, 1, " SD")}
+              <CountUp value={event.surprise_sd} format={(v) => signed(v, 1, " SD")} />
             </div>
             <div className="key-sub">
               {Math.abs(event.surprise_sd) < 0.05 ? "in line with" : event.surprise_sd > 0 ? "above" : "below"} the
