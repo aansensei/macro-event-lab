@@ -26,7 +26,7 @@ npm run dev
 
 - `src/data/types.ts`: shapes of the JSON files, matching `pipeline/src/macro_event_lab/web_export.py`.
 - `src/data/load.ts`: fetches and validates the JSON; a wrong or outdated file fails with the name of the bad field.
-- `src/lib/`: formatting, point-in-time snapshot lookup and URL state, all unit tested.
+- `src/lib/`: formatting, point-in-time snapshot lookup, URL state, the plain words reading of each event and the glossary, all unit tested.
 - `src/components/`: the Event Explorer (event list, key figures, fan chart or FOMC odds over time, outcome bin chart, time controls, threshold chart) and the header.
 - `public/`: logo and favicons, copied as is into the build.
 - Links keep the view: `?event=kxcpi-26sep&h=48` opens that event 48 hours before its market closed.

@@ -3,6 +3,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { About } from "./components/About";
 import { EventList, type Filter } from "./components/EventList";
 import { Explorer } from "./components/Explorer";
+import { Glossary } from "./components/Glossary";
 import { Header } from "./components/Header";
 import { Method } from "./components/Method";
 import { loadManifest } from "./data/load";
@@ -66,6 +67,7 @@ export function App() {
       <Header page={page} onNavigate={navigate} />
       <main className="main-container" id="app-main">
         {page === "method" && <Method />}
+        {page === "glossary" && <Glossary />}
         {page === "about" && <About />}
         {page === "events" && state.kind === "loading" && <p className="t-label">Loading events</p>}
         {page === "events" && state.kind === "error" && (

@@ -99,6 +99,19 @@ describe("parseEvent", () => {
     expect(parseEvent({ ...event, reaction: null }).reaction).toBeNull();
   });
 
+  it("reads the insight and treats a missing one as none", () => {
+    const insight = {
+      in_50: true, in_90: false, surprise_rank_pct: 0.28, series_n: 58,
+      series_hit_50: 0.53, series_hit_90: 0.88, yield_n: 57,
+      dgs2_bp_per_sd: 6.06, dgs10_bp_per_sd: 4.12, dgs2_corr: 0.55, dgs10_corr: 0.48,
+    };
+    expect(parseEvent({ ...event, insight }).insight).toEqual(insight);
+    expect(parseEvent(event).insight).toBeNull();
+    expect(() => parseEvent({ ...event, insight: { ...insight, in_50: "yes" } })).toThrow(
+      "event.insight.in_50",
+    );
+  });
+
   it("names a malformed reaction field", () => {
     const reaction = { date: "2026-10-14", prev_date: null, dgs2_bp: "six", dgs10_bp: 4 };
     expect(() => parseEvent({ ...event, reaction })).toThrow("event.reaction.dgs2_bp");

@@ -9,6 +9,7 @@ import {
   unitParts,
 } from "../lib/format";
 import { releaseWhen, type EventStatus } from "../lib/snapshots";
+import { Term } from "./Term";
 
 function Hero({ value, unit, className }: { value: number; unit: string | null; className: string }) {
   const { lead, rest } = unitParts(unit);
@@ -39,16 +40,21 @@ export function KeyStrip({ event, status, anchor }: Props) {
   return (
     <div className="key-strip" aria-label="Summary figures">
       <div className="key-block">
-        <div className="key-label">Market expected ({anchor ? hourLabel(anchor.h) : "n/a"})</div>
+        <div className="key-label">
+          Market expected (<Term id="t-1h">{anchor ? hourLabel(anchor.h) : "n/a"}</Term>)
+        </div>
         {anchor && anchor.p50 !== null ? (
           <>
             <Hero value={anchor.p50} unit={unit} className="val-market" />
             {anchor.p25 !== null && anchor.p75 !== null && (
-              <div className="key-sub num">50% range {precise(anchor.p25)} to {precise(anchor.p75)}</div>
+              <div className="key-sub num">
+                <Term id="range">50% range</Term> {precise(anchor.p25)} to {precise(anchor.p75)}
+              </div>
             )}
             {anchor.mean !== null && anchor.sd !== null && (
               <div className="key-sub-micro num">
-                Median shown. Mean {precise(anchor.mean)}, SD {precise(anchor.sd)}
+                <Term id="median">Median</Term> shown. Mean {precise(anchor.mean)},{" "}
+                <Term id="sd">SD</Term> {precise(anchor.sd)}
               </div>
             )}
           </>
@@ -58,12 +64,16 @@ export function KeyStrip({ event, status, anchor }: Props) {
       </div>
 
       <div className="key-block">
-        <div className="key-label">First print</div>
+        <div className="key-label"><Term id="first-print">First print</Term></div>
         {status === "published" && event.first_print !== null ? (
           <>
             <Hero value={event.first_print} unit={unit} className="val-actual" />
             <div className="key-sub">
-              {event.first_print_source === "alfred" ? "First release, from ALFRED" : "Kalshi settlement value"}
+              {event.first_print_source === "alfred" ? (
+                <>First release, from <Term id="alfred">ALFRED</Term></>
+              ) : (
+                "Kalshi settlement value"
+              )}
             </div>
             {event.first_print_source === "alfred" && event.settled_value !== null && (
               <div className="key-sub-micro num">
@@ -87,7 +97,7 @@ export function KeyStrip({ event, status, anchor }: Props) {
       </div>
 
       <div className="key-block">
-        <div className="key-label">Surprise</div>
+        <div className="key-label"><Term id="surprise">Surprise</Term></div>
         {event.surprise_sd !== null && event.surprise !== null ? (
           <>
             <div className={`t-hero ${event.surprise_sd >= 0 ? "val-surprise-up" : "val-surprise-down"}`}>
@@ -100,7 +110,8 @@ export function KeyStrip({ event, status, anchor }: Props) {
             <div className="key-sub-micro num">Print minus mean: {formatDelta(event.surprise, unit)}</div>
             {event.reaction?.dgs2_bp != null && event.reaction.dgs10_bp != null && (
               <div className="key-sub-micro num">
-                Release day: 2y {formatBp(event.reaction.dgs2_bp)}, 10y {formatBp(event.reaction.dgs10_bp)}
+                Release day: <Term id="yield">2y</Term> {formatBp(event.reaction.dgs2_bp)}, 10y{" "}
+                {formatBp(event.reaction.dgs10_bp)}
               </div>
             )}
           </>

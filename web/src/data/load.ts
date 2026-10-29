@@ -5,6 +5,7 @@ import {
   SCHEMA_VERSION,
   type Bin,
   type EventFile,
+  type Insight,
   type Manifest,
   type ManifestEvent,
   type Reaction,
@@ -126,6 +127,33 @@ function parseReaction(value: unknown, where: string): Reaction | null {
   };
 }
 
+function boolOrNull(o: Json, key: string, where: string): boolean | null {
+  const v = o[key];
+  if (v !== null && typeof v !== "boolean") {
+    throw new DataError(`${where}.${key}: expected true, false or null`);
+  }
+  return v;
+}
+
+// older files have no "insight" key; that reads as none
+function parseInsight(value: unknown, where: string): Insight | null {
+  if (value === undefined || value === null) return null;
+  const o = obj(value, where);
+  return {
+    in_50: boolOrNull(o, "in_50", where),
+    in_90: boolOrNull(o, "in_90", where),
+    surprise_rank_pct: numOrNull(o, "surprise_rank_pct", where),
+    series_n: num(o, "series_n", where),
+    series_hit_50: numOrNull(o, "series_hit_50", where),
+    series_hit_90: numOrNull(o, "series_hit_90", where),
+    yield_n: numOrNull(o, "yield_n", where),
+    dgs2_bp_per_sd: numOrNull(o, "dgs2_bp_per_sd", where),
+    dgs10_bp_per_sd: numOrNull(o, "dgs10_bp_per_sd", where),
+    dgs2_corr: numOrNull(o, "dgs2_corr", where),
+    dgs10_corr: numOrNull(o, "dgs10_corr", where),
+  };
+}
+
 function parseManifestEvent(value: unknown, where: string): ManifestEvent {
   const o = obj(value, where);
   return {
@@ -183,6 +211,7 @@ export function parseEvent(value: unknown): EventFile {
     surprise: numOrNull(o, "surprise", "event"),
     surprise_sd: numOrNull(o, "surprise_sd", "event"),
     reaction: parseReaction(o.reaction, "event.reaction"),
+    insight: parseInsight(o.insight, "event.insight"),
     snapshots: list(o, "snapshots", "event").map((s, i) =>
       parseSnapshot(s, `event.snapshots[${i}]`),
     ),

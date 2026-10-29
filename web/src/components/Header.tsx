@@ -62,6 +62,7 @@ function ThemeSwitch() {
 const PAGES: [Page, string][] = [
   ["events", "Events"],
   ["method", "Method"],
+  ["glossary", "Glossary"],
   ["about", "About"],
 ];
 

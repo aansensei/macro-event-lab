@@ -48,6 +48,9 @@ def _gold(tmp_path) -> Paths:
         "surprise": 0.029, "surprise_sd": 0.2357723577,
         "reaction_date": date(2026, 10, 14), "reaction_prev_date": date(2026, 10, 13),
         "dgs2_change_bp": 6.0, "dgs10_change_bp": 4.0,
+        "in_50": True, "in_90": True, "surprise_rank_pct": 0.25, "series_n": 41,
+        "series_hit_50": 0.51, "series_hit_90": 0.88, "yield_n": 39,
+        "dgs2_bp_per_sd": 2.1234567, "dgs10_bp_per_sd": 1.5, "dgs2_corr": 0.42, "dgs10_corr": 0.3,
     }, {
         "series_ticker": "KXCPI", "event_ticker": "KXCPI-27JAN",
         "close": CLOSE + timedelta(days=90), "release_date": None,
@@ -56,6 +59,9 @@ def _gold(tmp_path) -> Paths:
         "mean_t1h": None, "sd_t1h": None, "surprise": None, "surprise_sd": None,
         "reaction_date": None, "reaction_prev_date": None,
         "dgs2_change_bp": None, "dgs10_change_bp": None,
+        "in_50": None, "in_90": None, "surprise_rank_pct": None, "series_n": None,
+        "series_hit_50": None, "series_hit_90": None, "yield_n": None,
+        "dgs2_bp_per_sd": None, "dgs10_bp_per_sd": None, "dgs2_corr": None, "dgs10_corr": None,
     }], schema_overrides={"close": TS}).write_parquet(paths.gold / "event_surprise.parquet")
 
     keys = {"series_ticker": "KXCPI", "event_ticker": "KXCPI-26SEP"}
@@ -104,6 +110,9 @@ def test_build_web_writes_manifest_and_event_files(tmp_path):
     assert event["reaction"] == {
         "date": "2026-10-14", "prev_date": "2026-10-13", "dgs2_bp": 6.0, "dgs10_bp": 4.0,
     }
+    insight = event["insight"]
+    assert (insight["in_50"], insight["series_n"], insight["yield_n"]) == (True, 41, 39)
+    assert insight["dgs2_bp_per_sd"] == 2.123457  # rounded to 6 digits
 
 
 def test_build_web_is_byte_identical_when_rebuilt(tmp_path):

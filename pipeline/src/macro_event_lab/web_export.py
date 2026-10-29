@@ -114,6 +114,20 @@ def event_payload(
             "dgs2_bp": _num(event["dgs2_change_bp"]),
             "dgs10_bp": _num(event["dgs10_change_bp"]),
         },
+        # how this event compares with every other event of its series
+        "insight": None if event.get("series_n") is None else {
+            "in_50": event["in_50"],
+            "in_90": event["in_90"],
+            "surprise_rank_pct": _num(event["surprise_rank_pct"]),
+            "series_n": event["series_n"],
+            "series_hit_50": _num(event["series_hit_50"]),
+            "series_hit_90": _num(event["series_hit_90"]),
+            "yield_n": event["yield_n"],
+            "dgs2_bp_per_sd": _num(event["dgs2_bp_per_sd"]),
+            "dgs10_bp_per_sd": _num(event["dgs10_bp_per_sd"]),
+            "dgs2_corr": _num(event["dgs2_corr"]),
+            "dgs10_corr": _num(event["dgs10_corr"]),
+        },
         # bins: [lower, upper, probability], null marks an open end;
         # survival: [strike k, raw contract price, isotonic P(X > k)]
         "snapshots": snapshots,

@@ -609,6 +609,69 @@ def release_reactions(events: pl.DataFrame, observations: pl.DataFrame) -> pl.Da
     )
 
 
+MIN_YIELD_PAIRS = 10
+
+
+def event_insights(
+    events: pl.DataFrame, stats: pl.DataFrame, min_pairs: int = MIN_YIELD_PAIRS
+) -> pl.DataFrame:
+    """What each event says once set against every other event of its series.
+
+    Per event: whether the first print fell inside the T-1h 50% and 90% ranges, and
+    surprise_rank_pct, the share of the series' other published events with a smaller absolute
+    surprise (in SD). Per series, attached to each of its events: series_n published events,
+    series_hit_50 and series_hit_90, the share of first prints inside those ranges (a calibrated
+    market lands near 0.5 and 0.9), and the least squares slope of the release-day 2 and 10 year
+    yield changes on the surprise, in bp per SD, with their correlations. A series with fewer than
+    `min_pairs` events that have both a surprise and yield changes gets no slope.
+    """
+    t1h = stats.filter(pl.col("hours_before_close") == 1).select(
+        "event_ticker", "p05", "p25", "p75", "p95"
+    )
+    fp = pl.col("first_print")
+    abs_sd = pl.col("surprise_sd").abs()
+    known = abs_sd.count().over("series_ticker")
+    ranked = events.join(t1h, on="event_ticker", how="left").with_columns(
+        in_50=pl.when(fp.is_null() | pl.col("p25").is_null()).then(None)
+        .otherwise(fp.is_between(pl.col("p25"), pl.col("p75"))),
+        in_90=pl.when(fp.is_null() | pl.col("p05").is_null()).then(None)
+        .otherwise(fp.is_between(pl.col("p05"), pl.col("p95"))),
+        surprise_rank_pct=pl.when(abs_sd.is_null() | (known < 2)).then(None)
+        .otherwise((abs_sd.rank("min").over("series_ticker") - 1) / (known - 1)),
+    )
+    series = ranked.group_by("series_ticker").agg(
+        series_n=pl.col("surprise_sd").count(),
+        series_hit_50=pl.col("in_50").cast(pl.Float64).mean(),
+        series_hit_90=pl.col("in_90").cast(pl.Float64).mean(),
+    )
+    sd = pl.col("surprise_sd")
+    sensitivity = (
+        ranked.filter(
+            sd.is_not_null()
+            & pl.col("dgs2_change_bp").is_not_null()
+            & pl.col("dgs10_change_bp").is_not_null()
+        )
+        .group_by("series_ticker")
+        .agg(
+            yield_n=pl.len(),
+            dgs2_bp_per_sd=pl.cov(sd, "dgs2_change_bp") / sd.var(),
+            dgs10_bp_per_sd=pl.cov(sd, "dgs10_change_bp") / sd.var(),
+            dgs2_corr=pl.corr(sd, "dgs2_change_bp"),
+            dgs10_corr=pl.corr(sd, "dgs10_change_bp"),
+        )
+        .with_columns(
+            pl.when(pl.col("yield_n") >= min_pairs).then(pl.col(c)).otherwise(None).alias(c)
+            for c in ("dgs2_bp_per_sd", "dgs10_bp_per_sd", "dgs2_corr", "dgs10_corr")
+        )
+    )
+    return (
+        ranked.select("event_ticker", "series_ticker", "in_50", "in_90", "surprise_rank_pct")
+        .join(series, on="series_ticker", how="left")
+        .join(sensitivity, on="series_ticker", how="left")
+        .drop("series_ticker")
+    )
+
+
 def build_gold(paths: Paths) -> dict[str, int]:
     candles = pl.read_parquet(paths.silver / "kalshi_candles.parquet")
     markets = pl.read_parquet(paths.silver / "kalshi_markets.parquet")
@@ -618,14 +681,15 @@ def build_gold(paths: Paths) -> dict[str, int]:
     survival, bins = implied_distributions(markets, prices)
     stats = implied_stats(bins)
     surprises = event_surprises(markets, observations, stats)
+    events = surprises.join(
+        release_reactions(surprises, observations), on="event_ticker", how="left"
+    )
     tables = {
         "contract_prices": prices,
         "implied_survival": survival,
         "implied_bins": with_week_ago(bins),
         "implied_stats": stats,
-        "event_surprise": surprises.join(
-            release_reactions(surprises, observations), on="event_ticker", how="left"
-        ),
+        "event_surprise": events.join(event_insights(events, stats), on="event_ticker", how="left"),
     }
     # industry returns need `ingest french`; without it the table is simply not built
     french_path = paths.silver / "french_daily.parquet"

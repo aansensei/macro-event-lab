@@ -66,6 +66,8 @@ html, body {
   line-height: 24px;
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
+  /* nothing that pokes past the right edge (a hint near the edge) may create a sideways scroll */
+  overflow-x: clip;
 }
 
 .t-micro { font-size: 12px; line-height: 16px; }
@@ -612,6 +614,69 @@ input[type="range"].time-slider { width: 100%; height: 24px; accent-color: var(-
   margin: 12px 0 20px 0;
 }
 .sidenote-box strong { color: var(--text); }
+
+/* a glossary term keeps the surrounding text color with a dotted underline; its hint appears above on hover or focus */
+.term {
+  color: inherit;
+  text-decoration: underline dotted;
+  text-decoration-color: var(--border-control);
+  text-underline-offset: 3px;
+  position: relative;
+}
+.term:hover { text-decoration-color: var(--accent); }
+/* the hint only exists while shown, so hidden hints never widen the page */
+.term:hover::after, .term:focus-visible::after {
+  content: attr(data-hint);
+  position: absolute;
+  left: 0;
+  bottom: calc(100% + 6px);
+  z-index: 20;
+  width: max-content;
+  max-width: min(260px, 70vw);
+  padding: 8px 10px;
+  border-radius: 6px;
+  background-color: var(--text);
+  color: var(--bg);
+  font-size: 12px;
+  line-height: 16px;
+  font-weight: 400;
+  letter-spacing: 0;
+  text-transform: none;
+  white-space: normal;
+  pointer-events: none;
+  animation: hint-in 0.15s ease both;
+}
+@keyframes hint-in {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: none; }
+}
+
+/* the plain words reading sits first on an event page, as a quiet tinted panel */
+.plain-words {
+  background-color: var(--accent-tint);
+  border-radius: 8px;
+  padding: 14px 16px;
+  margin-bottom: 32px;
+  max-width: 78ch;
+}
+.plain-words p { margin: 6px 0 0 0; line-height: 25px; }
+.plain-words-link { display: inline-block; margin-top: 10px; font-size: 13px; }
+
+.glossary-list { margin: 32px 0 0 0; }
+.glossary-entry {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 4px;
+  padding: 16px 0;
+  border-top: 1px solid var(--border);
+  scroll-margin-top: 96px;
+}
+@media (min-width: 640px) {
+  .glossary-entry { grid-template-columns: 220px 1fr; gap: 24px; }
+}
+.glossary-entry dt { font-weight: 600; }
+.glossary-entry dd { margin: 0; color: var(--text-muted); line-height: 26px; }
+.glossary-entry:target { background-color: var(--accent-tint); }
 
 /* the about page is one 760px reading column; rows pair a short label with its explanation */
 .t-h2 { font-size: 24px; line-height: 30px; font-weight: 500; margin: 0; }

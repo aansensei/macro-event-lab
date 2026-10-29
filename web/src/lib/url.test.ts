@@ -10,6 +10,7 @@ describe("url state", () => {
   it("reads the method and about pages", () => {
     expect(parseUrlState(pageSearch("about")).page).toBe("about");
     expect(parseUrlState(pageSearch("method")).page).toBe("method");
+    expect(parseUrlState(pageSearch("glossary")).page).toBe("glossary");
     expect(parseUrlState("?page=unknown").page).toBe("events");
   });
 

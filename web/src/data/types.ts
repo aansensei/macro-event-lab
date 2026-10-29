@@ -30,6 +30,22 @@ export interface Reaction {
   dgs10_bp: number | null;
 }
 
+// this event set against every other event of its series (pipeline gold.event_insights)
+export interface Insight {
+  in_50: boolean | null;
+  in_90: boolean | null;
+  // share of the series' other events with a smaller absolute surprise, 0 to 1
+  surprise_rank_pct: number | null;
+  series_n: number;
+  series_hit_50: number | null;
+  series_hit_90: number | null;
+  yield_n: number | null;
+  dgs2_bp_per_sd: number | null;
+  dgs10_bp_per_sd: number | null;
+  dgs2_corr: number | null;
+  dgs10_corr: number | null;
+}
+
 export type FirstPrintSource = "alfred" | "kalshi";
 export type MatchMethod = "reference_period" | "release_window";
 
@@ -51,6 +67,7 @@ export interface EventFile {
   surprise: number | null;
   surprise_sd: number | null;
   reaction: Reaction | null;
+  insight: Insight | null;
   snapshots: Snapshot[];
 }
 

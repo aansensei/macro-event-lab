@@ -12,6 +12,7 @@ from macro_event_lab.gold import (
     build_gold,
     contract_prices,
     distribution_stats,
+    event_insights,
     event_surprises,
     first_prints,
     implied_distributions,
@@ -522,3 +523,50 @@ def test_release_day_industry_and_market_returns():
     assert set(out["event_ticker"]) == {"CPI-AUG"}
     returns = dict(zip(out["portfolio"].to_list(), out["ret_pct"].to_list(), strict=True))
     assert returns == {"BusEq": 1.25, "Money": -0.40, "Market": pytest.approx(0.72)}
+
+
+INSIGHT_EVENT_SCHEMA = {
+    "series_ticker": pl.String, "event_ticker": pl.String, "first_print": pl.Float64,
+    "surprise_sd": pl.Float64, "dgs2_change_bp": pl.Float64, "dgs10_change_bp": pl.Float64,
+}
+
+
+def test_event_insights_rank_calibration_and_yield_sensitivity():
+    events = pl.DataFrame([
+        # (series, event, first print, surprise in SD, 2y bp, 10y bp)
+        ("KXCPI", "C1", 0.30, -1.0, -6.0, -3.0),
+        ("KXCPI", "C2", 0.40, 0.0, 0.0, 0.0),
+        ("KXCPI", "C3", 0.50, 1.0, 6.0, 3.0),
+        ("KXCPI", "C4", 0.90, 2.0, 12.0, 6.0),
+        ("KXCPI", "C5", None, None, None, None),  # never published
+        ("KXFED", "F1", 4.0, 0.5, 1.0, 1.0),
+    ], schema=INSIGHT_EVENT_SCHEMA, orient="row")
+    stats = pl.DataFrame({
+        "event_ticker": ["C1", "C2", "C3", "C4", "C5", "F1"],
+        "hours_before_close": [1] * 6,
+        "p05": [0.1, 0.1, 0.1, 0.1, 0.1, 3.5],
+        "p25": [0.2, 0.3, 0.3, 0.3, 0.3, 3.9],
+        "p75": [0.4, 0.5, 0.5, 0.5, 0.5, 4.1],
+        "p95": [0.6, 0.6, 0.6, 0.6, 0.6, 4.5],
+    })
+
+    rows = event_insights(events, stats, min_pairs=3).iter_rows(named=True)
+    out = {r["event_ticker"]: r for r in rows}
+
+    # C1 0.30 sits inside both ranges; C4 0.90 is outside both
+    assert (out["C1"]["in_50"], out["C1"]["in_90"]) == (True, True)
+    assert (out["C4"]["in_50"], out["C4"]["in_90"]) == (False, False)
+    assert out["C5"]["in_50"] is None
+    # |surprise| 0, 1, 1, 2: C4 is larger than all three others, C2 than none
+    assert out["C4"]["surprise_rank_pct"] == pytest.approx(1.0)
+    assert out["C2"]["surprise_rank_pct"] == pytest.approx(0.0)
+    assert out["C1"]["surprise_rank_pct"] == pytest.approx(1 / 3)
+    cpi = out["C3"]
+    assert (cpi["series_n"], cpi["series_hit_50"], cpi["series_hit_90"]) == (4, 0.75, 0.75)
+    assert cpi["dgs2_bp_per_sd"] == pytest.approx(6.0)
+    assert cpi["dgs10_bp_per_sd"] == pytest.approx(3.0)
+    assert cpi["dgs2_corr"] == pytest.approx(1.0)
+    assert cpi["yield_n"] == 4
+    # one FOMC event is too few pairs for a slope
+    assert out["F1"]["dgs2_bp_per_sd"] is None
+    assert out["F1"]["surprise_rank_pct"] is None

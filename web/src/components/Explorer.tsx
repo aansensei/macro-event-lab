@@ -25,6 +25,7 @@ import {
 import { oddsSeries } from "../lib/charts";
 import { BinChart } from "./BinChart";
 import { KeyStrip } from "./KeyStrip";
+import { PlainWords } from "./PlainWords";
 import { ReactionBlock } from "./ReactionBlock";
 import { FanChart, OddsChart } from "./OverTimeChart";
 import { ThresholdChart, type ThresholdMode } from "./ThresholdChart";
@@ -266,6 +267,8 @@ export function Explorer({ entry, dataThrough, initialHour, onHourChange }: Prop
           the close are shown as they were.
         </div>
       )}
+
+      <PlainWords event={ev} status={status} expectedMedian={anchor?.p50 ?? null} />
 
       <KeyStrip event={ev} status={status} anchor={anchor} />
 
