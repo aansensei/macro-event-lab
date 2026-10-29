@@ -10,7 +10,7 @@ Macro Event Lab is an automated, point-in-time data pipeline that:
 4. Measures how Treasury yields and sector stocks reacted to the surprise.
 5. Serves everything on a fully interactive website.
 
-**Status:** the pipeline (ingestion, point-in-time tables, implied distributions, surprises) and the website's Event Explorer, Method and About pages run locally. Publishing waits on written permission from Kalshi for its market data. Treasury yields and sector reactions come next. See [ROADMAP.md](ROADMAP.md).
+**Status:** the pipeline (ingestion, point-in-time tables, implied distributions, surprises) and the website's Event Explorer, Method and About pages run locally. Publishing waits on written permission from Kalshi for its market data. Treasury yields and sector reactions come next.
 
 ## Repo layout
 
