@@ -683,9 +683,9 @@ input[type="range"].time-slider {
 
 .skeleton-box { background-color: var(--surface-hover); border-radius: 6px; }
 
-/* footer: brand and tagline beside three short columns, then a ruled bottom line; columns fold to two, then one */
+/* footer: brand, status and profile links beside three short columns, then a ruled bottom line; columns fold to two, then one */
 .site-footer {
-  border-top: 1px solid var(--border);
+  position: relative;
   margin-top: 96px;
   padding: 48px 16px 24px;
   background-color: var(--surface);
@@ -693,27 +693,81 @@ input[type="range"].time-slider {
   font-size: 14px;
   line-height: 22px;
 }
+/* a hairline that glows in the accent at its centre and fades out toward both edges */
+.site-footer::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--accent) 50%, transparent);
+  opacity: 0.55;
+}
 .footer-grid {
   max-width: 1200px;
   margin: 0 auto;
   display: grid;
-  grid-template-columns: minmax(0, 1fr);
-  gap: 32px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 36px 24px;
 }
+.footer-brand { grid-column: 1 / -1; }
 @media (min-width: 640px) {
   .site-footer { padding: 56px 24px 24px; }
-  .footer-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .footer-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 }
 @media (min-width: 1024px) {
   .site-footer { padding: 64px 32px 28px; }
-  .footer-grid { grid-template-columns: minmax(0, 1.6fr) repeat(3, minmax(0, 1fr)); gap: 48px; }
+  .footer-grid { grid-template-columns: minmax(0, 1.5fr) repeat(3, minmax(0, 1fr)); gap: 48px; }
+  .footer-brand { grid-column: auto; }
 }
-.footer-brand img { height: 28px; width: auto; display: block; }
-.footer-brand p { margin: 14px 0 0 0; max-width: 34ch; }
-.footer-col { display: flex; flex-direction: column; align-items: flex-start; gap: 6px; }
-.footer-col p { margin: 0; }
+.footer-mark { display: flex; align-items: center; gap: 10px; }
+.footer-mark img { height: 28px; width: auto; display: block; }
+.footer-name { font-size: 16px; font-weight: 600; color: var(--text); letter-spacing: -0.01em; }
+.footer-tagline { margin: 14px 0 0 0; max-width: 36ch; }
+.footer-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin: 18px 0 0 0;
+  padding: 4px 12px 4px 10px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background-color: var(--bg);
+  font-size: 12px;
+  line-height: 18px;
+}
+.footer-status .num { color: var(--text); }
+/* the status dot breathes slowly to show the data is maintained */
+.footer-status-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background-color: var(--accent);
+  box-shadow: 0 0 0 0 var(--accent-tint);
+  animation: status-pulse 2.4s ease-in-out infinite;
+}
+@keyframes status-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 var(--accent-tint); }
+  50% { box-shadow: 0 0 0 5px var(--accent-tint); }
+}
+.footer-social { display: flex; gap: 8px; margin-top: 18px; }
+.footer-social-btn {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background-color: var(--bg);
+  color: var(--text-muted);
+  transition: color 0.18s ease, border-color 0.18s ease, transform 0.18s ease;
+}
+.footer-social-btn:hover { color: var(--accent); border-color: var(--accent); transform: translateY(-2px); text-decoration: none; }
+.footer-social-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.footer-col { min-width: 0; }
 .footer-head {
-  margin: 0 0 6px 0;
+  margin: 0 0 12px 0;
   font-size: 12px;
   line-height: 16px;
   font-weight: 600;
@@ -721,21 +775,31 @@ input[type="range"].time-slider {
   text-transform: uppercase;
   color: var(--text);
 }
+.footer-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.footer-source { display: flex; flex-direction: column; }
+.footer-role { font-size: 12px; line-height: 16px; color: var(--text-muted); opacity: 0.85; }
+/* links underline from the left on hover instead of changing colour alone */
 .footer-link {
   padding: 0;
   border: none;
   background: none;
+  font: inherit;
   font-size: 14px;
   line-height: 22px;
-  color: var(--text-muted);
+  color: var(--text);
   text-decoration: none;
   cursor: pointer;
-  transition: color 0.18s ease;
+  background-image: linear-gradient(var(--accent), var(--accent));
+  background-size: 0% 1px;
+  background-position: 0 100%;
+  background-repeat: no-repeat;
+  transition: color 0.18s ease, background-size 0.25s ease;
 }
-.footer-link:hover { color: var(--accent); text-decoration: none; }
+.footer-link:hover { color: var(--accent); background-size: 100% 1px; text-decoration: none; }
+.footer-link:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 2px; }
 .footer-bottom {
   max-width: 1200px;
-  margin: 40px auto 0;
+  margin: 44px auto 0;
   padding-top: 20px;
   border-top: 1px solid var(--border);
   display: flex;
@@ -744,6 +808,9 @@ input[type="range"].time-slider {
   gap: 8px 24px;
   font-size: 12px;
   line-height: 18px;
+}
+@media (prefers-reduced-motion: reduce) {
+  .footer-status-dot { animation: none; }
 }
 
 /* the method page is a 640px reading column with notes beside it from 1024px */
@@ -1055,6 +1122,26 @@ input[type="range"].time-slider {
 .howto-title { font-weight: 600; }
 .howto-text { color: var(--text-muted); line-height: 25px; }
 .about-section > .t-h2 { margin-bottom: 8px; }
+.idea-text p { margin: 0 0 16px 0; line-height: 27px; max-width: 66ch; }
+.idea-kicker { font-size: 15px; font-weight: 600; margin: 24px 0 8px 0; }
+.idea-questions { list-style: none; margin: 0; padding: 0; }
+/* each question is marked with a short accent bar instead of a bullet */
+.idea-questions li {
+  position: relative;
+  padding: 10px 0 10px 20px;
+  border-top: 1px solid var(--border);
+  color: var(--text-muted);
+  line-height: 25px;
+}
+.idea-questions li::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 20px;
+  width: 10px;
+  height: 2px;
+  background-color: var(--accent);
+}
 .about-rows { margin: 0; }
 .about-rows > div { display: grid; grid-template-columns: 1fr; gap: 4px; padding: 16px 0; border-top: 1px solid var(--border); }
 @media (min-width: 640px) {
