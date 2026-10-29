@@ -27,7 +27,8 @@ npm run dev
 - `src/data/types.ts`: shapes of the JSON files, matching `pipeline/src/macro_event_lab/web_export.py`.
 - `src/data/load.ts`: fetches and validates the JSON; a wrong or outdated file fails with the name of the bad field.
 - `src/lib/`: formatting, point-in-time snapshot lookup, URL state, the plain words reading of each event and the glossary, all unit tested.
-- `src/components/`: the Event Explorer (event list, key figures, fan chart or FOMC odds over time, outcome bin chart, time controls, threshold chart) and the header.
+- `src/components/`: one file per page (Event Explorer, Compare, Method, Glossary, About) and per chart, plus the header.
+- `summary.json` (next to `manifest.json`): per series calibration and yield response, and one point per scored event, for the Compare page.
 - `public/`: logo and favicons, copied as is into the build.
 - Links keep the view: `?event=kxcpi-26sep&h=48` opens that event 48 hours before its market closed.
 - `prototype/`: the static design prototype the site is being built from.

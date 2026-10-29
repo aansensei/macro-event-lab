@@ -91,3 +91,36 @@ export interface Manifest {
   data_through: string | null;
   events: ManifestEvent[];
 }
+
+// one series in summary.json: how its markets did across every scored event
+export interface SeriesSummary {
+  series: string;
+  label: string;
+  n: number;
+  yield_n: number | null;
+  hit_50: number | null;
+  hit_90: number | null;
+  dgs2_bp_per_sd: number | null;
+  dgs10_bp_per_sd: number | null;
+  dgs2_corr: number | null;
+  dgs10_corr: number | null;
+  mean_abs_sd: number | null;
+}
+
+// one scored event in summary.json
+export interface SummaryPoint {
+  id: string;
+  series: string;
+  title: string;
+  surprise_sd: number;
+  dgs2_bp: number | null;
+  dgs10_bp: number | null;
+  in_50: boolean | null;
+  in_90: boolean | null;
+}
+
+export interface Summary {
+  schema_version: number;
+  series: SeriesSummary[];
+  points: SummaryPoint[];
+}

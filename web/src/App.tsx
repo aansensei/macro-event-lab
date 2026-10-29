@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { About } from "./components/About";
+import { Compare } from "./components/Compare";
 import { EventList, type Filter } from "./components/EventList";
 import { Explorer } from "./components/Explorer";
 import { Glossary } from "./components/Glossary";
@@ -66,6 +67,7 @@ export function App() {
     <>
       <Header page={page} onNavigate={navigate} />
       <main className="main-container" id="app-main">
+        {page === "compare" && <Compare />}
         {page === "method" && <Method />}
         {page === "glossary" && <Glossary />}
         {page === "about" && <About />}

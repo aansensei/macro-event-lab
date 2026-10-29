@@ -5,7 +5,7 @@ import polars as pl
 import pytest
 
 from macro_event_lab.config import Paths
-from macro_event_lab.web_export import build_web, event_id, event_title
+from macro_event_lab.web_export import build_web, event_id, event_title, summary_payload
 
 CLOSE = datetime(2026, 10, 14, 12, 29, tzinfo=UTC)
 TS = pl.Datetime("us", "UTC")
@@ -122,3 +122,45 @@ def test_build_web_is_byte_identical_when_rebuilt(tmp_path):
     build_web(paths)
     second = {p.name: p.read_bytes() for p in paths.web.rglob("*.json")}
     assert first == second
+
+
+SUMMARY_EVENT_SCHEMA = {
+    "series_ticker": pl.String, "event_ticker": pl.String, "reference_period": pl.Date,
+    "close": TS, "surprise_sd": pl.Float64, "dgs2_change_bp": pl.Float64,
+    "dgs10_change_bp": pl.Float64, "in_50": pl.Boolean, "in_90": pl.Boolean, "series_n": pl.UInt32,
+    "series_hit_50": pl.Float64, "series_hit_90": pl.Float64, "yield_n": pl.UInt32,
+    "dgs2_bp_per_sd": pl.Float64, "dgs10_bp_per_sd": pl.Float64, "dgs2_corr": pl.Float64,
+    "dgs10_corr": pl.Float64,
+}
+
+
+def test_summary_has_one_row_per_series_and_one_point_per_published_event():
+    series = (40, 0.5, 0.9, 38, 6.0, 4.0, 0.55, 0.48)
+    events = pl.DataFrame([
+        ("KXCPI", "KXCPI-26AUG", date(2026, 8, 1), CLOSE - timedelta(days=33), 1.5, 9.0, 5.0,
+         False, True, *series),
+        ("KXCPI", "KXCPI-26SEP", date(2026, 9, 1), CLOSE, -0.5, -2.0, -1.0, True, True, *series),
+        ("KXCPI", "KXCPI-26OCT", date(2026, 10, 1), CLOSE + timedelta(days=30), None, None, None,
+         None, None, *series),  # upcoming: no point
+    ], schema=SUMMARY_EVENT_SCHEMA, orient="row")
+
+    out = summary_payload(events)
+
+    (cpi,) = out["series"]
+    assert cpi["series"] == "KXCPI" and cpi["label"] == "CPI"
+    assert (cpi["n"], cpi["hit_50"], cpi["hit_90"]) == (40, 0.5, 0.9)
+    assert cpi["mean_abs_sd"] == 1.0  # mean of 1.5 and 0.5
+    assert [p["id"] for p in out["points"]] == ["kxcpi-26aug", "kxcpi-26sep"]
+    first = out["points"][0]
+    assert first == {
+        "id": "kxcpi-26aug", "series": "KXCPI", "title": "CPI, August 2026", "surprise_sd": 1.5,
+        "dgs2_bp": 9.0, "dgs10_bp": 5.0, "in_50": False, "in_90": True,
+    }
+
+
+def test_build_web_writes_the_summary(tmp_path):
+    paths = _gold(tmp_path)
+    build_web(paths)
+    summary = json.loads((paths.web / "summary.json").read_text(encoding="utf-8"))
+    assert summary["schema_version"] == 1
+    assert [p["id"] for p in summary["points"]] == ["kxcpi-26sep"]

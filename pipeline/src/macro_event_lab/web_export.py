@@ -134,6 +134,50 @@ def event_payload(
     }
 
 
+# summary key -> gold column; counts stay integers, the rest are rounded floats
+SERIES_COUNTS = {"n": "series_n", "yield_n": "yield_n"}
+SERIES_RATES = {
+    "hit_50": "series_hit_50", "hit_90": "series_hit_90",
+    "dgs2_bp_per_sd": "dgs2_bp_per_sd", "dgs10_bp_per_sd": "dgs10_bp_per_sd",
+    "dgs2_corr": "dgs2_corr", "dgs10_corr": "dgs10_corr",
+}
+
+
+def summary_payload(events: pl.DataFrame) -> dict[str, Any]:
+    """Everything the compare page draws: one row per series and one point per scored event.
+
+    Series rows carry the cross-event statistics of gold.event_insights plus mean_abs_sd, the
+    average size of a surprise. Points are the events with a surprise, oldest first.
+    """
+    scored = events.filter(pl.col("surprise_sd").is_not_null()).sort("close", "event_ticker")
+    series = []
+    for ticker in [s for s in SERIES_LABEL if s in set(events["series_ticker"])]:
+        rows = events.filter(pl.col("series_ticker") == ticker)
+        first = rows.row(0, named=True)
+        abs_sd = scored.filter(pl.col("series_ticker") == ticker)["surprise_sd"].abs()
+        series.append({
+            "series": ticker,
+            "label": SERIES_LABEL[ticker],
+            **{key: first[col] for key, col in SERIES_COUNTS.items()},
+            **{key: _num(first[col]) for key, col in SERIES_RATES.items()},
+            "mean_abs_sd": _num(abs_sd.mean()) if abs_sd.len() else None,
+        })
+    points = [
+        {
+            "id": event_id(e["event_ticker"]),
+            "series": e["series_ticker"],
+            "title": event_title(e["series_ticker"], e["reference_period"], e["close"]),
+            "surprise_sd": _num(e["surprise_sd"]),
+            "dgs2_bp": _num(e["dgs2_change_bp"]),
+            "dgs10_bp": _num(e["dgs10_change_bp"]),
+            "in_50": e["in_50"],
+            "in_90": e["in_90"],
+        }
+        for e in scored.iter_rows(named=True)
+    ]
+    return {"schema_version": SCHEMA_VERSION, "series": series, "points": points}
+
+
 def build_web(paths: Paths) -> dict[str, int]:
     """Write web/manifest.json and web/events/<id>.json for every event with snapshots."""
     events = pl.read_parquet(paths.gold / "event_surprise.parquet")
@@ -146,10 +190,12 @@ def build_web(paths: Paths) -> dict[str, int]:
     survival_by = survival.partition_by("event_ticker", as_dict=True)
 
     entries = []
+    shown = []
     for event in events.sort("close", "event_ticker").iter_rows(named=True):
         key = (event["event_ticker"],)
         if key not in stats_by:
             continue
+        shown.append(event["event_ticker"])
         payload = event_payload(
             event, stats_by[key], bins_by.get(key, bins.clear()),
             survival_by.get(key, survival.clear()),
@@ -167,4 +213,8 @@ def build_web(paths: Paths) -> dict[str, int]:
         "data_through": _iso(last),
         "events": entries,
     })
+    _write_json(
+        paths.web / "summary.json",
+        summary_payload(events.filter(pl.col("event_ticker").is_in(shown))),
+    )
     return {"events": len(entries)}

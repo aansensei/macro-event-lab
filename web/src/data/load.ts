@@ -9,7 +9,10 @@ import {
   type Manifest,
   type ManifestEvent,
   type Reaction,
+  type SeriesSummary,
   type Snapshot,
+  type Summary,
+  type SummaryPoint,
   type SurvivalPoint,
 } from "./types";
 
@@ -242,4 +245,48 @@ export async function loadEvent(
   entry: ManifestEvent, base = "data/", fetchImpl: typeof fetch = fetch,
 ) {
   return parseEvent(await fetchJson(`${base}${entry.file}`, fetchImpl));
+}
+
+function parseSeriesSummary(value: unknown, where: string): SeriesSummary {
+  const o = obj(value, where);
+  return {
+    series: str(o, "series", where),
+    label: str(o, "label", where),
+    n: num(o, "n", where),
+    yield_n: numOrNull(o, "yield_n", where),
+    hit_50: numOrNull(o, "hit_50", where),
+    hit_90: numOrNull(o, "hit_90", where),
+    dgs2_bp_per_sd: numOrNull(o, "dgs2_bp_per_sd", where),
+    dgs10_bp_per_sd: numOrNull(o, "dgs10_bp_per_sd", where),
+    dgs2_corr: numOrNull(o, "dgs2_corr", where),
+    dgs10_corr: numOrNull(o, "dgs10_corr", where),
+    mean_abs_sd: numOrNull(o, "mean_abs_sd", where),
+  };
+}
+
+function parseSummaryPoint(value: unknown, where: string): SummaryPoint {
+  const o = obj(value, where);
+  return {
+    id: str(o, "id", where),
+    series: str(o, "series", where),
+    title: str(o, "title", where),
+    surprise_sd: num(o, "surprise_sd", where),
+    dgs2_bp: numOrNull(o, "dgs2_bp", where),
+    dgs10_bp: numOrNull(o, "dgs10_bp", where),
+    in_50: boolOrNull(o, "in_50", where),
+    in_90: boolOrNull(o, "in_90", where),
+  };
+}
+
+export function parseSummary(value: unknown): Summary {
+  const o = obj(value, "summary");
+  return {
+    schema_version: version(o, "summary"),
+    series: list(o, "series", "summary").map((s, i) => parseSeriesSummary(s, `summary.series[${i}]`)),
+    points: list(o, "points", "summary").map((p, i) => parseSummaryPoint(p, `summary.points[${i}]`)),
+  };
+}
+
+export async function loadSummary(base = "data/", fetchImpl: typeof fetch = fetch) {
+  return parseSummary(await fetchJson(`${base}summary.json`, fetchImpl));
 }

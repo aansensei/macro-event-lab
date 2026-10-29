@@ -1,6 +1,14 @@
 import { describe, expect, it } from "vitest";
 
-import { DataError, loadEvent, loadManifest, parseEvent, parseManifest } from "./load";
+import {
+  DataError,
+  loadEvent,
+  loadManifest,
+  loadSummary,
+  parseEvent,
+  parseManifest,
+  parseSummary,
+} from "./load";
 
 const entry = {
   id: "kxcpi-26sep",
@@ -133,5 +141,42 @@ describe("loading over fetch", () => {
     await expect(loadManifest("data/", fakeFetch({}))).rejects.toThrow(
       "Could not load data/manifest.json (HTTP 404)",
     );
+  });
+});
+
+describe("parseSummary", () => {
+  const summary = {
+    schema_version: 1,
+    series: [{
+      series: "KXCPI", label: "CPI", n: 58, yield_n: 58, hit_50: 0.53, hit_90: 0.88,
+      dgs2_bp_per_sd: 6.06, dgs10_bp_per_sd: 4.12, dgs2_corr: 0.55, dgs10_corr: 0.48,
+      mean_abs_sd: 0.69,
+    }],
+    points: [{
+      id: "kxcpi-26sep", series: "KXCPI", title: "CPI, September 2026", surprise_sd: 0.24,
+      dgs2_bp: 3, dgs10_bp: -2, in_50: true, in_90: true,
+    }],
+  };
+
+  it("reads series statistics and points", () => {
+    const s = parseSummary(summary);
+    expect(s.series[0]?.hit_90).toBe(0.88);
+    expect(s.points[0]?.id).toBe("kxcpi-26sep");
+  });
+
+  it("names a point without a surprise", () => {
+    const bad = { ...summary, points: [{ ...summary.points[0], surprise_sd: null }] };
+    expect(() => parseSummary(bad)).toThrow("summary.points[0].surprise_sd");
+  });
+
+  it("loads summary.json from the data folder", async () => {
+    const urls: string[] = [];
+    const fetchImpl = (async (url: string) => {
+      urls.push(url);
+      return new Response(JSON.stringify(summary));
+    }) as typeof fetch;
+    const s = await loadSummary("data/", fetchImpl);
+    expect(urls).toEqual(["data/summary.json"]);
+    expect(s.series).toHaveLength(1);
   });
 });
