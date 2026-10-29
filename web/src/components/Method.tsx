@@ -1,4 +1,5 @@
 import { MINUS } from "../lib/format";
+import { DataLineage } from "./DataLineage";
 
 function Code({ children }: { children: string }) {
   return <span className="mono">{children}</span>;
@@ -45,6 +46,8 @@ export function Method() {
           the 7 days before each US CPI, jobs, GDP and Fed release, and pairs it with the number first
           published on release day.
         </p>
+
+        <DataLineage />
 
         <h2 className="t-h2">1. From contract prices to a probability curve</h2>
         <p>

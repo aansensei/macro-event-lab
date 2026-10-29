@@ -759,6 +759,89 @@ input[type="range"].time-slider {
 /* the timeline keeps readable 12px labels on phones by scrolling sideways instead of shrinking */
 .method-diagram-wrap { overflow-x: auto; margin-top: 8px; }
 .method-diagram { width: 100%; min-width: 540px; height: auto; display: block; }
+/* the lineage runs top to bottom at every width: table boxes, then the method written on the arrow to the next table */
+.lineage {
+  list-style: none;
+  margin: 12px 0 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  -webkit-user-select: none;
+  user-select: none;
+}
+.lineage-row, .lineage-step { animation: flow-in 0.4s ease-out backwards; }
+.lineage-row { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; width: 100%; }
+.lineage-table {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  width: min(100%, 300px);
+  padding: 10px 12px;
+  background-color: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+/* a pair sits side by side until each box would be narrower than 140px, then stacks */
+.lineage-row.is-pair .lineage-table { width: auto; flex: 1 1 140px; max-width: 300px; }
+.lineage-table.layer-gold { border-color: var(--accent); background-color: var(--accent-tint); }
+.lineage-table.layer-web { border-style: dashed; border-color: var(--border-control); }
+.lineage-layer { font-size: 11px; line-height: 14px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-muted); }
+.layer-gold .lineage-layer { color: var(--accent); }
+.lineage-name {
+  font-family: "IBM Plex Mono", ui-monospace, monospace;
+  font-size: 13px;
+  line-height: 18px;
+  font-weight: 500;
+  color: var(--text);
+  overflow-wrap: break-word;
+}
+.lineage-holds { font-size: 12px; line-height: 16px; color: var(--text-muted); }
+.lineage-step { display: flex; flex-direction: column; align-items: center; padding: 2px 0; }
+/* the connector is a dashed line whose dashes drift downward, like data flowing to the next table */
+.lineage-line {
+  width: 2px;
+  height: 14px;
+  background-image: linear-gradient(to bottom, var(--accent) 50%, transparent 50%);
+  background-size: 2px 6px;
+  animation: lineage-flow 0.9s linear infinite;
+  opacity: 0.7;
+}
+.lineage-line.is-end { position: relative; height: 16px; }
+.lineage-line.is-end::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+  width: 7px;
+  height: 7px;
+  border-right: 2px solid var(--accent);
+  border-bottom: 2px solid var(--accent);
+  transform: translateX(-50%) rotate(45deg);
+}
+.lineage-method {
+  max-width: min(100%, 440px);
+  padding: 4px 10px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background-color: var(--bg);
+  font-size: 12px;
+  line-height: 16px;
+  color: var(--text);
+  text-align: center;
+}
+.flow-caption { margin-top: 12px; font-size: 13px; line-height: 19px; color: var(--text-muted); }
+@keyframes flow-in {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes lineage-flow {
+  from { background-position: 0 0; }
+  to { background-position: 0 6px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .lineage-row, .lineage-step, .lineage-line { animation: none; }
+}
 .code-block {
   background-color: var(--surface);
   border-radius: 8px;
