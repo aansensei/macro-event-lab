@@ -13,6 +13,7 @@ describe("url state", () => {
     expect(parseUrlState(pageSearch("glossary")).page).toBe("glossary");
     expect(parseUrlState(pageSearch("compare")).page).toBe("compare");
     expect(parseUrlState(pageSearch("scorecard")).page).toBe("scorecard");
+    expect(parseUrlState(pageSearch("revisions")).page).toBe("revisions");
     expect(parseUrlState("?page=unknown").page).toBe("events");
   });
 

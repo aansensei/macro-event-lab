@@ -215,6 +215,79 @@ def summary_payload(events: pl.DataFrame) -> dict[str, Any]:
     return {"schema_version": SCHEMA_VERSION, "series": series, "points": points}
 
 
+# A period counts as settled once this many months separate it from the newest vintage:
+# payroll benchmarks and seasonal factors keep revising younger numbers
+SETTLED_MONTHS = 24
+BIGGEST = 5
+
+
+def _months_between(start: date, end: date) -> int:
+    return (end.year - start.year) * 12 + end.month - start.month
+
+
+def revisions_payload(rev: pl.DataFrame) -> dict[str, Any]:
+    """Everything the revisions page draws, from gold.revisions: one block per series.
+
+    Each block lists every period's first, next and latest print, and summarises the settled
+    periods: the average and typical size of the total revision (latest minus first), the
+    typical change one report later, how often the number moved up or down by at least half
+    its publication step, and the typical size of the number itself for scale.
+    """
+    series = []
+    for ticker in [s for s in SERIES_LABEL if s in set(rev["series_ticker"])]:
+        rows = rev.filter(pl.col("series_ticker") == ticker).sort("reference_period")
+        latest_vintage = rows["latest_vintage"].max()
+        half_step = RESOLUTION[ticker] / 2
+        points = []
+        settled = []
+        for r in rows.iter_rows(named=True):
+            is_settled = _months_between(r["reference_period"], latest_vintage) >= SETTLED_MONTHS
+            points.append({
+                "period": _iso(r["reference_period"]),
+                "first": _num(r["first_print"]),
+                "next": _num(r["next_print"]),
+                "latest": _num(r["latest_print"]),
+                "settled": is_settled,
+            })
+            if is_settled and r["latest_print"] is not None:
+                settled.append(r)
+        totals = [r["latest_print"] - r["first_print"] for r in settled]
+        nexts = [r["next_print"] - r["first_print"] for r in settled if r["next_print"] is not None]
+        n = len(totals)
+
+        def mean(values: list[float]) -> float | None:
+            return _num(sum(values) / len(values)) if values else None
+
+        # sizes are rounded first so float noise cannot reorder revisions of the same size
+        biggest = sorted(settled, key=lambda r: (
+            -round(abs(r["latest_print"] - r["first_print"]), DIGITS), r["reference_period"]
+        ))[:BIGGEST]
+        series.append({
+            "series": ticker,
+            "label": SERIES_LABEL[ticker],
+            "unit": UNIT[ticker],
+            "resolution": RESOLUTION[ticker],
+            "latest_vintage": _iso(latest_vintage),
+            "n": n,
+            "mean_revision": mean(totals),
+            "mean_abs_revision": mean([abs(t) for t in totals]),
+            "mean_abs_next": mean([abs(x) for x in nexts]),
+            "share_up": _num(sum(t > half_step for t in totals) / n) if n else None,
+            "share_down": _num(sum(t < -half_step for t in totals) / n) if n else None,
+            "mean_abs_first": mean([abs(r["first_print"]) for r in settled]),
+            "biggest": [
+                {
+                    "period": _iso(r["reference_period"]),
+                    "first": _num(r["first_print"]),
+                    "latest": _num(r["latest_print"]),
+                }
+                for r in biggest
+            ],
+            "points": points,
+        })
+    return {"schema_version": SCHEMA_VERSION, "settled_months": SETTLED_MONTHS, "series": series}
+
+
 def strikes_at_anchor(snapshots: list[dict[str, Any]]) -> int:
     """How many "above k" contracts were priced at T-1h, or at the newest hour before it.
 
@@ -269,4 +342,9 @@ def build_web(paths: Paths) -> dict[str, int]:
         paths.web / "summary.json",
         summary_payload(events.filter(pl.col("event_ticker").is_in(shown))),
     )
+    # revisions come from ALFRED alone, so they are written whenever gold has the table
+    revisions_path = paths.gold / "revisions.parquet"
+    if revisions_path.exists():
+        payload = revisions_payload(pl.read_parquet(revisions_path))
+        _write_json(paths.web / "revisions.json", payload)
     return {"events": len(entries)}

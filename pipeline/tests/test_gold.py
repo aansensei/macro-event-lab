@@ -27,6 +27,7 @@ from macro_event_lab.gold import (
     reference_period_from_event,
     release_industry_returns,
     release_reactions,
+    revisions,
     with_week_ago,
 )
 
@@ -267,6 +268,39 @@ OBS_SCHEMA = {
 def _observations(rows: list[tuple]) -> pl.DataFrame:
     # (series_id, observation_date, value, realtime_start, realtime_end or None)
     return pl.DataFrame(rows, schema=OBS_SCHEMA, orient="row")
+
+
+def test_revisions_follow_a_period_from_release_day_to_the_current_vintage():
+    d = date
+    obs = _observations([
+        ("PAYEMS", d(2026, 5, 1), 1000.0, d(2026, 6, 5), None),
+        ("PAYEMS", d(2026, 6, 1), 1100.0, d(2026, 7, 2), d(2026, 8, 6)),
+        ("PAYEMS", d(2026, 6, 1), 1120.0, d(2026, 8, 7), d(2026, 9, 3)),  # revised in July's report
+        ("PAYEMS", d(2026, 6, 1), 1150.0, d(2026, 9, 4), None),  # and again in August's
+        ("PAYEMS", d(2026, 7, 1), 1200.0, d(2026, 8, 7), None),
+        ("PAYEMS", d(2026, 8, 1), 1300.0, d(2026, 9, 4), None),
+    ])
+
+    out = {
+        r["reference_period"]: r
+        for r in revisions(obs, since=d(2026, 1, 1)).iter_rows(named=True)
+    }
+
+    assert set(out) == {d(2026, 6, 1), d(2026, 7, 1), d(2026, 8, 1)}  # May has no April level
+    june = out[d(2026, 6, 1)]
+    assert (june["first_print"], june["next_print"], june["latest_print"]) == (
+        100000.0, 120000.0, 150000.0
+    )
+    assert june["next_release_date"] == d(2026, 8, 7)
+    july = out[d(2026, 7, 1)]  # both levels move together: 1200 against June as revised
+    assert (july["first_print"], july["next_print"], july["latest_print"]) == (
+        80000.0, 50000.0, 50000.0
+    )
+    august = out[d(2026, 8, 1)]  # published in the newest vintage: nothing later yet
+    assert august["next_release_date"] is None
+    assert august["next_print"] is None
+    assert august["first_print"] == august["latest_print"] == 100000.0
+    assert {r["latest_vintage"] for r in out.values()} == {d(2026, 9, 4)}
 
 
 def test_values_in_kalshi_units():

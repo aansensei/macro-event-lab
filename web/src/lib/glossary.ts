@@ -151,7 +151,21 @@ export const GLOSSARY: GlossaryEntry[] = [
     term: "Fit (isotonic regression)",
     short: "A small correction that makes raw contract prices consistent.",
     long: "Raw prices sometimes say a higher number is more likely than a lower one, which cannot be true. The fit nudges them, trusting tighter quotes more, until every bar is a valid probability.",
+  },  {
+    id: "revision",
+    term: "Revision",
+    short: "A later change to a number that was already published.",
+    long: "Agencies update a published number when more complete data arrive or when seasonal adjustment is recalculated. A jobs number can move by tens of thousands. This site keeps the first print for every surprise and shows the revisions on their own page.",
   },
+];
+
+// the glossary page groups its entries under these headings, in this order
+export const GLOSSARY_GROUPS: { id: string; title: string; ids: string[] }[] = [
+  { id: "gl-releases", title: "The releases", ids: ["cpi", "m-m", "payrolls", "gdp", "fomc"] },
+  { id: "gl-odds", title: "Market odds", ids: ["prediction-market", "implied-probability", "fit", "median", "sd", "range"] },
+  { id: "gl-release-day", title: "Release day and after", ids: ["surprise", "t-1h", "first-print", "revision", "alfred", "point-in-time"] },
+  { id: "gl-units", title: "Units and bonds", ids: ["pp", "bp", "yield"] },
+  { id: "gl-scoring", title: "Scoring forecasts", ids: ["calibration", "brier", "crps", "pit", "skill"] },
 ];
 
 export function glossaryEntry(id: string): GlossaryEntry | undefined {

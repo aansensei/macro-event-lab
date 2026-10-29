@@ -7,6 +7,7 @@ import {
   loadSummary,
   parseEvent,
   parseManifest,
+  parseRevisions,
   parseSummary,
 } from "./load";
 
@@ -190,5 +191,35 @@ describe("parseSummary", () => {
     const s = await loadSummary("data/", fetchImpl);
     expect(urls).toEqual(["data/summary.json"]);
     expect(s.series).toHaveLength(1);
+  });
+});
+
+describe("parseRevisions", () => {
+  const revisions = {
+    schema_version: 1,
+    settled_months: 24,
+    series: [{
+      series: "KXPAYROLLS", label: "Jobs", unit: "jobs", resolution: 1000, latest_vintage: "2026-10-02",
+      n: 1, mean_revision: -697000, mean_abs_revision: 697000, mean_abs_next: 0, share_up: 0, share_down: 1,
+      mean_abs_first: 701000,
+      biggest: [{ period: "2020-03-01", first: -701000, latest: -1398000 }],
+      points: [
+        { period: "2020-03-01", first: -701000, next: -701000, latest: -1398000, settled: true },
+        { period: "2026-09-01", first: 29000, next: null, latest: 29000, settled: false },
+      ],
+    }],
+  };
+
+  it("reads every series with its points", () => {
+    const r = parseRevisions(revisions);
+    expect(r.settled_months).toBe(24);
+    expect(r.series[0]?.biggest[0]?.latest).toBe(-1398000);
+    expect(r.series[0]?.points[1]?.next).toBeNull();
+  });
+
+  it("names the field when a point is malformed", () => {
+    const bad = structuredClone(revisions);
+    (bad.series[0]?.points[0] as Record<string, unknown>).settled = "yes";
+    expect(() => parseRevisions(bad)).toThrow("revisions.series[0].points[0].settled");
   });
 });

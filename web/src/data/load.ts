@@ -9,6 +9,9 @@ import {
   type Manifest,
   type ManifestEvent,
   type Reaction,
+  type RevisionPoint,
+  type Revisions,
+  type RevisionSeries,
   type SeriesScores,
   type SeriesSummary,
   type Snapshot,
@@ -311,4 +314,54 @@ export function parseSummary(value: unknown): Summary {
 
 export async function loadSummary(base = "data/", fetchImpl: typeof fetch = fetch) {
   return parseSummary(await fetchJson(`${base}summary.json`, fetchImpl));
+}
+
+function parseRevisionPoint(value: unknown, where: string): RevisionPoint {
+  const o = obj(value, where);
+  const settled = o.settled;
+  if (typeof settled !== "boolean") throw new DataError(`${where}.settled: expected true or false`);
+  return {
+    period: str(o, "period", where),
+    first: num(o, "first", where),
+    next: numOrNull(o, "next", where),
+    latest: numOrNull(o, "latest", where),
+    settled,
+  };
+}
+
+function parseRevisionSeries(value: unknown, where: string): RevisionSeries {
+  const o = obj(value, where);
+  return {
+    series: str(o, "series", where),
+    label: str(o, "label", where),
+    unit: str(o, "unit", where),
+    resolution: num(o, "resolution", where),
+    latest_vintage: str(o, "latest_vintage", where),
+    n: num(o, "n", where),
+    mean_revision: numOrNull(o, "mean_revision", where),
+    mean_abs_revision: numOrNull(o, "mean_abs_revision", where),
+    mean_abs_next: numOrNull(o, "mean_abs_next", where),
+    share_up: numOrNull(o, "share_up", where),
+    share_down: numOrNull(o, "share_down", where),
+    mean_abs_first: numOrNull(o, "mean_abs_first", where),
+    biggest: list(o, "biggest", where).map((b, i) => {
+      const w = `${where}.biggest[${i}]`;
+      const bo = obj(b, w);
+      return { period: str(bo, "period", w), first: num(bo, "first", w), latest: num(bo, "latest", w) };
+    }),
+    points: list(o, "points", where).map((p, i) => parseRevisionPoint(p, `${where}.points[${i}]`)),
+  };
+}
+
+export function parseRevisions(value: unknown): Revisions {
+  const o = obj(value, "revisions");
+  return {
+    schema_version: version(o, "revisions"),
+    settled_months: num(o, "settled_months", "revisions"),
+    series: list(o, "series", "revisions").map((s, i) => parseRevisionSeries(s, `revisions.series[${i}]`)),
+  };
+}
+
+export async function loadRevisions(base = "data/", fetchImpl: typeof fetch = fetch) {
+  return parseRevisions(await fetchJson(`${base}revisions.json`, fetchImpl));
 }

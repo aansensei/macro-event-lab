@@ -5,7 +5,14 @@ import polars as pl
 import pytest
 
 from macro_event_lab.config import Paths
-from macro_event_lab.web_export import build_web, event_id, event_title, summary_payload
+from macro_event_lab.gold import REVISION_SCHEMA
+from macro_event_lab.web_export import (
+    build_web,
+    event_id,
+    event_title,
+    revisions_payload,
+    summary_payload,
+)
 
 CLOSE = datetime(2026, 10, 14, 12, 29, tzinfo=UTC)
 TS = pl.Datetime("us", "UTC")
@@ -174,3 +181,35 @@ def test_build_web_writes_the_summary(tmp_path):
     summary = json.loads((paths.web / "summary.json").read_text(encoding="utf-8"))
     assert summary["schema_version"] == 1
     assert [p["id"] for p in summary["points"]] == ["kxcpi-26sep"]
+
+
+def test_revisions_summarise_settled_periods_and_list_every_period():
+    d = date
+    now = d(2026, 10, 14)
+    rev = pl.DataFrame(
+        [
+            ("KXCPI", d(2020, 1, 1), d(2020, 2, 13), 0.2, d(2020, 3, 11), 0.2, 0.3, now),
+            ("KXCPI", d(2020, 2, 1), d(2020, 3, 11), 0.1, d(2020, 4, 10), 0.1, 0.0, now),
+            ("KXCPI", d(2020, 3, 1), d(2020, 4, 10), 0.4, d(2020, 5, 12), 0.4, 0.4, now),
+            # too young to be settled: listed, but left out of the statistics
+            ("KXCPI", d(2026, 8, 1), d(2026, 9, 11), 0.3, None, None, 0.9, now),
+        ],
+        schema=REVISION_SCHEMA, orient="row",
+    )
+
+    out = revisions_payload(rev)
+
+    assert out["settled_months"] == 24
+    (cpi,) = out["series"]
+    assert (cpi["series"], cpi["label"], cpi["n"]) == ("KXCPI", "CPI", 3)
+    assert cpi["latest_vintage"] == "2026-10-14"
+    assert cpi["mean_revision"] == pytest.approx(0.0)
+    assert cpi["mean_abs_revision"] == pytest.approx(0.066667)
+    assert cpi["mean_abs_next"] == pytest.approx(0.0)
+    assert (cpi["share_up"], cpi["share_down"]) == (pytest.approx(1 / 3), pytest.approx(1 / 3))
+    assert cpi["mean_abs_first"] == pytest.approx(0.233333)
+    assert [b["period"] for b in cpi["biggest"]] == ["2020-01-01", "2020-02-01", "2020-03-01"]
+    assert [p["settled"] for p in cpi["points"]] == [True, True, True, False]
+    assert cpi["points"][3] == {
+        "period": "2026-08-01", "first": 0.3, "next": None, "latest": 0.9, "settled": False,
+    }
