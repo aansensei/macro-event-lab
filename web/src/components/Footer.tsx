@@ -49,7 +49,7 @@ interface Props {
   onNavigate: (page: Page) => void;
 }
 
-// brand, data status and profile links beside explore, data and project columns, then a ruled bottom line
+// brand, data status and profile links beside explore, data and project columns, then the copyright under a rule
 export function Footer({ dataThrough, onNavigate }: Props) {
   return (
     <footer className="site-footer">
@@ -116,8 +116,7 @@ export function Footer({ dataThrough, onNavigate }: Props) {
       </div>
 
       <div className="footer-bottom">
-        <span>&copy; 2026 Cao Thien An Nguyen. Built in Madison with Python, DuckDB and React.</span>
-        <span>Not investment advice. Not affiliated with Kalshi or the Federal Reserve.</span>
+        <span>&copy; 2026 Cao Thien An Nguyen</span>
       </div>
     </footer>
   );
