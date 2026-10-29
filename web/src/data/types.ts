@@ -140,3 +140,44 @@ export interface Summary {
   series: SeriesSummary[];
   points: SummaryPoint[];
 }
+
+// one period in revisions.json: its number on release day, one report later and today
+export interface RevisionPoint {
+  period: string;
+  first: number;
+  next: number | null;
+  latest: number | null;
+  // old enough (settled_months) that later revisions are unlikely to move it much
+  settled: boolean;
+}
+
+export interface RevisionBiggest {
+  period: string;
+  first: number;
+  latest: number;
+}
+
+// how one series' first prints changed afterwards (pipeline web_export.revisions_payload)
+export interface RevisionSeries {
+  series: string;
+  label: string;
+  unit: string;
+  resolution: number;
+  latest_vintage: string;
+  // statistics cover settled periods only
+  n: number;
+  mean_revision: number | null;
+  mean_abs_revision: number | null;
+  mean_abs_next: number | null;
+  share_up: number | null;
+  share_down: number | null;
+  mean_abs_first: number | null;
+  biggest: RevisionBiggest[];
+  points: RevisionPoint[];
+}
+
+export interface Revisions {
+  schema_version: number;
+  settled_months: number;
+  series: RevisionSeries[];
+}

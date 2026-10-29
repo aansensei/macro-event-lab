@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { GLOSSARY, glossaryEntry } from "./glossary";
+import { GLOSSARY, GLOSSARY_GROUPS, glossaryEntry } from "./glossary";
 
 describe("glossary", () => {
   it("has unique ids that are safe in a URL hash", () => {
@@ -19,5 +19,11 @@ describe("glossary", () => {
   it("looks entries up by id", () => {
     expect(glossaryEntry("sd")?.term).toBe("SD (standard deviation)");
     expect(glossaryEntry("missing")).toBeUndefined();
+  });
+
+  it("puts every entry in exactly one group", () => {
+    const grouped = GLOSSARY_GROUPS.flatMap((g) => g.ids);
+    expect(new Set(grouped).size).toBe(grouped.length);
+    expect([...grouped].sort()).toEqual(GLOSSARY.map((e) => e.id).sort());
   });
 });

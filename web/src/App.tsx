@@ -9,6 +9,7 @@ import { Footer } from "./components/Footer";
 import { Glossary } from "./components/Glossary";
 import { Header } from "./components/Header";
 import { Method } from "./components/Method";
+import { Revisions } from "./components/Revisions";
 import { Scorecard } from "./components/Scorecard";
 import { loadManifest } from "./data/load";
 import type { Manifest } from "./data/types";
@@ -71,6 +72,7 @@ export function App() {
       <main className="main-container" id="app-main" tabIndex={-1}>
         {page === "compare" && <Compare />}
         {page === "scorecard" && <Scorecard />}
+        {page === "revisions" && <Revisions />}
         {page === "method" && <Method />}
         {page === "glossary" && <Glossary />}
         {page === "about" && <About />}

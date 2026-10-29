@@ -403,6 +403,103 @@ def first_prints(observations: pl.DataFrame) -> pl.DataFrame:
     return pl.concat(frames).sort("series_ticker", "reference_period")
 
 
+# Revisions are studied from this period on; older first vintages are not always the true release
+REVISIONS_SINCE = date(2000, 1, 1)
+REVISION_SCHEMA = {
+    "series_ticker": pl.String, "reference_period": pl.Date, "release_date": pl.Date,
+    "first_print": pl.Float64, "next_release_date": pl.Date, "next_print": pl.Float64,
+    "latest_print": pl.Float64, "latest_vintage": pl.Date,
+}
+# Stands for "today": a vintage still current has no end date, so it covers any later day
+CURRENT = date(9999, 12, 31)
+
+
+def units_as_of(
+    series_ticker: str, observations: pl.DataFrame, targets: pl.DataFrame
+) -> pl.DataFrame:
+    """(reference_period, as_of, value): each period in Kalshi units as of the vintage `as_of`.
+
+    Both the period's level and the previous period's level come from that same vintage, the
+    way first_prints pairs them on the release day. Periods missing from that vintage drop out.
+    """
+    series_id, lag_months = FIRST_PRINT_SERIES[series_ticker]
+    levels = observations.filter(pl.col("series_id") == series_id).select(
+        "observation_date", "value", "realtime_start", "realtime_end"
+    )
+    in_vintage = (pl.col("realtime_start") <= pl.col("as_of")) & (
+        pl.col("realtime_end").is_null() | (pl.col("realtime_end") >= pl.col("as_of"))
+    )
+
+    def level_at(period_col: str, name: str) -> pl.DataFrame:
+        return (
+            targets.with_columns(
+                previous=pl.col("reference_period").dt.offset_by(f"-{lag_months}mo")
+            )
+            .join(levels, left_on=period_col, right_on="observation_date")
+            .filter(in_vintage)
+            .select("reference_period", "as_of", pl.col("value").alias(name))
+        )
+
+    return (
+        level_at("reference_period", "level")
+        .join(level_at("previous", "previous_level"), on=["reference_period", "as_of"])
+        .with_columns(
+            value=pl.struct("level", "previous_level").map_elements(
+                lambda r: None
+                if r["level"] is None or r["previous_level"] is None
+                else in_kalshi_units(series_ticker, r["level"], r["previous_level"]),
+                return_dtype=pl.Float64,
+            )
+        )
+        .select("reference_period", "as_of", "value")
+    )
+
+
+def revisions(observations: pl.DataFrame, since: date = REVISIONS_SINCE) -> pl.DataFrame:
+    """One row per (series_ticker, reference_period) from `since`: how its number changed.
+
+    first_print is the number on release day; next_print the same period in the series'
+    next vintage (the next report, which for payrolls and GDP carries the first revision);
+    latest_print the period in the current vintage. latest_vintage is the newest vintage date.
+    """
+    prints = first_prints(observations).filter(
+        (pl.col("reference_period") >= since) & pl.col("first_print").is_not_null()
+    )
+    frames = []
+    for series_ticker, (series_id, _) in FIRST_PRINT_SERIES.items():
+        firsts = prints.filter(pl.col("series_ticker") == series_ticker).sort("release_date")
+        if firsts.height == 0:
+            continue
+        vintages = (
+            observations.filter(pl.col("series_id") == series_id)
+            .select(next_release_date="realtime_start").unique().sort("next_release_date")
+        )
+        rows = firsts.with_columns(after=pl.col("release_date").dt.offset_by("1d")).join_asof(
+            vintages, left_on="after", right_on="next_release_date", strategy="forward"
+        )
+        nexts = units_as_of(
+            series_ticker, observations,
+            rows.filter(pl.col("next_release_date").is_not_null())
+            .select("reference_period", as_of="next_release_date"),
+        ).select("reference_period", next_print="value")
+        latest = units_as_of(
+            series_ticker, observations,
+            rows.select("reference_period", as_of=pl.lit(CURRENT)),
+        ).select("reference_period", latest_print="value")
+        frames.append(
+            rows.join(nexts, on="reference_period", how="left")
+            .join(latest, on="reference_period", how="left")
+            .with_columns(latest_vintage=vintages["next_release_date"].max())
+            .select(
+                "series_ticker", "reference_period", "release_date", "first_print",
+                "next_release_date", "next_print", "latest_print", "latest_vintage",
+            )
+        )
+    if not frames:
+        return pl.DataFrame(schema=REVISION_SCHEMA)
+    return pl.concat(frames).sort("series_ticker", "reference_period")
+
+
 def latest_per_release(prints: pl.DataFrame) -> pl.DataFrame:
     """One row per (series_ticker, release_date): the latest period first published that day.
 
@@ -816,6 +913,7 @@ def build_gold(paths: Paths) -> dict[str, int]:
         "implied_survival": survival,
         "implied_bins": with_week_ago(bins),
         "implied_stats": stats,
+        "revisions": revisions(observations),
         "event_surprise": events.join(event_insights(events, stats), on="event_ticker", how="left")
         .join(forecast_scores(events, bins, survival, stats), on="event_ticker", how="left"),
     }

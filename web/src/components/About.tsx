@@ -1,6 +1,17 @@
 import { ExternalLink } from "./ExternalLink";
+import { SectionRail, type RailSection } from "./SectionRail";
 
 const REPO = "https://github.com/aansensei/macro-event-lab";
+
+const RAIL: RailSection[] = [
+  { id: "about-top", label: "Top" },
+  { id: "about-idea", label: "The idea" },
+  { id: "about-howto", label: "How to use" },
+  { id: "about-why", label: "Why this way" },
+  { id: "about-stack", label: "How it is built" },
+  { id: "about-author", label: "Author" },
+  { id: "about-faq", label: "FAQ" },
+];
 
 const QUESTIONS = [
   "What did the market expect an hour before the number came out, and how sure was it?",
@@ -62,8 +73,10 @@ function Rows({ rows }: { rows: [string, string][] }) {
 
 export function About() {
   return (
+    <div className="with-rail">
+    <SectionRail sections={RAIL} />
     <article className="about-page page-fade">
-      <h1 className="t-h1">About Macro Event Lab</h1>
+      <h1 className="t-h1" id="about-top">About Macro Event Lab</h1>
       <p className="about-lead">
         Macro Event Lab shows what prediction markets expected before each US CPI report, jobs report,
         GDP release and Fed decision, and how that compared with the number first published.
@@ -175,5 +188,6 @@ export function About() {
         </div>
       </details>
     </article>
+    </div>
   );
 }

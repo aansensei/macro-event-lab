@@ -10,6 +10,7 @@ const PAGES: [Page, string][] = [
   ["events", "Events"],
   ["compare", "Compare"],
   ["scorecard", "Scorecard"],
+  ["revisions", "Revisions"],
   ["method", "Method"],
   ["glossary", "Glossary"],
   ["about", "About"],
