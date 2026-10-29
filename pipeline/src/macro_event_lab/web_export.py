@@ -143,6 +143,42 @@ SERIES_RATES = {
 }
 
 
+PIT_BINS = 10
+
+
+def _mean(values: pl.Series) -> float | None:
+    clean = values.drop_nulls()
+    return _num(clean.mean()) if clean.len() else None
+
+
+def series_scores(rows: pl.DataFrame) -> dict[str, Any]:
+    """How good one series' T-1h forecasts were across its scored events (gold.forecast_scores).
+
+    skill compares the market median with repeating the previous print: 1 - MAE market / MAE
+    naive, so 0.4 means 40% smaller misses and a negative value means the naive guess won. The
+    benchmark only counts events that have a previous print, so both errors cover the same events.
+    pit_hist counts PIT values in ten equal bins; a calibrated market spreads them evenly.
+    """
+    both = rows.filter(
+        pl.col("abs_err_market").is_not_null() & pl.col("abs_err_naive").is_not_null()
+    )
+    mae_market = _mean(both["abs_err_market"])
+    mae_naive = _mean(both["abs_err_naive"])
+    pits = rows["pit"].drop_nulls().to_list()
+    hist = [0] * PIT_BINS
+    for p in pits:
+        hist[min(PIT_BINS - 1, int(p * PIT_BINS))] += 1
+    return {
+        "n": rows["crps"].drop_nulls().len(),
+        "brier": _mean(rows["brier"]),
+        "crps": _mean(rows["crps"]),
+        "mae_market": mae_market,
+        "mae_naive": mae_naive,
+        "skill": _num(1 - mae_market / mae_naive) if mae_market is not None and mae_naive else None,
+        "pit_hist": hist,
+    }
+
+
 def summary_payload(events: pl.DataFrame) -> dict[str, Any]:
     """Everything the compare page draws: one row per series and one point per scored event.
 
@@ -161,6 +197,7 @@ def summary_payload(events: pl.DataFrame) -> dict[str, Any]:
             **{key: first[col] for key, col in SERIES_COUNTS.items()},
             **{key: _num(first[col]) for key, col in SERIES_RATES.items()},
             "mean_abs_sd": _num(abs_sd.mean()) if abs_sd.len() else None,
+            "scores": series_scores(rows),
         })
     points = [
         {
@@ -176,6 +213,17 @@ def summary_payload(events: pl.DataFrame) -> dict[str, Any]:
         for e in scored.iter_rows(named=True)
     ]
     return {"schema_version": SCHEMA_VERSION, "series": series, "points": points}
+
+
+def strikes_at_anchor(snapshots: list[dict[str, Any]]) -> int:
+    """How many "above k" contracts were priced at T-1h, or at the newest hour before it.
+
+    Early markets listed a single contract, which gives one probability but no distribution.
+    """
+    if not snapshots:
+        return 0
+    anchor = min(snapshots, key=lambda s: (s["h"] < 1, abs(s["h"] - 1)))
+    return len(anchor["survival"])
 
 
 def build_web(paths: Paths) -> dict[str, int]:
@@ -205,7 +253,11 @@ def build_web(paths: Paths) -> dict[str, int]:
             k: payload[k]
             for k in ("id", "event_ticker", "series", "title", "unit", "close", "release_date",
                       "first_print", "surprise", "surprise_sd")
-        } | {"file": f"events/{payload['id']}.json", "n_snapshots": len(payload["snapshots"])})
+        } | {
+            "file": f"events/{payload['id']}.json",
+            "n_snapshots": len(payload["snapshots"]),
+            "strikes": strikes_at_anchor(payload["snapshots"]),
+        })
 
     last = stats["ts"].max() if stats.height else None
     _write_json(paths.web / "manifest.json", {

@@ -22,6 +22,7 @@ from datetime import date, datetime
 import polars as pl
 
 from macro_event_lab.config import RELEASE_TZ, Paths
+from macro_event_lab.sources.releases import fomc_statement_dates
 
 # In the 7 days before a market closes, 96 to 99.7% of candles have a spread of at most
 # 10 cents (median 1 to 2 cents), so a wider book no longer says where the price is.
@@ -45,6 +46,10 @@ FIRST_PRINT_SERIES = {
 # Fallback for events whose ticker names no period: the release is the series' first new
 # observation within this many days after the markets close, shorter than one monthly cycle.
 RELEASE_MATCH_DAYS = 14
+
+# An FOMC event's decision is the first scheduled statement within this many days of the close.
+# Early markets closed the evening a day or two before the decision, later ones minutes before it.
+FOMC_MATCH_DAYS = 7
 MONTHS = {m: i for i, m in enumerate(
     ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"], start=1
 )}
@@ -168,6 +173,109 @@ def distribution_stats(
             cum += p
         stats[f"p{round(q * 100):02d}"] = value
     return stats
+
+
+def _cdf_knots(
+    intervals: list[tuple[float, float]], probs: list[float]
+) -> list[tuple[float, float]]:
+    """(x, F(x)) at each edge of a piecewise-uniform distribution whose intervals touch."""
+    knots = [(intervals[0][0], 0.0)]
+    cum = 0.0
+    for p, (_, hi) in zip(probs, intervals, strict=True):
+        cum += p
+        knots.append((hi, min(1.0, cum)))
+    return knots
+
+
+def _cdf_at(knots: list[tuple[float, float]], x: float) -> float:
+    if x <= knots[0][0]:
+        return 0.0
+    for (x0, f0), (x1, f1) in zip(knots, knots[1:], strict=False):
+        if x <= x1:
+            return f0 if x1 == x0 else f0 + (f1 - f0) * (x - x0) / (x1 - x0)
+    return knots[-1][1]
+
+
+def pit_value(intervals: list[tuple[float, float]], probs: list[float], y: float) -> float:
+    """Probability integral transform: the forecast CDF at the outcome, uniform when calibrated."""
+    return _cdf_at(_cdf_knots(intervals, probs), y)
+
+
+def crps_piecewise(intervals: list[tuple[float, float]], probs: list[float], y: float) -> float:
+    """Exact continuous ranked probability score of a piecewise-uniform forecast at outcome y.
+
+    CRPS is the integral of (F(x) minus the step at y) squared, in the outcome's own unit; lower
+    is better. On each stretch between knots F is linear, so each piece integrates in closed form.
+    """
+    knots = _cdf_knots(intervals, probs)
+    lo, hi = knots[0][0], knots[-1][0]
+    xs = sorted({x for x, _ in knots} | ({y} if lo < y < hi else set()))
+    total = 0.0
+    for x0, x1 in zip(xs, xs[1:], strict=False):
+        step = 1.0 if x0 >= y else 0.0
+        f0, f1 = _cdf_at(knots, x0) - step, _cdf_at(knots, x1) - step
+        total += (x1 - x0) * (f0 * f0 + f0 * f1 + f1 * f1) / 3
+    if y < lo:
+        total += lo - y
+    if y > hi:
+        total += y - hi
+    return total
+
+
+def brier_score(survival: list[tuple[float, float]], y: float) -> float | None:
+    """Mean over strikes of (P(X > k) minus whether the outcome was above k) squared."""
+    if not survival:
+        return None
+    return sum((p - (1.0 if y > k + 1e-9 else 0.0)) ** 2 for k, p in survival) / len(survival)
+
+
+def forecast_scores(
+    events: pl.DataFrame, bins: pl.DataFrame, survival: pl.DataFrame, stats: pl.DataFrame
+) -> pl.DataFrame:
+    """Per published event, how good the T-1h forecast was against its first print.
+
+    brier, crps and pit score the whole distribution; abs_err_market is the distance from the
+    T-1h median, abs_err_naive the distance from simply repeating the series' previous print.
+    """
+    scored = (
+        events.filter(pl.col("first_print").is_not_null())
+        .sort("series_ticker", "close")
+        .with_columns(previous=pl.col("first_print").shift(1).over("series_ticker"))
+    )
+    at_t1h = pl.col("hours_before_close") == 1
+    t1h_bins = bins.filter(at_t1h).partition_by("event_ticker", as_dict=True)
+    t1h_surv = survival.filter(at_t1h).partition_by("event_ticker", as_dict=True)
+    medians = dict(
+        stats.filter(pl.col("hours_before_close") == 1).select("event_ticker", "p50").iter_rows()
+    )
+    rows = []
+    for e in scored.iter_rows(named=True):
+        key = (e["event_ticker"],)
+        if key not in t1h_bins:
+            continue
+        y = e["first_print"]
+        b = t1h_bins[key].sort("bin_lower", nulls_last=False)
+        lowers, uppers, probs = (b[c].to_list() for c in ("bin_lower", "bin_upper", "prob"))
+        resolution = RESOLUTION.get(e["series_ticker"], 0.1)
+        enough = len(probs) >= 3
+        intervals = bin_intervals(lowers, uppers, resolution) if enough else []
+        s = t1h_surv.get(key)
+        strikes = (
+            [] if s is None else s.sort("floor_strike").select("floor_strike", "survival").rows()
+        )
+        median = medians.get(e["event_ticker"])
+        rows.append({
+            "event_ticker": e["event_ticker"],
+            "brier": brier_score(strikes, y),
+            "crps": crps_piecewise(intervals, probs, y) if enough else None,
+            "pit": pit_value(intervals, probs, y) if enough else None,
+            "abs_err_market": None if median is None else abs(median - y),
+            "abs_err_naive": None if e["previous"] is None else abs(e["previous"] - y),
+        })
+    schema = {"event_ticker": pl.String, **dict.fromkeys(
+        ("brier", "crps", "pit", "abs_err_market", "abs_err_naive"), pl.Float64
+    )}
+    return pl.DataFrame(rows, schema=schema)
 
 
 def implied_stats(bins: pl.DataFrame) -> pl.DataFrame:
@@ -338,7 +446,10 @@ def settled_from_results(markets: pl.DataFrame) -> pl.DataFrame:
 
 
 def event_surprises(
-    markets: pl.DataFrame, observations: pl.DataFrame, stats: pl.DataFrame
+    markets: pl.DataFrame,
+    observations: pl.DataFrame,
+    stats: pl.DataFrame,
+    fomc_dates: list[date] | None = None,
 ) -> pl.DataFrame:
     """Per event: the first print, Kalshi's settled value, the T-1h mean and SD, and the surprise.
 
@@ -348,7 +459,8 @@ def event_surprises(
     shutdown pushed back weeks still finds its event; a ticker that names no period falls back
     to the first release within RELEASE_MATCH_DAYS of the close ("release_window"). FOMC
     events, with no ALFRED series here, take Kalshi's settled value: the numeric
-    expiration_value, or the value the strike results imply when Kalshi stored it as text.
+    expiration_value, or the value the strike results imply when Kalshi stored it as text,
+    and their release_date is the statement date from `fomc_dates` matched to the close.
     """
     events = (
         markets.with_columns(
@@ -401,6 +513,18 @@ def event_surprises(
             first_print=pl.when(use_window).then("w_print").otherwise("first_print"),
             reference_period=pl.when(use_window).then("w_period")
             .otherwise("reference_period"),
+        )
+        .sort("close_date")
+        .join_asof(
+            pl.DataFrame(
+                {"statement_date": sorted(fomc_dates or [])}, schema={"statement_date": pl.Date}
+            ),
+            left_on="close_date", right_on="statement_date", strategy="forward",
+            tolerance=f"{FOMC_MATCH_DAYS}d", check_sortedness=False,
+        )
+        .with_columns(
+            release_date=pl.when(~pl.col("series_ticker").is_in(list(FIRST_PRINT_SERIES)))
+            .then("statement_date").otherwise("release_date")
         )
     )
     at_t1h = stats.filter(pl.col("hours_before_close") == 1).select(
@@ -522,13 +646,16 @@ def reaction_days(events: pl.DataFrame) -> pl.DataFrame:
     """(event_ticker, reaction_date): the day markets reacted to each published event.
 
     CPI, jobs and GDP react on their release date (08:30 ET, before the market opens); FOMC
-    events on the New York date of the market close, the decision day. Events never published
+    events on their statement date, or the New York date of the close when no meeting matched
+    one. Events never published
     have no reaction day, even when ALFRED lists their empty month on a later release's date.
     """
     return (
         events.with_columns(
             reaction_date=pl.when(pl.col("first_print_source") == "kalshi")
-            .then(pl.col("close").dt.convert_time_zone(RELEASE_TZ).dt.date())
+            .then(pl.coalesce(
+                "release_date", pl.col("close").dt.convert_time_zone(RELEASE_TZ).dt.date()
+            ))
             .when(pl.col("first_print").is_not_null())
             .then(pl.col("release_date"))
             .otherwise(None)
@@ -680,7 +807,7 @@ def build_gold(paths: Paths) -> dict[str, int]:
     prices = contract_prices(candles)
     survival, bins = implied_distributions(markets, prices)
     stats = implied_stats(bins)
-    surprises = event_surprises(markets, observations, stats)
+    surprises = event_surprises(markets, observations, stats, fomc_statement_dates())
     events = surprises.join(
         release_reactions(surprises, observations), on="event_ticker", how="left"
     )
@@ -689,7 +816,8 @@ def build_gold(paths: Paths) -> dict[str, int]:
         "implied_survival": survival,
         "implied_bins": with_week_ago(bins),
         "implied_stats": stats,
-        "event_surprise": events.join(event_insights(events, stats), on="event_ticker", how="left"),
+        "event_surprise": events.join(event_insights(events, stats), on="event_ticker", how="left")
+        .join(forecast_scores(events, bins, survival, stats), on="event_ticker", how="left"),
     }
     # industry returns need `ingest french`; without it the table is simply not built
     french_path = paths.silver / "french_daily.parquet"

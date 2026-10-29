@@ -164,6 +164,18 @@ describe("parseSummary", () => {
     expect(s.points[0]?.id).toBe("kxcpi-26sep");
   });
 
+  it("reads forecast scores and treats missing ones as none", () => {
+    expect(parseSummary(summary).series[0]?.scores).toBeNull();
+    const scores = {
+      n: 57, brier: 0.02, crps: 0.04, mae_market: 0.07, mae_naive: 0.15, skill: 0.53,
+      pit_hist: [5, 6, 5, 6, 7, 5, 6, 5, 6, 6],
+    };
+    const withScores = { ...summary, series: [{ ...summary.series[0], scores }] };
+    expect(parseSummary(withScores).series[0]?.scores?.skill).toBe(0.53);
+    const bad = { ...summary, series: [{ ...summary.series[0], scores: { ...scores, pit_hist: [1.5] } }] };
+    expect(() => parseSummary(bad)).toThrow("summary.series[0].scores.pit_hist");
+  });
+
   it("names a point without a surprise", () => {
     const bad = { ...summary, points: [{ ...summary.points[0], surprise_sd: null }] };
     expect(() => parseSummary(bad)).toThrow("summary.points[0].surprise_sd");

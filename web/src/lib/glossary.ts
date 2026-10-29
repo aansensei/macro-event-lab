@@ -123,6 +123,30 @@ export const GLOSSARY: GlossaryEntry[] = [
     long: "A market is well calibrated if outcomes it calls 90% likely really happen about 90% of the time. This site checks that across every release of each kind.",
   },
   {
+    id: "brier",
+    term: "Brier score",
+    short: "How far the market's odds were from what happened, 0 is perfect.",
+    long: "For every \"above k\" contract, the squared gap between the market's probability and the outcome (1 if the number came in above k, 0 if not), averaged. 0 is a perfect forecast; always saying 50% scores 0.25.",
+  },
+  {
+    id: "crps",
+    term: "CRPS",
+    short: "A score for the whole forecast distribution, in the number's own units.",
+    long: "The continuous ranked probability score rewards odds that put a lot of weight close to the real number and punishes confident misses. It is measured in the release's own unit, so a CRPS of 0.04 for CPI means 0.04 percentage points; lower is better.",
+  },
+  {
+    id: "pit",
+    term: "PIT (probability integral transform)",
+    short: "Where the real number landed within the market's odds, from 0 to 1.",
+    long: "The share of the market's odds that sat below the real number. If the market is well calibrated, these values spread evenly from 0 to 1 across many releases; too many near 0 or 1 means the market was too confident.",
+  },
+  {
+    id: "skill",
+    term: "Skill against a naive guess",
+    short: "How much smaller the market's misses were than repeating the last number.",
+    long: "1 minus the market median's typical miss divided by the typical miss of simply repeating the previous release. 0.5 means misses half as big; below 0 means the naive guess did better.",
+  },
+  {
     id: "fit",
     term: "Fit (isotonic regression)",
     short: "A small correction that makes raw contract prices consistent.",

@@ -5,6 +5,7 @@ import {
   formatNumber,
   formatValue,
   hourLabel,
+  pct,
   signed,
   unitParts,
 } from "../lib/format";
@@ -58,6 +59,18 @@ export function KeyStrip({ event, status, anchor }: Props) {
                 <Term id="sd">SD</Term> {precise(anchor.sd)}
               </div>
             )}
+          </>
+        ) : anchor && anchor.survival.length > 0 ? (
+          <>
+            <div className="t-hero val-market">
+              <CountUp value={(anchor.survival[0] as [number, number, number])[2]} format={(v) => pct(v)} />
+            </div>
+            <div className="key-sub num">
+              chance of above {formatValue((anchor.survival[0] as [number, number, number])[0], unit)}
+            </div>
+            <div className="key-sub-micro">
+              {anchor.survival.length === 1 ? "Only one contract was listed" : `Only ${anchor.survival.length} contracts were listed`}
+            </div>
           </>
         ) : (
           <TextHero>No estimate</TextHero>
@@ -120,7 +133,11 @@ export function KeyStrip({ event, status, anchor }: Props) {
           <>
             <TextHero>{status === "upcoming" ? "Pending" : "N/A"}</TextHero>
             <div className="key-sub">
-              {status === "upcoming" ? "measured once the number is out" : "nothing to compare with"}
+              {status === "upcoming"
+                ? "measured once the number is out"
+                : anchor && anchor.p50 === null && anchor.survival.length > 0
+                  ? "needs a full set of odds"
+                  : "nothing to compare with"}
             </div>
           </>
         )}

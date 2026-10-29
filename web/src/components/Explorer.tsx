@@ -14,6 +14,7 @@ import {
 } from "../lib/format";
 import {
   binIndexOf,
+  daysClosedBefore,
   defaultHour,
   eventStatus,
   hourBounds,
@@ -140,7 +141,12 @@ export function Explorer({ entry, dataThrough, initialHour, onHourChange }: Prop
   const heading = (
     <div className="event-top-bar">
       <h1 className="t-h1">{entry.title}</h1>
-      <div className="t-label event-meta-sub">{verb} {when.date}, {when.time}</div>
+      <div className="t-label event-meta-sub">
+        {verb} {when.date}, {when.time}
+        {daysClosedBefore(entry) > 0 && (
+          <>. Trading closed {formatEt(entry.close)}, {daysClosedBefore(entry) === 1 ? "the evening before" : `${daysClosedBefore(entry)} days before`}</>
+        )}
+      </div>
     </div>
   );
 
@@ -197,6 +203,8 @@ export function Explorer({ entry, dataThrough, initialHour, onHourChange }: Prop
   if (activeIndex !== null && activeIndex >= 0) readout = binReadout(activeIndex);
   else if (snap && snap.mean !== null && snap.p25 !== null && snap.p75 !== null && snap.p05 !== null && snap.p95 !== null) {
     readout = `Implied mean ${precise(snap.mean)} (50% interval ${precise(snap.p25)} to ${precise(snap.p75)}, 90% interval ${precise(snap.p05)} to ${precise(snap.p95)}).`;
+  } else if (bins.length > 0) {
+    readout = `${bins.map((b, i) => `${labels[i]} at ${pct(b[2], 1)}`).join(", ")}.`;
   }
 
   function setHour(next: number) {
@@ -219,24 +227,36 @@ export function Explorer({ entry, dataThrough, initialHour, onHourChange }: Prop
   const title = modeBin ? `Market put ${pct(modeBin[2])} on ${labels[mode]}` : "No outcome bins at this hour";
   const summary = modeBin
     ? `At ${hourLabel(hour)} the most likely outcome was ${labels[mode]} at ${pct(modeBin[2])}` +
-      (modeGhost !== null ? `, ${modeBin[2] >= modeGhost ? "up" : "down"} from ${pct(modeGhost)} a week earlier.` : ".")
+      (modeGhost === null
+        ? "."
+        : pct(modeGhost) === pct(modeBin[2])
+          ? `, unchanged from a week earlier.`
+          : `, ${modeBin[2] >= modeGhost ? "up" : "down"} from ${pct(modeGhost)} a week earlier.`)
     : "";
   const source = ev.first_print_source === "alfred" ? "first print from ALFRED" : "outcome from the Kalshi settlement";
 
   const isFomc = ev.series === "KXFED";
+  // one or two listed contracts give a few outcome odds but no median, so they are drawn as odds lines
+  const fewContracts = anchor !== null && anchor.p50 === null && anchor.survival.length > 0 && anchor.survival.length < 3;
+  const oddsLines = isFomc || fewContracts;
   const earliest = snapshotAt(ev.snapshots, max);
   const width = (v: number) => (ev.unit === "jobs" ? formatValue(v, ev.unit) : `${fixed(v, 2)} pp`);
   let timeTitle = "How the market's view moved over the final week";
   let timeSummary = "";
-  if (isFomc && anchor) {
+  if (oddsLines && anchor) {
     const anchorMode = anchor.bins[modeIndex(anchor.bins)];
     const series = oddsSeries(ev.snapshots).find((s) => anchorMode && s.key === `${anchorMode[0]}|${anchorMode[1]}`);
     const start = series?.points.find((pt) => pt[1] !== null)?.[1];
     if (anchorMode && start !== undefined && start !== null) {
       const label = binLabel(anchorMode, ev.unit, ev.resolution);
-      timeTitle = `Odds on ${label} ${anchorMode[2] >= start ? "rose" : "fell"} from ${pct(start)} to ${pct(anchorMode[2])}`;
+      timeTitle =
+        pct(start) === pct(anchorMode[2])
+          ? `Odds on ${label} held at ${pct(start)}`
+          : `Odds on ${label} ${anchorMode[2] >= start ? "rose" : "fell"} from ${pct(start)} to ${pct(anchorMode[2])}`;
     }
-    timeSummary = "Each line is one rate outcome that reached 10% at some hour, from its first listing to the close.";
+    timeSummary = !fewContracts
+      ? "Each line is one rate outcome that reached 10% at some hour, from its first listing to the close."
+      : "Each line is one side of the listed contract, from its first listing to the close.";
   } else if (earliest && anchor && earliest.p05 !== null && earliest.p95 !== null && anchor.p05 !== null && anchor.p95 !== null) {
     const w0 = earliest.p95 - earliest.p05;
     const w1 = anchor.p95 - anchor.p05;
@@ -268,7 +288,16 @@ export function Explorer({ entry, dataThrough, initialHour, onHourChange }: Prop
         </div>
       )}
 
-      <PlainWords event={ev} status={status} expectedMedian={anchor?.p50 ?? null} />
+      {status === "published" && fewContracts && anchor && (
+        <div className="state-banner">
+          <strong>{anchor.survival.length === 1 ? "One contract." : `${anchor.survival.length} contracts.`}</strong> Early Kalshi
+          markets listed {anchor.survival.length === 1 ? "a single contract" : "only a couple of contracts"} for this{" "}
+          {isFomc ? "decision" : "release"}, not a full ladder. The odds are shown as traded, but there is no distribution, so no median,
+          range or surprise.
+        </div>
+      )}
+
+      <PlainWords event={ev} status={status} expectedMedian={anchor?.p50 ?? null} survival={anchor?.survival ?? null} />
 
       <KeyStrip event={ev} status={status} anchor={anchor} />
 
@@ -288,7 +317,7 @@ export function Explorer({ entry, dataThrough, initialHour, onHourChange }: Prop
           <h2 className="t-h3" id="time-chart-title">{timeTitle}</h2>
         </div>
         <p className="chart-summary num">{timeSummary} Click or drag on the chart to move in time.</p>
-        {isFomc ? (
+        {oddsLines ? (
           <OddsChart
             snaps={ev.snapshots} h={hour} maxH={max} minH={min}
             unit={ev.unit} resolution={ev.resolution}
@@ -308,8 +337,8 @@ export function Explorer({ entry, dataThrough, initialHour, onHourChange }: Prop
           <details className="how-to-read">
             <summary>How to read this chart</summary>
             <p>
-              {isFomc
-                ? "Each line follows the probability of one rate outcome across the final week, ordered from the lowest rate up. A line starts when Kalshi first listed that outcome. The vertical line marks the selected hour."
+              {oddsLines
+                ? "Each line follows the probability of one outcome across the final week, ordered from the lowest value up. A line starts when Kalshi first listed that outcome. The vertical line marks the selected hour."
                 : "The dark line is the implied median for every hour of the final week. The darker band holds the middle 50% of outcomes and the lighter band the middle 90%. The dashed line is the number first published. The vertical line marks the selected hour."}
             </p>
           </details>

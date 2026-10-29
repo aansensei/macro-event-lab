@@ -26,7 +26,10 @@ function Badge({ event, dataThrough }: { event: ManifestEvent; dataThrough: stri
   const status = eventStatus(event, dataThrough);
   if (status === "upcoming") return <span>Upcoming</span>;
   if (status === "not_published") return <span>No outcome</span>;
-  if (event.surprise_sd === null) return <span>No surprise</span>;
+  // early markets listed one or two contracts: odds for a threshold, but no distribution to score
+  if (event.surprise_sd === null) {
+    return <span>{event.strikes !== null && event.strikes > 0 && event.strikes < 3 ? (event.strikes === 1 ? "One contract" : "Two contracts") : "No surprise"}</span>;
+  }
   const cls = event.surprise_sd > 0 ? "val-surprise-up" : event.surprise_sd < 0 ? "val-surprise-down" : "";
   return <span className={`num ${cls}`}>{signed(event.surprise_sd, 1, " SD")}</span>;
 }

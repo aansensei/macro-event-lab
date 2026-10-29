@@ -84,6 +84,8 @@ export interface ManifestEvent {
   surprise_sd: number | null;
   file: string;
   n_snapshots: number;
+  // contracts priced at T-1h; early markets listed one, which gives no distribution
+  strikes: number | null;
 }
 
 export interface Manifest {
@@ -105,6 +107,20 @@ export interface SeriesSummary {
   dgs2_corr: number | null;
   dgs10_corr: number | null;
   mean_abs_sd: number | null;
+  scores: SeriesScores | null;
+}
+
+// forecast quality of one series at T-1h (pipeline gold.forecast_scores and web_export.series_scores)
+export interface SeriesScores {
+  n: number;
+  brier: number | null;
+  crps: number | null;
+  mae_market: number | null;
+  mae_naive: number | null;
+  // 1 - MAE market / MAE naive: above 0 the market beat repeating the last print
+  skill: number | null;
+  // PIT counts in ten equal bins from 0 to 1
+  pit_hist: number[];
 }
 
 // one scored event in summary.json

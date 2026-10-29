@@ -76,3 +76,13 @@ export function releaseWhen(
   const date = entry.release_date ? formatIsoDate(entry.release_date) : formatEtDate(entry.close);
   return { date, time: seriesKind(entry.series) === "fomc" ? "14:00 ET" : "08:30 ET" };
 }
+
+const ET_DAY = new Intl.DateTimeFormat("en-CA", { timeZone: "America/New_York" });
+
+// calendar days from the close to the release: early Kalshi markets stopped trading an evening
+// or two before the number came out, later ones minutes before it (0)
+export function daysClosedBefore(entry: Pick<ManifestEvent, "release_date" | "close">): number {
+  if (entry.release_date === null) return 0;
+  const closeDay = ET_DAY.format(new Date(entry.close));
+  return Math.max(0, Math.round((Date.parse(entry.release_date) - Date.parse(closeDay)) / 86_400_000));
+}

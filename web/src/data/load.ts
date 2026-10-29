@@ -9,6 +9,7 @@ import {
   type Manifest,
   type ManifestEvent,
   type Reaction,
+  type SeriesScores,
   type SeriesSummary,
   type Snapshot,
   type Summary,
@@ -172,6 +173,7 @@ function parseManifestEvent(value: unknown, where: string): ManifestEvent {
     surprise_sd: numOrNull(o, "surprise_sd", where),
     file: str(o, "file", where),
     n_snapshots: num(o, "n_snapshots", where),
+    strikes: o.strikes === undefined ? null : numOrNull(o, "strikes", where),
   };
 }
 
@@ -261,6 +263,26 @@ function parseSeriesSummary(value: unknown, where: string): SeriesSummary {
     dgs2_corr: numOrNull(o, "dgs2_corr", where),
     dgs10_corr: numOrNull(o, "dgs10_corr", where),
     mean_abs_sd: numOrNull(o, "mean_abs_sd", where),
+    scores: parseScores(o.scores, `${where}.scores`),
+  };
+}
+
+// summaries written before scoring existed have no "scores" key; that reads as none
+function parseScores(value: unknown, where: string): SeriesScores | null {
+  if (value === undefined || value === null) return null;
+  const o = obj(value, where);
+  const hist = list(o, "pit_hist", where);
+  if (!hist.every((c) => typeof c === "number" && Number.isInteger(c) && c >= 0)) {
+    throw new DataError(`${where}.pit_hist: expected whole counts`);
+  }
+  return {
+    n: num(o, "n", where),
+    brier: numOrNull(o, "brier", where),
+    crps: numOrNull(o, "crps", where),
+    mae_market: numOrNull(o, "mae_market", where),
+    mae_naive: numOrNull(o, "mae_naive", where),
+    skill: numOrNull(o, "skill", where),
+    pit_hist: hist as number[],
   };
 }
 

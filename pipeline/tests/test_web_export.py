@@ -51,6 +51,7 @@ def _gold(tmp_path) -> Paths:
         "in_50": True, "in_90": True, "surprise_rank_pct": 0.25, "series_n": 41,
         "series_hit_50": 0.51, "series_hit_90": 0.88, "yield_n": 39,
         "dgs2_bp_per_sd": 2.1234567, "dgs10_bp_per_sd": 1.5, "dgs2_corr": 0.42, "dgs10_corr": 0.3,
+        "brier": 0.05, "crps": 0.04, "pit": 0.62, "abs_err_market": 0.02, "abs_err_naive": 0.1,
     }, {
         "series_ticker": "KXCPI", "event_ticker": "KXCPI-27JAN",
         "close": CLOSE + timedelta(days=90), "release_date": None,
@@ -62,6 +63,7 @@ def _gold(tmp_path) -> Paths:
         "in_50": None, "in_90": None, "surprise_rank_pct": None, "series_n": None,
         "series_hit_50": None, "series_hit_90": None, "yield_n": None,
         "dgs2_bp_per_sd": None, "dgs10_bp_per_sd": None, "dgs2_corr": None, "dgs10_corr": None,
+        "brier": None, "crps": None, "pit": None, "abs_err_market": None, "abs_err_naive": None,
     }], schema_overrides={"close": TS}).write_parquet(paths.gold / "event_surprise.parquet")
 
     keys = {"series_ticker": "KXCPI", "event_ticker": "KXCPI-26SEP"}
@@ -97,6 +99,7 @@ def test_build_web_writes_manifest_and_event_files(tmp_path):
     assert entry["title"] == "CPI, September 2026"
     assert entry["file"] == "events/kxcpi-26sep.json"
     assert entry["n_snapshots"] == 3
+    assert entry["strikes"] == 2  # strikes priced at T-1h
 
     event = json.loads((paths.web / entry["file"]).read_text(encoding="utf-8"))
     assert [s["h"] for s in event["snapshots"]] == [168, 1, 0]  # earliest hour first
@@ -130,7 +133,8 @@ SUMMARY_EVENT_SCHEMA = {
     "dgs10_change_bp": pl.Float64, "in_50": pl.Boolean, "in_90": pl.Boolean, "series_n": pl.UInt32,
     "series_hit_50": pl.Float64, "series_hit_90": pl.Float64, "yield_n": pl.UInt32,
     "dgs2_bp_per_sd": pl.Float64, "dgs10_bp_per_sd": pl.Float64, "dgs2_corr": pl.Float64,
-    "dgs10_corr": pl.Float64,
+    "dgs10_corr": pl.Float64, "brier": pl.Float64, "crps": pl.Float64, "pit": pl.Float64,
+    "abs_err_market": pl.Float64, "abs_err_naive": pl.Float64,
 }
 
 
@@ -138,10 +142,11 @@ def test_summary_has_one_row_per_series_and_one_point_per_published_event():
     series = (40, 0.5, 0.9, 38, 6.0, 4.0, 0.55, 0.48)
     events = pl.DataFrame([
         ("KXCPI", "KXCPI-26AUG", date(2026, 8, 1), CLOSE - timedelta(days=33), 1.5, 9.0, 5.0,
-         False, True, *series),
-        ("KXCPI", "KXCPI-26SEP", date(2026, 9, 1), CLOSE, -0.5, -2.0, -1.0, True, True, *series),
+         False, True, *series, 0.06, 0.05, 0.95, 0.2, None),
+        ("KXCPI", "KXCPI-26SEP", date(2026, 9, 1), CLOSE, -0.5, -2.0, -1.0, True, True, *series,
+         0.04, 0.03, 0.31, 0.1, 0.2),
         ("KXCPI", "KXCPI-26OCT", date(2026, 10, 1), CLOSE + timedelta(days=30), None, None, None,
-         None, None, *series),  # upcoming: no point
+         None, None, *series, None, None, None, None, None),  # upcoming: no point
     ], schema=SUMMARY_EVENT_SCHEMA, orient="row")
 
     out = summary_payload(events)
@@ -150,6 +155,11 @@ def test_summary_has_one_row_per_series_and_one_point_per_published_event():
     assert cpi["series"] == "KXCPI" and cpi["label"] == "CPI"
     assert (cpi["n"], cpi["hit_50"], cpi["hit_90"]) == (40, 0.5, 0.9)
     assert cpi["mean_abs_sd"] == 1.0  # mean of 1.5 and 0.5
+    scores = cpi["scores"]
+    assert (scores["n"], scores["brier"], scores["crps"]) == (2, 0.05, 0.04)
+    # only KXCPI-26SEP has a previous print, so both errors come from it alone
+    assert (scores["mae_market"], scores["mae_naive"], scores["skill"]) == (0.1, 0.2, 0.5)
+    assert scores["pit_hist"] == [0, 0, 0, 1, 0, 0, 0, 0, 0, 1]
     assert [p["id"] for p in out["points"]] == ["kxcpi-26aug", "kxcpi-26sep"]
     first = out["points"][0]
     assert first == {

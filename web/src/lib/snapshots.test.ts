@@ -8,6 +8,7 @@ import {
   hourBounds,
   matchBins,
   modeIndex,
+  daysClosedBefore,
   releaseWhen,
   snapshotAt,
 } from "./snapshots";
@@ -95,5 +96,18 @@ describe("releaseWhen", () => {
   it("uses the close date in New York and 14:00 for FOMC", () => {
     expect(releaseWhen({ series: "KXFED", release_date: null, close: "2026-10-28T17:55:00Z" }))
       .toEqual({ date: "Oct 28 2026", time: "14:00 ET" });
+  });
+});
+
+describe("daysClosedBefore", () => {
+  it("counts New York calendar days from an early close to the release", () => {
+    expect(daysClosedBefore({ release_date: "2021-08-11", close: "2021-08-10T23:00:00Z" })).toBe(1);
+    expect(daysClosedBefore({ release_date: "2021-07-28", close: "2021-07-26T23:00:00Z" })).toBe(2);
+    // 00:00 UTC is still the previous evening in New York
+    expect(daysClosedBefore({ release_date: "2021-12-15", close: "2021-12-15T00:00:00Z" })).toBe(1);
+  });
+  it("gives 0 for a close on the release day or an unknown release", () => {
+    expect(daysClosedBefore({ release_date: "2026-10-14", close: "2026-10-14T12:29:00Z" })).toBe(0);
+    expect(daysClosedBefore({ release_date: null, close: "2026-10-14T12:29:00Z" })).toBe(0);
   });
 });

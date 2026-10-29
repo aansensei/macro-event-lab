@@ -6,6 +6,7 @@ import { seriesFinding, verdict } from "./compareWords";
 const cpi: SeriesSummary = {
   series: "KXCPI", label: "CPI", n: 58, yield_n: 58, hit_50: 0.534, hit_90: 0.879,
   dgs2_bp_per_sd: 6.06, dgs10_bp_per_sd: 4.12, dgs2_corr: 0.551, dgs10_corr: 0.479, mean_abs_sd: 0.69,
+  scores: null,
 };
 
 describe("verdict", () => {

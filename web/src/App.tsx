@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { About } from "./components/About";
+import { BackToTop } from "./components/BackToTop";
 import { Compare } from "./components/Compare";
 import { EventList, type Filter } from "./components/EventList";
 import { Explorer } from "./components/Explorer";
@@ -8,6 +9,7 @@ import { Footer } from "./components/Footer";
 import { Glossary } from "./components/Glossary";
 import { Header } from "./components/Header";
 import { Method } from "./components/Method";
+import { Scorecard } from "./components/Scorecard";
 import { loadManifest } from "./data/load";
 import type { Manifest } from "./data/types";
 import { pageSearch, parseUrlState, urlSearch, type Page } from "./lib/url";
@@ -66,8 +68,9 @@ export function App() {
   return (
     <>
       <Header page={page} onNavigate={navigate} />
-      <main className="main-container" id="app-main">
+      <main className="main-container" id="app-main" tabIndex={-1}>
         {page === "compare" && <Compare />}
+        {page === "scorecard" && <Scorecard />}
         {page === "method" && <Method />}
         {page === "glossary" && <Glossary />}
         {page === "about" && <About />}
@@ -102,6 +105,7 @@ export function App() {
         )}
       </main>
       <Footer dataThrough={dataThrough} onNavigate={navigate} />
+      <BackToTop />
     </>
   );
 }

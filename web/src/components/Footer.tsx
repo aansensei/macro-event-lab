@@ -1,11 +1,13 @@
 import { formatEtDate } from "../lib/format";
 import type { Page } from "../lib/url";
+import { ExternalLink } from "./ExternalLink";
 
 const REPO = "https://github.com/aansensei/macro-event-lab";
 
 const PAGES: [Page, string][] = [
   ["events", "Events"],
   ["compare", "Compare"],
+  ["scorecard", "Scorecard"],
   ["method", "Method"],
   ["glossary", "Glossary"],
   ["about", "About"],
@@ -45,8 +47,8 @@ export function Footer({ dataThrough, onNavigate }: Props) {
 
         <div className="footer-col">
           <h2 className="footer-head">Project</h2>
-          <a className="footer-link" href={REPO}>Source code</a>
-          <a className="footer-link" href={`${REPO}/issues`}>Report an issue</a>
+          <ExternalLink className="footer-link" href={REPO}>Source code</ExternalLink>
+          <ExternalLink className="footer-link" href={`${REPO}/issues`}>Report an issue</ExternalLink>
         </div>
       </div>
 

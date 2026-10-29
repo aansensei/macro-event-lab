@@ -74,6 +74,23 @@ describe("plainWords", () => {
     expect(only).toBe("This report has no published number in this data, so there is nothing to compare with.");
   });
 
+  it("reads a release with only one contract as a single bet", () => {
+    const early: EventFile = { ...cpi, surprise_sd: null, surprise: null, first_print: 0.5, insight: null, reaction: null };
+    const [only] = plainWords(early, "published", null, [[0.7, 0.1, 0.12]]);
+    expect(only).toBe(
+      "Kalshi listed only one contract for this release: whether monthly CPI would come in above 0.7%. " +
+        "Just before trading closed, traders put that at 12%. The official number came in at 0.5%, " +
+        "so the contract paid no and the market had leaned the right way. With a single contract there " +
+        "is no full set of odds, so there is no median or surprise to measure.",
+    );
+  });
+
+  it("says when a single contract went against the market", () => {
+    const early: EventFile = { ...cpi, surprise_sd: null, surprise: null, first_print: 0.9, insight: null, reaction: null };
+    const [only] = plainWords(early, "published", null, [[0.7, 0.2, 0.2]]);
+    expect(only).toContain("so the contract paid yes, against the market's lean");
+  });
+
   it("phrases the Fed decision as the top of the rate range", () => {
     const fed: EventFile = { ...cpi, series: "KXFED", unit: "% upper bound", first_print: 3.75, surprise_sd: 0 };
     expect(plainWords(fed, "published", 3.75)[0]).toContain(

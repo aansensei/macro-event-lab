@@ -1,8 +1,8 @@
 // The page, selected event and hour live in the query string so any view can be shared as a link.
 
-export type Page = "events" | "compare" | "method" | "glossary" | "about";
+export type Page = "events" | "compare" | "scorecard" | "method" | "glossary" | "about";
 
-const OTHER_PAGES: Page[] = ["compare", "method", "glossary", "about"];
+const OTHER_PAGES: Page[] = ["compare", "scorecard", "method", "glossary", "about"];
 
 export interface UrlState {
   page: Page;

@@ -9,17 +9,21 @@ from macro_event_lab.config import Paths
 from macro_event_lab.gold import (
     bin_intervals,
     bins_from_survival,
+    brier_score,
     build_gold,
     contract_prices,
+    crps_piecewise,
     distribution_stats,
     event_insights,
     event_surprises,
     first_prints,
+    forecast_scores,
     implied_distributions,
     implied_stats,
     in_kalshi_units,
     isotonic_decreasing,
     latest_per_release,
+    pit_value,
     reference_period_from_event,
     release_industry_returns,
     release_reactions,
@@ -381,6 +385,28 @@ def test_event_surprise_matches_releases_and_falls_back_for_fomc():
     assert fed["surprise_sd"] == pytest.approx(1.0)
 
 
+def test_fomc_events_take_the_statement_date_after_the_close():
+    markets = _event_markets([
+        # legacy market: closed at 19:00 ET two days before the decision
+        ("KXFED", "FED-21JUL", datetime(2021, 7, 26, 23, 0, tzinfo=UTC), "0.25"),
+        ("KXFED", "FED-DEC", datetime(2026, 12, 9, 18, 55, tzinfo=UTC), "4.50"),
+        ("KXFED", "FED-OFF", datetime(2026, 8, 1, 18, 55, tzinfo=UTC), "4.50"),  # no meeting near
+    ])
+    stats = pl.DataFrame(
+        {"event_ticker": [], "hours_before_close": [], "mean": [], "sd": []},
+        schema={"event_ticker": pl.String, "hours_before_close": pl.Int64,
+                "mean": pl.Float64, "sd": pl.Float64},
+    )
+    meetings = [date(2021, 6, 16), date(2021, 7, 28), date(2026, 12, 9)]
+
+    out = {
+        r["event_ticker"]: r["release_date"]
+        for r in event_surprises(markets, _observations([]), stats, meetings).iter_rows(named=True)
+    }
+
+    assert out == {"FED-21JUL": date(2021, 7, 28), "FED-DEC": date(2026, 12, 9), "FED-OFF": None}
+
+
 @pytest.mark.parametrize(
     ("series", "event", "expected"),
     [
@@ -457,6 +483,8 @@ def test_release_day_yield_changes_in_basis_points():
     events = pl.DataFrame([
         ("CPI-SEP", "alfred", 0.6, d(2026, 10, 14), datetime(2026, 10, 14, 12, 29, tzinfo=UTC)),
         ("FED-SEP", "kalshi", 4.0, None, datetime(2026, 9, 16, 17, 55, tzinfo=UTC)),
+        # closed two days early: the statement date, not the close date, is the reaction day
+        ("FED-JUL", "kalshi", 4.0, d(2026, 7, 6), datetime(2026, 7, 2, 23, 0, tzinfo=UTC)),
         ("JOBS-JUN", "alfred", 1e5, d(2026, 7, 6), datetime(2026, 7, 6, 12, 29, tzinfo=UTC)),
         ("CPI-OCT", "alfred", None, None, datetime(2026, 11, 13, 13, 29, tzinfo=UTC)),
         # never printed, but ALFRED lists the empty month on the next release's date
@@ -473,6 +501,7 @@ def test_release_day_yield_changes_in_basis_points():
     assert fed["reaction_date"] == d(2026, 9, 16)
     assert fed["dgs2_change_bp"] == pytest.approx(-5.0)
     assert fed["dgs10_change_bp"] == pytest.approx(-2.0)
+    assert out["FED-JUL"]["reaction_date"] == d(2026, 7, 6)
     jobs = out["JOBS-JUN"]
     assert jobs["reaction_prev_date"] == d(2026, 7, 2)
     assert jobs["dgs2_change_bp"] == pytest.approx(5.0)
@@ -570,3 +599,78 @@ def test_event_insights_rank_calibration_and_yield_sensitivity():
     # one FOMC event is too few pairs for a slope
     assert out["F1"]["dgs2_bp_per_sd"] is None
     assert out["F1"]["surprise_rank_pct"] is None
+
+
+def test_crps_of_one_uniform_interval_matches_the_closed_form():
+    # uniform on [0, 1]: CRPS at the centre is 1/12; at 2 it is 1/3 plus the gap of 1
+    assert crps_piecewise([(0.0, 1.0)], [1.0], 0.5) == pytest.approx(1 / 12)
+    assert crps_piecewise([(0.0, 1.0)], [1.0], 2.0) == pytest.approx(1 / 3 + 1)
+    assert crps_piecewise([(0.0, 1.0)], [1.0], -1.0) == pytest.approx(1 + 1 / 3)
+
+
+def test_crps_of_two_bins_matches_numeric_integration():
+    intervals, probs, y = [(0.0, 1.0), (1.0, 3.0)], [0.25, 0.75], 1.6
+
+    def cdf(x):
+        if x <= 0:
+            return 0.0
+        if x <= 1:
+            return 0.25 * x
+        if x <= 3:
+            return 0.25 + 0.75 * (x - 1) / 2
+        return 1.0
+
+    step = 1e-4
+    grid = [-1 + i * step for i in range(int(5 / step))]
+    numeric = sum(
+        (cdf(x + step / 2) - (1.0 if x + step / 2 >= y else 0.0)) ** 2 * step for x in grid
+    )
+    assert crps_piecewise(intervals, probs, y) == pytest.approx(numeric, abs=1e-4)
+
+
+def test_pit_is_the_cumulative_probability_at_the_print():
+    assert pit_value([(0.0, 1.0)], [1.0], 0.25) == pytest.approx(0.25)
+    assert pit_value([(0.0, 1.0), (1.0, 3.0)], [0.25, 0.75], 2.0) == pytest.approx(0.625)
+    assert pit_value([(0.0, 1.0)], [1.0], 5.0) == 1.0
+
+
+def test_brier_averages_the_squared_misses_over_strikes():
+    # P(X > 0.2) = 0.9 came true, P(X > 0.4) = 0.3 did not
+    assert brier_score([(0.2, 0.9), (0.4, 0.3)], 0.3) == pytest.approx((0.1**2 + 0.3**2) / 2)
+    assert brier_score([], 0.3) is None
+
+
+def test_forecast_scores_per_event_with_a_naive_benchmark():
+    close = datetime(2026, 10, 14, 12, 29, tzinfo=UTC)
+    events = pl.DataFrame([
+        ("KXCPI", "C1", close - timedelta(days=60), 0.2, 0.1),
+        ("KXCPI", "C2", close - timedelta(days=30), 0.4, 0.1),
+        ("KXCPI", "C3", close, 0.3, 0.1),
+        ("KXCPI", "C4", close + timedelta(days=30), None, 0.1),  # not out yet
+    ], schema={"series_ticker": pl.String, "event_ticker": pl.String,
+               "close": pl.Datetime("us", "UTC"), "first_print": pl.Float64,
+               "resolution": pl.Float64}, orient="row").drop("resolution")
+    one_bin = [(None, 0.2, 0.1), (0.2, 0.3, 0.6), (0.3, None, 0.3)]
+    bins = pl.DataFrame([
+        (e, 1, lo, hi, p) for e in ("C1", "C2", "C3", "C4") for lo, hi, p in one_bin
+    ], schema={"event_ticker": pl.String, "hours_before_close": pl.Int64,
+               "bin_lower": pl.Float64, "bin_upper": pl.Float64, "prob": pl.Float64}, orient="row")
+    survival = pl.DataFrame([
+        (e, 1, k, fit) for e in ("C1", "C2", "C3", "C4") for k, fit in ((0.2, 0.9), (0.3, 0.3))
+    ], schema={"event_ticker": pl.String, "hours_before_close": pl.Int64,
+               "floor_strike": pl.Float64, "survival": pl.Float64}, orient="row")
+    stats = pl.DataFrame({
+        "event_ticker": ["C1", "C2", "C3", "C4"], "hours_before_close": [1] * 4,
+        "p50": [0.28, 0.28, 0.28, 0.28],
+    })
+
+    rows = forecast_scores(events, bins, survival, stats).iter_rows(named=True)
+    out = {r["event_ticker"]: r for r in rows}
+
+    c3 = out["C3"]
+    assert c3["abs_err_market"] == pytest.approx(0.02)
+    assert c3["abs_err_naive"] == pytest.approx(0.1)  # last month printed 0.4
+    assert c3["brier"] == pytest.approx((0.1**2 + 0.3**2) / 2)
+    assert 0 < c3["pit"] < 1 and c3["crps"] > 0
+    assert out["C1"]["abs_err_naive"] is None  # no earlier print to copy
+    assert "C4" not in out

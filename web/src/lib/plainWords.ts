@@ -1,7 +1,7 @@
 // Plain English reading of an event for people without an economics background. Every sentence is
 // built from the event's own numbers and from how it compares with the rest of its series.
 
-import type { EventFile } from "../data/types";
+import type { EventFile, SurvivalPoint } from "../data/types";
 import { MINUS, formatValue, seriesKind, type SeriesKind } from "./format";
 import type { EventStatus } from "./snapshots";
 
@@ -63,12 +63,53 @@ function moved(bp: number): string {
   return `${bp > 0 ? "rose" : "fell"} ${size} bp`;
 }
 
-export function plainWords(event: EventFile, status: EventStatus, expectedMedian: number | null): string[] {
+const METRIC: Record<SeriesKind, string> = {
+  cpi: "monthly CPI",
+  jobs: "the jobs number",
+  gdp: "GDP growth",
+  fomc: "the Fed's upper bound",
+  other: "the number",
+};
+
+// early markets listed one or two "above k" contracts: a few probabilities, but no distribution
+function fewContracts(event: EventFile, kind: SeriesKind, survival: SurvivalPoint[]): string {
+  const unit = event.unit;
+  const y = event.first_print as number;
+  const odds = (p: number) => `${Math.round(p * 100)}%`;
+  if (survival.length === 1) {
+    const [k, , p] = survival[0] as SurvivalPoint;
+    const paidYes = y > k + 1e-9;
+    const leanedYes = p > 0.5;
+    return (
+      `Kalshi listed only one contract for this ${kind === "fomc" ? "decision" : "release"}: whether ${METRIC[kind]} would come in above ${formatValue(k, unit)}. ` +
+      `Just before trading closed, traders put that at ${odds(p)}. ` +
+      `The official number came in at ${outcome(kind, y, unit)}, so the contract paid ${paidYes ? "yes" : "no"}` +
+      (paidYes === leanedYes ? " and the market had leaned the right way." : ", against the market's lean.") +
+      " With a single contract there is no full set of odds, so there is no median or surprise to measure."
+    );
+  }
+  const parts = survival.map(([k, , p]) => `above ${formatValue(k, unit)} (${odds(p)})`).join(" and ");
+  return (
+    `Kalshi listed only ${survival.length} contracts for this ${kind === "fomc" ? "decision" : "release"}: whether ${METRIC[kind]} would come in ${parts}. ` +
+    `The official number came in at ${outcome(kind, y, unit)}. With so few contracts there is no full set of odds, so there is no median or surprise to measure.`
+  );
+}
+
+export function plainWords(
+  event: EventFile,
+  status: EventStatus,
+  expectedMedian: number | null,
+  survival: SurvivalPoint[] | null = null,
+): string[] {
   const kind = seriesKind(event.series);
   const unit = event.unit;
   const series = SERIES_WORDS[kind];
   const paragraphs: string[] = [];
   const expected = expectedMedian === null ? null : measure(kind, expectedMedian, unit);
+  if (status === "published" && event.first_print !== null && expectedMedian === null && survival && survival.length > 0 && survival.length < 3) {
+    paragraphs.push(fewContracts(event, kind, survival));
+    return paragraphs;
+  }
 
   if (status === "upcoming") {
     paragraphs.push(

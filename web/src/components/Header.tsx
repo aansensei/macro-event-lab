@@ -62,6 +62,7 @@ function ThemeSwitch() {
 const PAGES: [Page, string][] = [
   ["events", "Events"],
   ["compare", "Compare"],
+  ["scorecard", "Scorecard"],
   ["method", "Method"],
   ["glossary", "Glossary"],
   ["about", "About"],
