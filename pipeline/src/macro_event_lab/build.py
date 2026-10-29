@@ -12,8 +12,8 @@ import polars as pl
 
 from macro_event_lab.config import RELEASES, Paths
 from macro_event_lab.pit import attach_known_from
-from macro_event_lab.raw_store import iter_manifest, load_raw
-from macro_event_lab.sources import alfred, fred_daily, kalshi, releases
+from macro_event_lab.raw_store import iter_manifest, load_raw, load_raw_bytes
+from macro_event_lab.sources import alfred, fred_daily, french, kalshi, releases
 
 UTC_TS = pl.Datetime("us", "UTC")
 
@@ -61,6 +61,13 @@ CANDLE_SCHEMA = {
     "open_interest": pl.Float64,
     "fetched_at_utc": pl.String,
 }
+FRENCH_SCHEMA = {
+    "file": pl.String,
+    "portfolio": pl.String,
+    "date": pl.Date,
+    "ret_pct": pl.Float64,
+    "fetched_at_utc": pl.String,
+}
 
 
 def _latest_first(records):
@@ -75,9 +82,23 @@ def build_silver(paths: Paths) -> dict[str, int]:
         "fomc", releases.fomc_statement_dates(), "seed:fomc_meetings.csv"
     )
     calendar_pages_seen: set[tuple[str, int]] = set()
+    french_rows: list[dict] = []
+    french_files_seen: set[str] = set()
 
     # Newest fetch first, so `unique(keep="first")` keeps the latest copy of each key.
     for record in _latest_first(iter_manifest(paths.raw)):
+        if record.kind == french.KIND:
+            # the library rebuilds its history monthly, so only the newest copy of a file counts
+            name = record.meta["name"]
+            if name in french_files_seen:
+                continue
+            french_files_seen.add(name)
+            text = french.read_zip_csv(load_raw_bytes(paths.raw, record))
+            french_rows += [
+                {**r, "file": name, "fetched_at_utc": record.fetched_at_utc}
+                for r in french.parse_first_table(text)
+            ]
+            continue
         payload = load_raw(paths.raw, record)
         fetched = record.fetched_at_utc
         if record.kind == releases.KIND:
@@ -132,6 +153,11 @@ def build_silver(paths: Paths) -> dict[str, int]:
     )
     counts["kalshi_markets"] = _write(markets, paths.silver / "kalshi_markets.parquet")
     counts["kalshi_candles"] = _write(candles, paths.silver / "kalshi_candles.parquet")
+    french_daily = _frame(
+        french_rows, FRENCH_SCHEMA, keys=["file", "portfolio", "date"],
+        sort=["file", "portfolio", "date"],
+    )
+    counts["french_daily"] = _write(french_daily, paths.silver / "french_daily.parquet")
     return counts
 
 

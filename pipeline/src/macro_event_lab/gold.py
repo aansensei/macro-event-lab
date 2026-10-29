@@ -515,18 +515,17 @@ def implied_distributions(
 
 
 REACTION_SERIES = {"DGS2": "dgs2_change_bp", "DGS10": "dgs10_change_bp"}
+MARKET_PORTFOLIO = "Market"
 
 
-def release_reactions(events: pl.DataFrame, observations: pl.DataFrame) -> pl.DataFrame:
-    """Per event: the change in the 2 and 10 year yields on the day of the release, in bp.
+def reaction_days(events: pl.DataFrame) -> pl.DataFrame:
+    """(event_ticker, reaction_date): the day markets reacted to each published event.
 
     CPI, jobs and GDP react on their release date (08:30 ET, before the market opens); FOMC
-    events on the New York date of the market close, the decision day. The change is that day's
-    close minus the last close before it, so a holiday before the release is skipped. Events
-    never published are left out, even when ALFRED lists their empty month on a later release's
-    date; a release on a market holiday has no change.
+    events on the New York date of the market close, the decision day. Events never published
+    have no reaction day, even when ALFRED lists their empty month on a later release's date.
     """
-    base = (
+    return (
         events.with_columns(
             reaction_date=pl.when(pl.col("first_print_source") == "kalshi")
             .then(pl.col("close").dt.convert_time_zone(RELEASE_TZ).dt.date())
@@ -536,6 +535,45 @@ def release_reactions(events: pl.DataFrame, observations: pl.DataFrame) -> pl.Da
         )
         .filter(pl.col("reaction_date").is_not_null())
         .select("event_ticker", "reaction_date")
+    )
+
+
+def release_industry_returns(events: pl.DataFrame, french_daily: pl.DataFrame) -> pl.DataFrame:
+    """Long rows (event_ticker, reaction_date, portfolio, ret_pct) for each reaction day.
+
+    Portfolios are the value-weighted industries of the industries file plus "Market", the
+    market excess return plus the T-bill rate (Mkt-RF + RF), all in percent for that one day.
+    A reaction day the library does not cover yet (it lags a month or two) has no rows.
+    """
+    industries = french_daily.filter(pl.col("file") == "industries_12").select(
+        "portfolio", "date", "ret_pct"
+    )
+    factors = french_daily.filter(pl.col("file") == "factors")
+    market = (
+        factors.filter(pl.col("portfolio").is_in(["Mkt-RF", "RF"]))
+        .group_by("date")
+        .agg(ret_pct=pl.col("ret_pct").sum(), parts=pl.col("ret_pct").count())
+        .filter(pl.col("parts") == 2)
+        .select(pl.lit(MARKET_PORTFOLIO).alias("portfolio"), "date", "ret_pct")
+    )
+    returns = pl.concat([industries, market])
+    return (
+        reaction_days(events)
+        .join(returns, left_on="reaction_date", right_on="date", how="inner")
+        .select("event_ticker", "reaction_date", "portfolio", "ret_pct")
+        .sort("event_ticker", "portfolio")
+    )
+
+
+def release_reactions(events: pl.DataFrame, observations: pl.DataFrame) -> pl.DataFrame:
+    """Per event: the change in the 2 and 10 year yields on its reaction day, in bp.
+
+    The reaction day comes from `reaction_days`. The change is that day's close minus the last
+    close before it, so a holiday before the release is skipped; a release on a market holiday
+    has no change.
+    """
+    base = (
+        reaction_days(events)
         .with_columns(day_before=pl.col("reaction_date") - pl.duration(days=1))
         .sort("day_before")
     )
@@ -589,6 +627,12 @@ def build_gold(paths: Paths) -> dict[str, int]:
             release_reactions(surprises, observations), on="event_ticker", how="left"
         ),
     }
+    # industry returns need `ingest french`; without it the table is simply not built
+    french_path = paths.silver / "french_daily.parquet"
+    if french_path.exists():
+        tables["release_industries"] = release_industry_returns(
+            surprises, pl.read_parquet(french_path)
+        )
     for name, df in tables.items():
         df.write_parquet(paths.gold / f"{name}.parquet", compression="zstd")
     return {name: df.height for name, df in tables.items()}

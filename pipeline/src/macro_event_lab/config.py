@@ -35,6 +35,14 @@ ALFRED_SERIES: dict[str, str] = {
     "GDPC1": "Real GDP",
 }
 
+# Kenneth R. French Data Library: daily industry and market returns, rebuilt monthly.
+FRENCH_BASE_URL = "https://mba.tuck.dartmouth.edu/pages/faculty/ken.french/ftp"
+FRENCH_FILES: dict[str, str] = {
+    "industries_12": "12_Industry_Portfolios_Daily_CSV.zip",
+    "factors": "F-F_Research_Data_Factors_daily_CSV.zip",
+}
+FRENCH_RPS = 0.5
+
 # Daily market series from FRED's current vintage (closes are not revised in practice).
 YIELD_SERIES: dict[str, str] = {
     "DGS2": "2-year Treasury constant maturity yield, daily",

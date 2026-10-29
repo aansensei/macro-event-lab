@@ -21,12 +21,13 @@ class RateLimitedClient:
         max_retries: int = 5,
         timeout: float = 30.0,
         transport: httpx.BaseTransport | None = None,
+        accept: str = "application/json",
     ) -> None:
         self._client = httpx.Client(
             base_url=base_url,
             timeout=timeout,
             transport=transport,
-            headers={"User-Agent": USER_AGENT, "Accept": "application/json"},
+            headers={"User-Agent": USER_AGENT, "Accept": accept},
         )
         self._min_interval = 1.0 / requests_per_second
         self._last_request = 0.0

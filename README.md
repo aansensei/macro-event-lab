@@ -82,6 +82,7 @@ npm run dev
 | `ingest alfred [--series ...]` | Download all vintages of the ALFRED series |
 | `ingest kalshi [--series ...] [--since YYYY-MM-DD] [--max-markets N] [--period 1/60/1440]` | Download markets and candlesticks |
 | `ingest yields [--series ...]` | Download daily 2 and 10 year Treasury yields (FRED `DGS2`, `DGS10`); each close counts as known at the end of its New York day |
+| `ingest french` | Download daily returns of the 12 industry portfolios and the market factor from the Kenneth R. French Data Library (kept local until permission to show them) |
 | `ingest releases` | Download CPI, jobs and GDP release dates (FRED); FOMC dates come from `pipeline/src/macro_event_lab/seeds/` |
 | `build` | Rebuild silver tables from raw, then gold tables (contract prices, implied distributions, stats, surprises), then the website JSON in `data/web/` |
 | `check [--show N]` | Data quality checks on silver (duplicates, bid above ask, prices outside [0, 1], missing months, markets without a strike); exits 1 on errors |

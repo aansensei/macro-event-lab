@@ -42,11 +42,13 @@ def save_raw(
     body: bytes,
     meta: dict[str, Any] | None = None,
     now: datetime | None = None,
+    suffix: str = ".json",
 ) -> RawRecord:
+    """Store a response body gzipped under its SHA-256; `suffix` names the body's own format."""
     now = now or datetime.now(UTC)
     digest = hashlib.sha256(body).hexdigest()
     source = kind.split(".", 1)[0]
-    rel_path = Path(source) / now.strftime("%Y-%m-%d") / f"{digest}.json.gz"
+    rel_path = Path(source) / now.strftime("%Y-%m-%d") / f"{digest}{suffix}.gz"
     full_path = raw_dir / rel_path
     if not full_path.exists():
         full_path.parent.mkdir(parents=True, exist_ok=True)
@@ -78,5 +80,9 @@ def iter_manifest(raw_dir: Path):
                 yield RawRecord(**json.loads(line))
 
 
+def load_raw_bytes(raw_dir: Path, record: RawRecord) -> bytes:
+    return gzip.decompress((raw_dir / record.path).read_bytes())
+
+
 def load_raw(raw_dir: Path, record: RawRecord) -> Any:
-    return json.loads(gzip.decompress((raw_dir / record.path).read_bytes()))
+    return json.loads(load_raw_bytes(raw_dir, record))

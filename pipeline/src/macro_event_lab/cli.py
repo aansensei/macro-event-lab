@@ -12,7 +12,7 @@ from macro_event_lab import config, pit, quality
 from macro_event_lab.build import build_silver
 from macro_event_lab.gold import build_gold
 from macro_event_lab.http import RateLimitedClient
-from macro_event_lab.sources import alfred, fred_daily, kalshi, releases
+from macro_event_lab.sources import alfred, fred_daily, french, kalshi, releases
 from macro_event_lab.web_export import build_web
 
 
@@ -34,6 +34,14 @@ def cmd_ingest_yields(args: argparse.Namespace) -> None:
         for series_id in series:
             rows = fred_daily.ingest_daily(client, paths.raw, series_id, key)
             print(f"FRED {series_id}: {rows:,} daily rows")
+
+
+def cmd_ingest_french(_args: argparse.Namespace) -> None:
+    paths = config.get_paths()
+    with RateLimitedClient(config.FRENCH_BASE_URL, config.FRENCH_RPS, accept="*/*") as client:
+        for name, filename in config.FRENCH_FILES.items():
+            size = french.ingest_file(client, paths.raw, name, filename)
+            print(f"French {name}: {size:,} bytes")
 
 
 def cmd_ingest_kalshi(args: argparse.Namespace) -> None:
@@ -145,6 +153,11 @@ def main(argv: list[str] | None = None) -> None:
     p_yields = ingest_sub.add_parser("yields", help="daily Treasury yields from FRED")
     p_yields.add_argument("--series", nargs="*", help="series ids (default: config.YIELD_SERIES)")
     p_yields.set_defaults(func=cmd_ingest_yields)
+
+    p_french = ingest_sub.add_parser(
+        "french", help="daily industry and market returns from the Kenneth French Data Library"
+    )
+    p_french.set_defaults(func=cmd_ingest_french)
 
     p_kalshi = ingest_sub.add_parser("kalshi", help="markets + candlesticks from Kalshi")
     p_kalshi.add_argument("--series", nargs="*", help="series tickers (default: KALSHI_SERIES)")

@@ -20,6 +20,7 @@ from macro_event_lab.gold import (
     isotonic_decreasing,
     latest_per_release,
     reference_period_from_event,
+    release_industry_returns,
     release_reactions,
     with_week_ago,
 )
@@ -491,3 +492,33 @@ def test_release_on_a_market_holiday_has_no_change():
     )
     row = release_reactions(events, closes).row(0, named=True)
     assert row["dgs2_change_bp"] is None and row["dgs10_change_bp"] is None
+
+
+def _french(rows: list[tuple[str, str, date, float | None]]) -> pl.DataFrame:
+    # (file, portfolio, date, ret_pct) as in silver french_daily
+    return pl.DataFrame(rows, schema={
+        "file": pl.String, "portfolio": pl.String, "date": pl.Date, "ret_pct": pl.Float64,
+    }, orient="row")
+
+
+def test_release_day_industry_and_market_returns():
+    d = date
+    french = _french([
+        ("industries_12", "BusEq", d(2026, 9, 11), 1.25),
+        ("industries_12", "Money", d(2026, 9, 11), -0.40),
+        ("industries_12", "BusEq", d(2026, 9, 10), 9.99),  # another day
+        ("factors", "Mkt-RF", d(2026, 9, 11), 0.70), ("factors", "RF", d(2026, 9, 11), 0.02),
+        ("factors", "SMB", d(2026, 9, 11), 0.10),
+    ])
+    events = pl.DataFrame([
+        ("CPI-AUG", "alfred", 0.4, d(2026, 9, 11), datetime(2026, 9, 11, 12, 25, tzinfo=UTC)),
+        # the library ends in September, so an October release has no rows yet
+        ("CPI-SEP", "alfred", 0.6, d(2026, 10, 14), datetime(2026, 10, 14, 12, 29, tzinfo=UTC)),
+        ("CPI-OCT25", "alfred", None, d(2026, 9, 11), datetime(2025, 11, 13, 13, 29, tzinfo=UTC)),
+    ], schema=REACTION_EVENT_SCHEMA, orient="row")
+
+    out = release_industry_returns(events, french)
+
+    assert set(out["event_ticker"]) == {"CPI-AUG"}
+    returns = dict(zip(out["portfolio"].to_list(), out["ret_pct"].to_list(), strict=True))
+    assert returns == {"BusEq": 1.25, "Money": -0.40, "Market": pytest.approx(0.72)}
