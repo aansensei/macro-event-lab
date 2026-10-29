@@ -13,7 +13,7 @@ import polars as pl
 from macro_event_lab.config import RELEASES, Paths
 from macro_event_lab.pit import attach_known_from
 from macro_event_lab.raw_store import iter_manifest, load_raw
-from macro_event_lab.sources import alfred, kalshi, releases
+from macro_event_lab.sources import alfred, fred_daily, kalshi, releases
 
 UTC_TS = pl.Datetime("us", "UTC")
 
@@ -93,6 +93,8 @@ def build_silver(paths: Paths) -> dict[str, int]:
             continue
         if record.kind == alfred.KIND:
             rows = alfred.parse_observations(record.meta["series_id"], payload)
+        elif record.kind == fred_daily.KIND:
+            rows = fred_daily.parse_daily(record.meta["series_id"], payload)
         elif record.kind in {"kalshi.markets", "kalshi.historical_markets"}:
             rows = kalshi.parse_markets(record.meta["series_ticker"], payload)
             market_rows += [{**r, "fetched_at_utc": fetched} for r in rows]

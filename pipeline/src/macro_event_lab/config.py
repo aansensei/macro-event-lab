@@ -35,6 +35,12 @@ ALFRED_SERIES: dict[str, str] = {
     "GDPC1": "Real GDP",
 }
 
+# Daily market series from FRED's current vintage (closes are not revised in practice).
+YIELD_SERIES: dict[str, str] = {
+    "DGS2": "2-year Treasury constant maturity yield, daily",
+    "DGS10": "10-year Treasury constant maturity yield, daily",
+}
+
 
 
 @dataclass(frozen=True)
