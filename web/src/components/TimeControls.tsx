@@ -1,3 +1,5 @@
+import type { CSSProperties } from "react";
+
 import { MINUS, formatEt, hourLabel } from "../lib/format";
 
 const PRESETS: [number, string][] = [
@@ -41,6 +43,8 @@ export function TimeControls({ h, ts, max, min, playing, onHour, onPlay }: Props
           max={-min}
           step={1}
           value={-h}
+          // share of the track already passed, painted in the accent color
+          style={{ "--fill": `${max === min ? 100 : ((max - h) / (max - min)) * 100}%` } as CSSProperties}
           aria-valuetext={`${h === 0 ? "At the close" : `${h} hours before the close`}${when && `, ${when}`}`}
           onChange={(e) => onHour(-Number(e.target.value))}
         />

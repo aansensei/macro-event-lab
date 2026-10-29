@@ -3,6 +3,7 @@ import { useEffect, useRef } from "react";
 import type { ManifestEvent } from "../data/types";
 import { KIND_LABEL, seriesKind, signed, type SeriesKind } from "../lib/format";
 import { eventStatus } from "../lib/snapshots";
+import { Select } from "./Select";
 
 export type Filter = "all" | SeriesKind;
 
@@ -43,35 +44,23 @@ export function EventList({ events, dataThrough, selectedId, filter, onFilter, o
   return (
     <>
       <div className="mobile-event-selectors">
-        <div>
-          <label htmlFor="mobile-release-filter" className="sr-only">Release type</label>
-          <select
-            id="mobile-release-filter"
-            className="control-select"
-            value={filter}
-            onChange={(e) => onFilter(e.target.value as Filter)}
-          >
-            {FILTERS.map((f) => (
-              <option key={f} value={f}>{f === "all" ? "All types" : filterLabel(f)}</option>
-            ))}
-          </select>
-        </div>
-        <div>
-          <label htmlFor="mobile-event-select" className="sr-only">Event</label>
-          <select
-            id="mobile-event-select"
-            className="control-select"
-            value={selectedId}
-            onChange={(e) => onSelect(e.target.value)}
-          >
-            {!shown.some((e) => e.id === selectedId) && (
-              <option value={selectedId}>{events.find((e) => e.id === selectedId)?.title}</option>
-            )}
-            {shown.map((e) => (
-              <option key={e.id} value={e.id}>{e.title}</option>
-            ))}
-          </select>
-        </div>
+        <Select
+          label="Release type"
+          value={filter}
+          options={FILTERS.map((f) => ({ value: f, label: f === "all" ? "All types" : filterLabel(f) }))}
+          onChange={(v) => onFilter(v as Filter)}
+        />
+        <Select
+          label="Event"
+          value={selectedId}
+          align="end"
+          options={[
+            // the selected event stays listed even when the filter hides its type
+            ...(shown.some((e) => e.id === selectedId) ? [] : events.filter((e) => e.id === selectedId)),
+            ...shown,
+          ].map((e) => ({ value: e.id, label: e.title, meta: <Badge event={e} dataThrough={dataThrough} /> }))}
+          onChange={onSelect}
+        />
       </div>
 
       <aside className="event-sidebar" aria-label="Release filter and event list">

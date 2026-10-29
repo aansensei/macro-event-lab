@@ -295,22 +295,86 @@ button, input, select { font-family: inherit; font-size: inherit; color: inherit
   width: 100%;
 }
 
-.mobile-event-selectors { display: grid; grid-template-columns: 110px minmax(0, 1fr); gap: 8px; }
+.mobile-event-selectors { display: grid; grid-template-columns: 124px minmax(0, 1fr); gap: 8px; }
+/* on the narrowest screens the two dropdowns stack, so the event name shows in full */
+@media (max-width: 359px) {
+  .mobile-event-selectors { grid-template-columns: minmax(0, 1fr); }
+}
 @media (min-width: 1024px) {
   .mobile-event-selectors { display: none; }
 }
-.control-select {
+
+/* designed dropdown: a quiet surface button, and a floating list that grows in from its edge */
+.select { position: relative; min-width: 0; }
+.select-trigger {
   width: 100%;
   min-height: 44px;
-  padding: 8px 10px;
-  border: none;
-  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 8px 12px;
+  border: 1px solid transparent;
+  border-radius: 10px;
   background-color: var(--surface);
   color: var(--text);
   font-size: 14px;
   line-height: 20px;
   font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+  transition: background-color 0.18s ease, border-color 0.18s ease;
 }
+.select-trigger:hover { background-color: var(--surface-hover); }
+.select-trigger[aria-expanded="true"] { border-color: var(--accent); background-color: var(--surface-hover); }
+.select-value { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.select-chevron { flex: none; color: var(--text-muted); transition: transform 0.2s ease; }
+.select-trigger[aria-expanded="true"] .select-chevron { transform: rotate(180deg); color: var(--accent); }
+.select-list {
+  position: absolute;
+  top: calc(100% + 6px);
+  z-index: 50;
+  min-width: 100%;
+  width: max-content;
+  max-width: min(360px, calc(100vw - 32px));
+  max-height: min(340px, 60vh);
+  overflow-y: auto;
+  margin: 0;
+  padding: 4px;
+  list-style: none;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background-color: var(--bg);
+  box-shadow: 0 12px 32px rgba(2, 12, 22, 0.28), 0 2px 6px rgba(2, 12, 22, 0.16);
+  scrollbar-width: thin;
+  scrollbar-color: var(--border-control) transparent;
+  animation: select-in 0.16s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+  outline: none;
+}
+.select-start { left: 0; transform-origin: top left; }
+.select-end { right: 0; transform-origin: top right; }
+@keyframes select-in {
+  from { opacity: 0; transform: translateY(-4px) scale(0.98); }
+  to { opacity: 1; transform: none; }
+}
+.select-option {
+  display: grid;
+  grid-template-columns: 16px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 8px;
+  min-height: 40px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  font-size: 14px;
+  line-height: 20px;
+  color: var(--text);
+  cursor: pointer;
+}
+.select-option.is-active { background-color: var(--surface-hover); }
+.select-option[aria-selected="true"] { color: var(--accent); font-weight: 600; }
+.select-check { color: var(--accent); font-size: 13px; }
+.select-option-label { min-width: 0; overflow-wrap: anywhere; }
+.select-option-meta { font-size: 12px; color: var(--text-muted); font-weight: 400; white-space: nowrap; }
 
 .event-top-bar { margin-bottom: 28px; }
 .event-meta-sub { color: var(--text-muted); margin-top: 6px; font-weight: 400; }
@@ -549,7 +613,47 @@ table.mel-table .r { text-align: right; font-variant-numeric: tabular-nums linin
 .slider-wrap { flex: 1 1 200px; display: flex; flex-direction: column; gap: 4px; }
 .slider-top-labels { display: flex; justify-content: space-between; gap: 12px; font-size: 12px; line-height: 16px; color: var(--text-muted); }
 .slider-current { color: var(--text); font-weight: 500; }
-input[type="range"].time-slider { width: 100%; height: 24px; accent-color: var(--accent); cursor: pointer; margin: 0; }
+/* designed time slider: a 6px track filled in the accent up to the thumb, the same in every browser */
+input[type="range"].time-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 24px;
+  margin: 0;
+  background: transparent;
+  cursor: pointer;
+}
+.time-slider::-webkit-slider-runnable-track {
+  height: 6px;
+  border-radius: 3px;
+  background: linear-gradient(to right, var(--accent) var(--fill, 0%), var(--surface-hover) var(--fill, 0%));
+}
+.time-slider::-moz-range-track { height: 6px; border-radius: 3px; background: var(--surface-hover); }
+.time-slider::-moz-range-progress { height: 6px; border-radius: 3px; background: var(--accent); }
+.time-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 18px;
+  height: 18px;
+  margin-top: -6px;
+  border-radius: 50%;
+  background: var(--bg);
+  border: 2px solid var(--accent);
+  transition: transform 0.15s ease;
+}
+.time-slider::-moz-range-thumb {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--bg);
+  border: 2px solid var(--accent);
+}
+.time-slider:hover::-webkit-slider-thumb, .time-slider:active::-webkit-slider-thumb { transform: scale(1.15); }
+.time-slider:focus-visible { outline: none; }
+.time-slider:focus-visible::-webkit-slider-thumb { box-shadow: 0 0 0 2px var(--bg), 0 0 0 4px var(--accent); }
+.time-slider:focus-visible::-moz-range-thumb { box-shadow: 0 0 0 2px var(--bg), 0 0 0 4px var(--accent); }
+@media (pointer: coarse) {
+  .time-slider::-webkit-slider-thumb { width: 24px; height: 24px; margin-top: -9px; }
+}
 .preset-chips { display: flex; gap: 4px; flex-wrap: wrap; }
 /* on phones the sticky bar stays short: presets scroll in one row and the end labels give way to the current hour */
 @media (max-width: 639px) {
