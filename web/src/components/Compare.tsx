@@ -8,6 +8,7 @@ import { ols } from "../lib/stats";
 import { CalibrationBars } from "./CalibrationBars";
 import { SurpriseScatter } from "./SurpriseScatter";
 import { Term } from "./Term";
+import { StoryNext, StoryPath } from "./Story";
 
 const VERDICT_LABEL: Record<Verdict, string> = {
   calibrated: "Well calibrated",
@@ -54,6 +55,7 @@ export function Compare() {
 
   return (
     <div className="compare-page page-fade">
+      <StoryPath current="compare" />
       <h1 className="t-h1">Compare</h1>
       <p className="about-lead">
         Every release side by side: how well the market judged its own uncertainty, and how bond
@@ -127,6 +129,7 @@ export function Compare() {
           ))}
         </ol>
       </section>
+      <StoryNext current="compare" />
     </div>
   );
 }

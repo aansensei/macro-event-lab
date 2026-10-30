@@ -6,6 +6,7 @@ import { missSize, scoreFinding } from "../lib/scoreWords";
 import { CountUp } from "./CountUp";
 import { PitHistogram } from "./PitHistogram";
 import { Term } from "./Term";
+import { StoryNext, StoryPath } from "./Story";
 
 type Load = { kind: "loading" } | { kind: "error"; message: string } | { kind: "ready"; summary: Summary };
 
@@ -77,6 +78,7 @@ export function Scorecard() {
   const scored = load.summary.series.filter((s) => s.scores);
   return (
     <div className="compare-page page-fade">
+      <StoryPath current="scorecard" />
       <h1 className="t-h1">Scorecard</h1>
       <p className="about-lead">
         How good were the market's forecasts an hour before each release? Scored with the tools
@@ -99,6 +101,7 @@ export function Scorecard() {
           ends mean the market was too confident, and a hump in the middle means it was too cautious.
         </p>
       </details>
+      <StoryNext current="scorecard" />
     </div>
   );
 }

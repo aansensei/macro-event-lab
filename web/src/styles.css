@@ -1328,3 +1328,90 @@ html.theme-switching *, html.theme-switching *::before, html.theme-switching *::
     scroll-behavior: auto !important;
   }
 }
+
+/* story path: the four story pages as numbered steps, done ones checked off in the accent, the current one filled */
+.story-path { margin: 0 0 20px 0; overflow-x: auto; scrollbar-width: none; -webkit-user-select: none; user-select: none; }
+.story-path::-webkit-scrollbar { display: none; }
+.story-path ol { list-style: none; margin: 0; padding: 2px; display: flex; gap: 6px; min-width: max-content; }
+.story-path li { display: flex; align-items: center; gap: 6px; }
+.story-path li:not(:last-child)::after {
+  content: "";
+  width: 14px;
+  height: 1px;
+  background-color: var(--border-control);
+  flex: none;
+}
+.story-path a {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px 6px 6px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  text-decoration: none;
+  color: var(--text-muted);
+  transition: border-color 0.18s ease, background-color 0.18s ease, color 0.18s ease;
+}
+.story-path a:hover { border-color: var(--border-control); color: var(--text); text-decoration: none; }
+.story-path a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.story-num {
+  flex: none;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font-size: 12px;
+  font-weight: 600;
+  border: 1px solid var(--border-control);
+}
+.story-text { display: flex; flex-direction: column; line-height: 15px; }
+.story-label { font-size: 13px; font-weight: 600; }
+.story-question { font-size: 11px; color: var(--text-muted); }
+.story-path li.is-done .story-num { border-color: var(--accent); color: var(--accent); }
+.story-path li.is-current a { border-color: var(--accent); background-color: var(--accent-tint); color: var(--accent); }
+.story-path li.is-current .story-num { background-color: var(--accent); border-color: var(--accent); color: var(--bg); }
+/* phones show every step as its number and name only the current one, so the whole path fits */
+@media (max-width: 639px) {
+  .story-question { display: none; }
+  .story-path li:not(.is-current) .story-text { display: none; }
+  .story-path li:not(.is-current) a { padding: 6px; }
+}
+
+/* next block: why to go on, then a wide link card to the following page */
+.story-next { margin-top: 48px; padding-top: 24px; border-top: 1px solid var(--border); }
+.story-next p { margin: 0 0 12px 0; color: var(--text-muted); line-height: 25px; max-width: 70ch; }
+.story-next-link {
+  position: relative;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  grid-template-areas: "kicker kicker" "label label" "question question";
+  padding: 16px 52px 16px 18px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background-color: var(--surface);
+  text-decoration: none;
+  color: var(--text);
+  max-width: 520px;
+  transition: border-color 0.18s ease, background-color 0.18s ease;
+  -webkit-user-select: none;
+  user-select: none;
+}
+.story-next-link:hover { border-color: var(--accent); background-color: var(--accent-tint); text-decoration: none; }
+.story-next-link:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.story-next-kicker { grid-area: kicker; font-size: 11px; font-weight: 600; letter-spacing: 0.07em; text-transform: uppercase; color: var(--accent); }
+.story-next-label { grid-area: label; font-size: 18px; font-weight: 600; line-height: 26px; }
+.story-next-question { grid-area: question; font-size: 13px; color: var(--text-muted); }
+/* a chevron that slides right when the card is hovered */
+.story-next-arrow {
+  position: absolute;
+  right: 22px;
+  top: 50%;
+  width: 10px;
+  height: 10px;
+  border-right: 2px solid var(--accent);
+  border-top: 2px solid var(--accent);
+  transform: translateY(-50%) rotate(45deg);
+  transition: transform 0.2s ease;
+}
+.story-next-link:hover .story-next-arrow { transform: translate(4px, -50%) rotate(45deg); }
