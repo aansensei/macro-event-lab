@@ -113,12 +113,15 @@ def calibration_design(rows: pl.DataFrame) -> tuple[np.ndarray, np.ndarray, np.n
     return x, rows["outcome"].to_numpy(), weights
 
 
-def fit_calibration(rows: pl.DataFrame) -> tuple[pl.DataFrame, MapFit]:
-    """Fit shared bias/confidence with Gaussian series deviations of fixed unit prior SD."""
+def fit_calibration(rows: pl.DataFrame, prior_sd: float = 1.0) -> tuple[pl.DataFrame, MapFit]:
+    """Fit shared and series effects with a fixed Gaussian prior SD."""
+    if not np.isfinite(prior_sd) or prior_sd <= 0:
+        raise ValueError("prior_sd must be finite and positive")
     x, y, weights = calibration_design(rows)
     prior = np.zeros(x.shape[1])
     prior[1] = 1.0
-    fit = fit_map(x, y, prior=prior, weights=weights)
+    fit = fit_map(x, y, prior=prior, weights=weights,
+                  precision=np.full(x.shape[1], 1 / prior_sd**2))
     result = pl.DataFrame({
         "series_ticker": SERIES,
         "bias": fit.coef[0] + fit.coef[2:6],
@@ -141,9 +144,11 @@ def build_calibration(paths: Paths) -> dict[str, int]:
     ), markets)
     coefficients, _ = fit_calibration(rows)
     predictions = model_evaluation.walk_forward(rows)
+    sensitivity = model_evaluation.prior_sensitivity(rows, predictions)
     tables = {"calibration_rows": rows, "calibration_map": coefficients,
               "calibration_predictions": predictions,
-              "model_scores": model_evaluation.score_predictions(predictions)}
+              "model_scores": sensitivity.filter(pl.col("prior_sd") == 1.0),
+              "model_sensitivity": sensitivity}
     for name, frame in tables.items():
         frame.write_parquet(paths.gold / f"{name}.parquet", compression="zstd")
     return {name: frame.height for name, frame in tables.items()}

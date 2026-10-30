@@ -127,6 +127,23 @@ def test_unobserved_series_uses_the_shared_effect(rows):
     assert missing["confidence"] == pytest.approx(fit.coef[1])
 
 
+def test_prior_sd_changes_precision_and_shrinkage(rows):
+    _, tight = fit_calibration(rows, prior_sd=0.1)
+    _, loose = fit_calibration(rows, prior_sd=2.0)
+    prior = np.zeros(10)
+    prior[1] = 1
+    assert np.linalg.norm(tight.coef - prior) < np.linalg.norm(loose.coef - prior)
+    x, y, weights = calibration_design(rows)
+    expected = fit_map(x, y, weights=weights, prior=prior, precision=np.full(10, 0.25))
+    assert loose.coef == pytest.approx(expected.coef)
+
+
+@pytest.mark.parametrize("sd", [0, -1, float("nan"), float("inf")])
+def test_invalid_prior_sd_is_rejected(rows, sd):
+    with pytest.raises(ValueError, match="prior_sd"):
+        fit_calibration(rows, prior_sd=sd)
+
+
 def test_model_command_writes_only_local_map_tables(tmp_path, monkeypatch, capsys, rows):
     paths = config.Paths(tmp_path)
     paths.gold.mkdir()
@@ -140,9 +157,13 @@ def test_model_command_writes_only_local_map_tables(tmp_path, monkeypatch, capsy
 
     monkeypatch.setattr(model_evaluation, "attach_label_times", lambda frame, _: frame)
     monkeypatch.setattr(model_evaluation, "walk_forward", lambda _: pl.DataFrame())
-    monkeypatch.setattr(model_evaluation, "score_predictions", lambda _: pl.DataFrame())
+    monkeypatch.setattr(model_evaluation, "prior_sensitivity", lambda *args: pl.DataFrame(
+        {"prior_sd": [0.5, 1.0, 2.0]}
+    ))
     cli.main(["model"])
     assert pl.read_parquet(paths.gold / "calibration_rows.parquet").equals(rows)
     assert pl.read_parquet(paths.gold / "calibration_map.parquet").height == 4
     assert not (paths.gold / "calibration_posterior.parquet").exists()
+    assert pl.read_parquet(paths.gold / "model_scores.parquet")["prior_sd"].to_list() == [1.0]
+    assert pl.read_parquet(paths.gold / "model_sensitivity.parquet").height == 3
     assert "No posterior intervals" in capsys.readouterr().out

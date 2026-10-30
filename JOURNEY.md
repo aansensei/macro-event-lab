@@ -276,7 +276,26 @@ CPI markets are well calibrated (ideal: 90% and 50%). Jobs and GDP markets are a
 - **Test:** IRLS agrees with gradient descent under the market-centred prior and with an independent logistic regression implementation under the equivalent zero-centred prior. Duplicating all rows leaves the fit unchanged, and collinear designs remain finite under the prior.
 - **Evaluation:** whole-event walk-forward fits before each event's earliest snapshot. All training labels must have settled strictly before that cutoff. Missing settlement times use a recorded fetch-time upper bound. Raw quotes remain separate from isotonic probabilities for score comparisons.
 - **Test:** future-data perturbations, held-out label flips, incomplete event labels and exact-cutoff timestamps guard temporal splitting. Score tests verify equal event weighting, pairing, reproducibility and finite log loss at extreme probabilities.
-- **Limit:** posterior uncertainty remains separate work. Score intervals are exploratory and uncorrected for multiple comparisons; combined isotonic and MAP performance does not isolate calibration's incremental contribution.
+- **Attribution:** scores compare raw prices, isotonic and isotonic plus MAP on identical rows. Shared event bootstrap draws separate the isotonic improvement from MAP's incremental contribution. Tests check additive mean differences and a case where isotonic helps but MAP hurts.
+- **Multiplicity:** nominal Bonferroni intervals cover the fixed family of series, horizons, metrics, method comparisons and prior scales. Sensitivity fits keep the same event splits and report every prior scale without selecting a winner. Tests verify adjusted quantiles, interval nesting, shrinkage, equal samples and leakage protection across scales.
+- **Limit:** posterior uncertainty remains separate work. Simultaneous percentile intervals are approximate, with small event samples and limited simulation draws in the extreme tails. Prior sensitivity varies common shrinkage strength only.
+
+### 9.7 Sampling hierarchical calibration without overstating uncertainty
+
+- **Built:** a noncentred hierarchical model learns separate pooling scales for bias and confidence. A fixed-scale version has the same weighted log density as the NumPy MAP objective, checked through density differences and gradients at the optimum.
+- **Dependence:** contracts and horizons within an event share an outcome. An event-weighted Bernoulli potential defines a generalized posterior; its intervals depend on that choice and do not prove that within-event dependence has been modelled.
+- **Validation:** four NUTS chains are gated on R-hat, bulk and tail ESS, and divergences. Failed diagnostics mark local outputs unvalidated and exit with an error. Draws are retained alongside the summaries for inspection.
+- **Sampling:** a divergence triggered the gate during a real run. The sampling settings use longer warmup and target acceptance 0.99; a run still has to pass the gate, regardless of those settings.
+- **Predictive checks:** explicit Bernoulli simulations check marginal event-weighted rates only. They are not coherent joint simulations across strikes and cannot establish event-level predictive adequacy.
+- **Lesson:** matching a posterior median to a MAP from a different prior is not a sound correctness test. Validate the shared objective first, then assess posterior geometry and model assumptions separately.
+
+### 9.8 Giving each event one outcome
+
+- **Problem:** weighted Bernoulli factors limit the influence of dense events but do not define the dependence between their contracts. Independent predictive draws can say no at a low strike and yes at a higher strike.
+- **Fix:** a separate T-1h model observes one categorical settlement interval per event. Positive confidence preserves survival order, and adjacent survival differences define the category probabilities. Every predictive draw selects one category and derives all contract labels from it.
+- **Support:** isotonic plateaus can give an observed category zero probability. A documented fixed uniform contamination mixture supplies support instead of dropping events based on their outcomes. Its sensitivity remains open.
+- **Test:** NumPy and PyMC categorical likelihoods agree with ragged strike grids and tails; contradictory labels fail validation; simulated contract labels are monotone and recover the same category. Generalized-posterior outputs are preserved separately.
+- **Limit:** the likelihood assumes conditional independence across events and uses only T-1h. Its log-confidence prior differs from the older MAP, and it still needs temporal evaluation and support-mixture sensitivity.
 
 ## 10. Website
 

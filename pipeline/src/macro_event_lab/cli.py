@@ -156,11 +156,25 @@ def cmd_nowcast(_: argparse.Namespace) -> None:
             print(f"{label:<24} {name:<8} n={e['n']:<3} RMSE {e['rmse']:.2f}  MAE {e['mae']:.2f}")
 
 
-def cmd_model(_: argparse.Namespace) -> None:
+def cmd_model(args: argparse.Namespace) -> None:
     """Fit calibration and evaluate whole-event temporal predictions on local data."""
-    for table, n in calibration.build_calibration(config.get_paths()).items():
+    if args.joint:
+        from macro_event_lab.joint_bayesian import build_joint_posterior
+
+        counts = build_joint_posterior(config.get_paths(), draws=args.draws, tune=args.tune)
+    elif args.bayesian:
+        from macro_event_lab.bayesian import build_posterior
+
+        counts = build_posterior(config.get_paths(), draws=args.draws, tune=args.tune)
+    else:
+        counts = calibration.build_calibration(config.get_paths())
+    for table, n in counts.items():
         print(f"gold/{table}.parquet: {n:,} rows")
-    print("Fixed-prior MAP with temporal evaluation. No posterior intervals.")
+    if args.joint:
+        print("Joint categorical posterior at T-1h, descriptive only.")
+    else:
+        print("Event-weighted generalized posterior, descriptive only." if args.bayesian
+              else "Fixed-prior MAP with temporal evaluation. No posterior intervals.")
 
 
 def cmd_build(_: argparse.Namespace) -> None:
@@ -215,6 +229,12 @@ def main(argv: list[str] | None = None) -> None:
     p_nowcast.set_defaults(func=cmd_nowcast)
 
     p_model = sub.add_parser("model", help="fit local descriptive MAP calibration")
+    model_mode = p_model.add_mutually_exclusive_group()
+    model_mode.add_argument("--bayesian", action="store_true",
+                            help="sample a generalized posterior")
+    model_mode.add_argument("--joint", action="store_true", help="sample a joint event posterior")
+    p_model.add_argument("--draws", type=int, default=1000, help="posterior draws per chain")
+    p_model.add_argument("--tune", type=int, default=2000, help="warmup draws per chain")
     p_model.set_defaults(func=cmd_model)
 
     p_check = sub.add_parser("check", help="data quality checks on silver (exit 1 on errors)")
