@@ -89,9 +89,9 @@ def nowcast_rows(observations: pl.DataFrame, since: date = NOWCAST_SINCE) -> pl.
         first_prints(observations)
         .filter((pl.col("series_ticker") == "KXGDP") & pl.col("first_print").is_not_null())
         .sort("reference_period")
-        .with_columns(previous_print=pl.col("first_print").shift(1))
-        .filter(pl.col("reference_period") >= since)
     )
+    previous = {t["reference_period"]: t for t in targets.iter_rows(named=True)}
+    targets = targets.filter(pl.col("reference_period") >= since)
     by_series = {
         s: observations.filter(pl.col("series_id") == s)
         for s in [*INDICATORS, "GDPC1"]
@@ -99,9 +99,12 @@ def nowcast_rows(observations: pl.DataFrame, since: date = NOWCAST_SINCE) -> pl.
     rows = []
     for t in targets.iter_rows(named=True):
         quarter, as_of = t["reference_period"], t["release_date"] - timedelta(days=1)
+        prior = previous.get(add_months(quarter, -3))
         row = {
             "reference_period": quarter, "release_date": t["release_date"], "as_of": as_of,
-            "first_print": t["first_print"], "previous_print": t["previous_print"],
+            "first_print": t["first_print"],
+            "previous_print": prior["first_print"]
+            if prior is not None and prior["release_date"] <= as_of else None,
         }
         for series, kind in INDICATORS.items():
             row[series] = quarter_value(vintage(by_series[series], as_of), quarter, kind)
@@ -141,14 +144,26 @@ def ridge_fit(x: np.ndarray, y: np.ndarray, lam: float) -> Ridge:
     return Ridge(float(y.mean()), coef, mean, scale)
 
 
-def choose_lambda(x: np.ndarray, y: np.ndarray, inner: int = INNER) -> float:
-    """The penalty with the smallest one-step-ahead squared error over the last `inner` rows."""
+def choose_lambda(
+    x: np.ndarray, y: np.ndarray, inner: int = INNER, *,
+    release_dates: list[date] | None = None, as_of_dates: list[date] | None = None,
+) -> float:
+    """Choose a penalty using only labels available at each validation row's cutoff."""
+    if (release_dates is None) != (as_of_dates is None):
+        raise ValueError("release_dates and as_of_dates must be supplied together")
     start = max(2, len(y) - inner)
+    splits = []
+    for i in range(start, len(y)):
+        train = [j for j in range(i) if release_dates is None or release_dates[j] <= as_of_dates[i]]
+        if len(train) >= 2:
+            splits.append((train, i))
+    if not splits:
+        return LAMBDAS[-1]
     best, best_err = LAMBDAS[0], float("inf")
     for lam in LAMBDAS:
         err = sum(
-            float((ridge_fit(x[:i], y[:i], lam).predict(x[i : i + 1])[0] - y[i]) ** 2)
-            for i in range(start, len(y))
+            float((ridge_fit(x[train], y[train], lam).predict(x[i : i + 1])[0] - y[i]) ** 2)
+            for train, i in splits
         )
         if err < best_err:
             best, best_err = lam, err
@@ -161,12 +176,16 @@ def walk_forward(rows: pl.DataFrame, min_train: int = MIN_TRAIN) -> pl.DataFrame
     x = usable.select(FEATURES).to_numpy()
     y = usable["first_print"].to_numpy()
     released = usable["release_date"].to_list()
+    cutoffs = usable["as_of"].to_list()
     out = []
     for i, as_of in enumerate(usable["as_of"].to_list()):
         train = [j for j, r in enumerate(released) if r <= as_of]
         if len(train) < min_train:
             continue
-        lam = choose_lambda(x[train], y[train])
+        lam = choose_lambda(
+            x[train], y[train], release_dates=[released[j] for j in train],
+            as_of_dates=[cutoffs[j] for j in train],
+        )
         pred = ridge_fit(x[train], y[train], lam).predict(x[i : i + 1])[0]
         out.append((usable["reference_period"][i], float(pred), lam, len(train)))
     preds = pl.DataFrame(
@@ -177,20 +196,36 @@ def walk_forward(rows: pl.DataFrame, min_train: int = MIN_TRAIN) -> pl.DataFrame
 
 
 def bootstrap_coefs(
-    x: np.ndarray, y: np.ndarray, lam: float, draws: int = 1000, block: int = 4, seed: int = 0
+    x: np.ndarray, y: np.ndarray, lam: float, draws: int = 1000, block: int = 4, seed: int = 0,
+    quarters: list[date] | None = None,
 ) -> np.ndarray:
-    """Standardised ridge coefficients over moving block bootstrap resamples, one row per draw.
+    """Ridge coefficients per original-sample SD, conditional on the selected penalty.
 
-    Blocks of `block` consecutive quarters keep the serial correlation of GDP growth.
+    Blocks have at most `block` rows and stop at missing quarters or the end of the sample.
+    Penalty selection uncertainty and the choice of excluded quarters are not included.
     """
     rng = np.random.default_rng(seed)
     n = len(y)
-    starts = np.arange(n - block + 1)
+    blocks = []
+    for start in range(n):
+        stop = start + 1
+        while stop < min(start + block, n):
+            if quarters is not None and quarters[stop] != add_months(quarters[stop - 1], 3):
+                break
+            stop += 1
+        blocks.append(np.arange(start, stop))
+    reference_scale = x.std(axis=0)
     out = np.empty((draws, x.shape[1]))
     for d in range(draws):
-        picks = rng.choice(starts, n // block + 1)
-        idx = np.concatenate([np.arange(s, s + block) for s in picks])[:n]
-        out[d] = ridge_fit(x[idx], y[idx], lam).coef
+        picks = []
+        size = 0
+        while size < n:
+            picked = blocks[rng.integers(len(blocks))]
+            picks.append(picked)
+            size += len(picked)
+        idx = np.concatenate(picks)[:n]
+        fit = ridge_fit(x[idx], y[idx], lam)
+        out[d] = fit.coef / fit.scale * reference_scale
     return out
 
 
@@ -202,6 +237,20 @@ def error_summary(rows: pl.DataFrame, column: str) -> dict[str, float | int]:
         return {"n": 0, "rmse": float("nan"), "mae": float("nan")}
     rmse = float(np.sqrt((err**2).mean()))
     return {"n": len(err), "rmse": rmse, "mae": float(np.abs(err).mean())}
+
+
+def market_comparison(
+    predictions: pl.DataFrame, events: pl.DataFrame, stats: pl.DataFrame,
+) -> pl.DataFrame:
+    """Pair GDP predictions with the market's T-1h median on common quarters."""
+    market = events.filter(pl.col("series_ticker") == "KXGDP").select(
+        "event_ticker", "reference_period"
+    ).join(
+        stats.filter(pl.col("hours_before_close") == 1).select(
+            "event_ticker", market_median="p50",
+        ), on="event_ticker",
+    ).drop_nulls("market_median")
+    return predictions.join(market, on="reference_period")
 
 
 def coefficient_table(
@@ -222,9 +271,12 @@ def coefficient_table(
                                     "hi": pl.Float64, "lam": pl.Float64})
     x = usable.select(FEATURES).to_numpy()
     y = usable["first_print"].to_numpy()
-    lam = choose_lambda(x, y)
+    lam = choose_lambda(
+        x, y, release_dates=usable["release_date"].to_list(),
+        as_of_dates=usable["as_of"].to_list(),
+    )
     fit = ridge_fit(x, y, lam)
-    boot = bootstrap_coefs(x, y, lam, draws)
+    boot = bootstrap_coefs(x, y, lam, draws, quarters=usable["reference_period"].to_list())
     return pl.DataFrame({
         "feature": FEATURES,
         "coef": fit.coef,
