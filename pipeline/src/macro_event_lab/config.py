@@ -33,6 +33,11 @@ ALFRED_SERIES: dict[str, str] = {
     "PAYEMS": "Total nonfarm payrolls, SA",
     "UNRATE": "Unemployment rate",
     "GDPC1": "Real GDP",
+    # monthly activity indicators that feed the GDP nowcast
+    "INDPRO": "Industrial production index, SA",
+    "PCEC96": "Real personal consumption expenditures, SA",
+    "RRSFS": "Advance real retail and food services sales, SA",
+    "HOUST": "Housing starts, SA annual rate",
 }
 
 # Kenneth R. French Data Library: daily industry and market returns, rebuilt monthly.
