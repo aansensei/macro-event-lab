@@ -8,7 +8,7 @@ from datetime import UTC, datetime
 
 import polars as pl
 
-from macro_event_lab import config, nowcast, pit, quality
+from macro_event_lab import calibration, config, nowcast, pit, quality
 from macro_event_lab.build import build_silver
 from macro_event_lab.gold import build_gold
 from macro_event_lab.http import RateLimitedClient
@@ -129,29 +129,38 @@ def cmd_check(args: argparse.Namespace) -> None:
 
 def cmd_nowcast(_: argparse.Namespace) -> None:
     """Print the GDP nowcast's out-of-sample errors, its coefficients and, where Kalshi covered
-    the quarter, the market's T-1h mean on the same quarters (local only)."""
+    the quarter, the market's T-1h median on the same quarters (local only)."""
     paths = config.get_paths()
     rows = nowcast.nowcast_rows(pl.read_parquet(paths.silver / "alfred_observations.parquet"))
     preds = nowcast.walk_forward(rows)
     calm = preds.filter(~pl.col("reference_period").is_in(list(nowcast.COVID_QUARTERS)))
     for label, frame in (("all quarters", preds), ("without 2020 Q2 and Q3", calm)):
+        frame = frame.drop_nulls(["nowcast", "previous_print", "first_print"])
         for column, name in (("nowcast", "nowcast"), ("previous_print", "naive")):
             e = nowcast.error_summary(frame, column)
             print(f"{label:<24} {name:<8} n={e['n']:<3} RMSE {e['rmse']:.2f}  MAE {e['mae']:.2f}")
     print()
-    print("standardised coefficients (pp of GDP growth per 1 SD), 95% block bootstrap:")
+    print("coefficients per original-sample SD, 95% block bootstrap (conditional on lambda):")
     with pl.Config(tbl_hide_dataframe_shape=True, float_precision=2):
         print(nowcast.coefficient_table(rows))
     events_path = paths.gold / "event_surprise.parquet"
-    if events_path.exists():
-        market = pl.read_parquet(events_path).filter(pl.col("series_ticker") == "KXGDP").select(
-            "reference_period", "mean_t1h"
+    stats_path = paths.gold / "implied_stats.parquet"
+    if events_path.exists() and stats_path.exists():
+        both = nowcast.market_comparison(
+            preds, pl.read_parquet(events_path), pl.read_parquet(stats_path),
         )
-        both = preds.join(market.drop_nulls(), on="reference_period")
-        for column, name in (("nowcast", "nowcast"), ("mean_t1h", "market")):
+        print("Cutoffs differ: nowcast uses the prior day; market uses T-1h before market close.")
+        for column, name in (("nowcast", "nowcast"), ("market_median", "market")):
             e = nowcast.error_summary(both, column)
             label = "Kalshi quarters"
             print(f"{label:<24} {name:<8} n={e['n']:<3} RMSE {e['rmse']:.2f}  MAE {e['mae']:.2f}")
+
+
+def cmd_model(_: argparse.Namespace) -> None:
+    """Fit calibration and evaluate whole-event temporal predictions on local data."""
+    for table, n in calibration.build_calibration(config.get_paths()).items():
+        print(f"gold/{table}.parquet: {n:,} rows")
+    print("Fixed-prior MAP with temporal evaluation. No posterior intervals.")
 
 
 def cmd_build(_: argparse.Namespace) -> None:
@@ -204,6 +213,9 @@ def main(argv: list[str] | None = None) -> None:
 
     p_nowcast = sub.add_parser("nowcast", help="evaluate the GDP nowcast walk-forward")
     p_nowcast.set_defaults(func=cmd_nowcast)
+
+    p_model = sub.add_parser("model", help="fit local descriptive MAP calibration")
+    p_model.set_defaults(func=cmd_model)
 
     p_check = sub.add_parser("check", help="data quality checks on silver (exit 1 on errors)")
     p_check.add_argument("--show", type=int, default=5, help="problem rows to print per check")

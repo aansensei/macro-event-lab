@@ -45,7 +45,7 @@ def calibration_rows(
     to_logit = pl.col("survival").map_elements(logit, return_dtype=pl.Float64)
     snaps = survival.select(
         "series_ticker", "event_ticker", "ticker", "ts", "hours_before_close", "floor_strike",
-        "weight", "price_age_h", market_prob="survival", market_logit=to_logit,
+        "weight", "price_age_h", raw_prob="price", market_prob="survival", market_logit=to_logit,
     )
     earlier = snaps.select(
         "ticker",
@@ -75,8 +75,8 @@ def calibration_rows(
         )
         .select(
             "series_ticker", "event_ticker", "ticker", "event_close", "ts", "hours_before_close",
-            "floor_strike", "market_prob", "market_logit", "spread", "price_age_h", "strike_z",
-            "has_distribution", "change_24h", "outcome",
+            "floor_strike", "raw_prob", "market_prob", "market_logit", "spread", "price_age_h",
+            "strike_z", "has_distribution", "change_24h", "outcome",
         )
         .sort("event_close", "event_ticker", "hours_before_close", "floor_strike")
     )

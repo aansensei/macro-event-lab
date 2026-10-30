@@ -93,3 +93,10 @@ def test_missing_history_and_distribution_fall_back_to_neutral_values():
     assert row["change_24h"] == 0.0
     assert row["strike_z"] == 0.0
     assert row["has_distribution"] is False
+
+
+def test_training_rows_keep_raw_and_isotonic_probabilities_separate():
+    survival = _survival([("T0.3", 0.3, 1, 0.6, 50.0, 0)]).with_columns(price=pl.lit(0.7))
+    rows = calibration_rows(survival, _stats([]), _markets([("T0.3", "finalized", "yes")]))
+    assert rows["raw_prob"].to_list() == [0.7]
+    assert rows["market_prob"].to_list() == [0.6]

@@ -262,6 +262,22 @@ CPI markets are well calibrated (ideal: 90% and 50%). Jobs and GDP markets are a
 - **Built:** every event page opens with an "In plain words" paragraph generated from the event's own numbers and how it compares with its series, for readers without an economics background. A glossary page defines 26 terms, and terms on the page show short hints.
 - **Test:** each generator is a pure function with unit tests on real shaped inputs.
 
+### 9.5 Reviewing the GDP nowcast
+
+- **Symptom:** bootstrap coefficients varied partly because every resample defined a different feature SD. The market comparator also used the mean despite the intended median comparison.
+- **Fix:** express each bootstrap coefficient in original-sample SD units, stop blocks at missing quarters, and compare with the T-1h market median. State the difference in information cutoffs explicitly.
+- **Timing:** inner penalty selection checks each validation cutoff against label release dates. The naive prior-quarter forecast is empty when that print was not yet public.
+- **Test:** a noiseless linear example catches changing coefficient units; isolated quarters catch blocks crossing gaps; delayed publication tests guard the inner split and naive baseline; a deliberately different mean and median catches the comparator error.
+- **Limit:** coefficient intervals condition on the selected penalty and excluded quarters. They are not causal estimates.
+
+### 9.6 A descriptive calibration model before predictive claims
+
+- **Built:** fixed-prior MAP calibration with shared bias and confidence plus series deviations. Every event has total weight one across contracts and horizons.
+- **Test:** IRLS agrees with gradient descent under the market-centred prior and with an independent logistic regression implementation under the equivalent zero-centred prior. Duplicating all rows leaves the fit unchanged, and collinear designs remain finite under the prior.
+- **Evaluation:** whole-event walk-forward fits before each event's earliest snapshot. All training labels must have settled strictly before that cutoff. Missing settlement times use a recorded fetch-time upper bound. Raw quotes remain separate from isotonic probabilities for score comparisons.
+- **Test:** future-data perturbations, held-out label flips, incomplete event labels and exact-cutoff timestamps guard temporal splitting. Score tests verify equal event weighting, pairing, reproducibility and finite log loss at extreme probabilities.
+- **Limit:** posterior uncertainty remains separate work. Score intervals are exploratory and uncorrected for multiple comparisons; combined isotonic and MAP performance does not isolate calibration's incremental contribution.
+
 ## 10. Website
 
 ### 10.1 A prototype that worked but did not look good
