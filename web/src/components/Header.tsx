@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 
 import type { Page } from "../lib/url";
+import { PRIMARY } from "../lib/navigation";
+import { LearnMenu } from "./LearnMenu";
 
 type ThemePref = "system" | "light" | "dark";
 
@@ -59,16 +61,6 @@ function ThemeSwitch() {
   );
 }
 
-const PAGES: [Page, string][] = [
-  ["events", "Events"],
-  ["compare", "Compare"],
-  ["scorecard", "Scorecard"],
-  ["revisions", "Revisions"],
-  ["method", "Method"],
-  ["glossary", "Glossary"],
-  ["about", "About"],
-];
-
 export function Header({ page, onNavigate }: { page: Page; onNavigate: (p: Page) => void }) {
   return (
     <header className="site-header">
@@ -77,7 +69,7 @@ export function Header({ page, onNavigate }: { page: Page; onNavigate: (p: Page)
           <img src={`${import.meta.env.BASE_URL}logo.png`} alt="Macro Event Lab" width="70" height="36" />
         </a>
         <nav className="header-nav" aria-label="Primary navigation">
-          {PAGES.map(([p, label]) => (
+          {PRIMARY.map(([p, label]) => (
             <button
               key={p}
               type="button"
@@ -88,6 +80,7 @@ export function Header({ page, onNavigate }: { page: Page; onNavigate: (p: Page)
               {label}
             </button>
           ))}
+          <LearnMenu page={page} onNavigate={onNavigate} />
         </nav>
         <ThemeSwitch />
       </div>

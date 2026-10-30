@@ -1,0 +1,53 @@
+/* light theme: deep sea ink with a dark cyan accent; dark theme: obsidian black with an electric cyan that matches the logo; surprises read warm orange up and rose down in both */
+:root, html[data-theme="light"] {
+  --bg: #ffffff;
+  --surface: #f3f8fb;
+  --surface-hover: #e8f1f7;
+  --border: #dbe7ef;
+  --border-control: #6f8799;
+  --text: #062033;
+  --text-muted: #3f5b6e;
+  --accent: #0369a1;
+  --button-bg: #0369a1;
+  --accent-hover: #075985;
+  --accent-tint: rgba(3, 105, 161, 0.08);
+  --market: #0369a1;
+  --actual: #062033;
+  --ghost: #6f8799;
+  --surprise-up: #c2410c;
+  --surprise-down: #be185d;
+  --band-90: rgba(3, 105, 161, 0.09);
+  --band-50: rgba(3, 105, 161, 0.22);
+  --median: #0c4a6e;
+  --odds-1: #0284c7;
+  --odds-2: #0369a1;
+  --odds-3: #0c4a6e;
+  --odds-4: #062033;
+  color-scheme: light;
+}
+html[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #0b0f14;
+  --surface: #111822;
+  --surface-hover: #172130;
+  --border: #1e293b;
+  --border-control: #64748b;
+  --text: #f8fafc;
+  --text-muted: #94a3b8;
+  --accent: #00d2ee;
+  --button-bg: #0e7490;
+  --accent-hover: #155e75;
+  --accent-tint: rgba(0, 210, 238, 0.12);
+  --market: #00d2ee;
+  --actual: #f8fafc;
+  --ghost: #64748b;
+  --surprise-up: #fb923c;
+  --surprise-down: #f472b6;
+  --band-90: rgba(0, 210, 238, 0.12);
+  --band-50: rgba(0, 210, 238, 0.26);
+  --median: #a5f3fc;
+  --odds-1: #0891b2;
+  --odds-2: #00d2ee;
+  --odds-3: #67e8f9;
+  --odds-4: #ecfeff;
+}

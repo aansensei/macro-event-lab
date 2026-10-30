@@ -3,10 +3,10 @@ import { useEffect, useState } from "react";
 import { loadSummary } from "../data/load";
 import type { SeriesSummary, Summary } from "../data/types";
 import { missSize, scoreFinding } from "../lib/scoreWords";
-import { CountUp } from "./CountUp";
-import { PitHistogram } from "./PitHistogram";
-import { Term } from "./Term";
-import { StoryNext, StoryPath } from "./Story";
+import { CountUp } from "../components/CountUp";
+import { PitHistogram } from "../components/PitHistogram";
+import { Term } from "../components/Term";
+import { StoryNext, StoryPath } from "../components/Story";
 
 type Load = { kind: "loading" } | { kind: "error"; message: string } | { kind: "ready"; summary: Summary };
 

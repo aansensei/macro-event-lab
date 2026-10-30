@@ -2,8 +2,8 @@ import type { KeyboardEvent } from "react";
 
 import type { Bin } from "../data/types";
 import { MINUS } from "../lib/format";
-import { useTween } from "./useTween";
-import { useWidth } from "./useWidth";
+import { useTween } from "../hooks/useTween";
+import { useWidth } from "../hooks/useWidth";
 
 interface Props {
   bins: Bin[];

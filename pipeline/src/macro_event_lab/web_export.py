@@ -347,4 +347,9 @@ def build_web(paths: Paths) -> dict[str, int]:
     if revisions_path.exists():
         payload = revisions_payload(pl.read_parquet(revisions_path))
         _write_json(paths.web / "revisions.json", payload)
+    if all((paths.gold / f"{name}.parquet").exists()
+           for name in ("gdp_nowcast", "gdp_nowcast_coefs")):
+        from macro_event_lab.nowcast_export import export_nowcast
+
+        export_nowcast(paths)
     return {"events": len(entries)}

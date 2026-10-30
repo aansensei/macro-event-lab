@@ -1,0 +1,17 @@
+.learn-menu .select-trigger { border: 0; background: transparent; font-size: 14px; padding: 6px 8px; min-height: 36px; color: var(--text-muted); }
+.learn-menu .select-list { min-width: 180px; z-index: 60; }
+@media (min-width: 640px) { .story-cards { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (min-width: 768px) { .overview-findings { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 32px; } }
+@media (min-width: 1120px) { .story-cards { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+@media (max-width: 1000px) {
+  .logo-slot { order: 1; }
+  .theme-group { order: 2; }
+  .header-nav { order: 3; flex-basis: 100%; flex-wrap: wrap; margin: 4px 0 8px; overflow: visible; }
+  .learn-menu .select-list { left: 0; right: auto; }
+}
+@media (min-width: 640px) {
+  .main-container { padding: 24px; }
+}
+@media (min-width: 1024px) {
+  .main-container { padding: 40px 32px 32px; }
+}

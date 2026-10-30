@@ -14,16 +14,24 @@ describe("url state", () => {
     expect(parseUrlState(pageSearch("compare")).page).toBe("compare");
     expect(parseUrlState(pageSearch("scorecard")).page).toBe("scorecard");
     expect(parseUrlState(pageSearch("revisions")).page).toBe("revisions");
-    expect(parseUrlState("?page=unknown").page).toBe("events");
+    expect(parseUrlState("?page=unknown").page).toBe("overview");
+  });
+
+  it("keeps direct Events, Models and Overview routes", () => {
+    for (const page of ["events", "models", "overview"] as const) {
+      expect(parseUrlState(pageSearch(page)).page).toBe(page);
+    }
+    expect(parseUrlState("?event=kxcpi-26sep&h=1").page).toBe("events");
+    expect(parseUrlState("?page=models&event=kxcpi-26sep").page).toBe("models");
   });
 
   it("ignores malformed values", () => {
-    expect(parseUrlState("?event=<script>&h=-4")).toEqual({ page: "events", event: null, h: null });
-    expect(parseUrlState("?h=1.5")).toEqual({ page: "events", event: null, h: null });
-    expect(parseUrlState("?h=99999")).toEqual({ page: "events", event: null, h: null });
+    expect(parseUrlState("?event=<script>&h=-4")).toEqual({ page: "overview", event: null, h: null });
+    expect(parseUrlState("?h=1.5")).toEqual({ page: "overview", event: null, h: null });
+    expect(parseUrlState("?h=99999")).toEqual({ page: "overview", event: null, h: null });
   });
 
-  it("is empty without parameters", () => {
-    expect(parseUrlState("")).toEqual({ page: "events", event: null, h: null });
+  it("opens Overview without parameters", () => {
+    expect(parseUrlState("")).toEqual({ page: "overview", event: null, h: null });
   });
 });

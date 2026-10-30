@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 
 import { GLOSSARY_GROUPS, glossaryEntry } from "../lib/glossary";
-import { SectionRail, type RailSection } from "./SectionRail";
+import { SectionRail, type RailSection } from "../components/SectionRail";
 
 const RAIL: RailSection[] = [
   { id: "glossary-top", label: "Top" },

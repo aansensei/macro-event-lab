@@ -102,7 +102,6 @@ export function Explorer({ entry, dataThrough, initialHour, onHourChange }: Prop
   useEffect(() => {
     if (!event || !bounds) return;
     const wanted = firstHour.current;
-    firstHour.current = null;
     setH(wanted !== null && wanted <= bounds.max && wanted >= bounds.min ? wanted : defaultHour(event.snapshots));
   }, [event, bounds]);
 

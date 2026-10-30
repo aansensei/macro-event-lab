@@ -2,19 +2,12 @@ import type { ReactNode } from "react";
 
 import { formatEtDate } from "../lib/format";
 import type { Page } from "../lib/url";
+import { PRIMARY, LEARN } from "../lib/navigation";
 import { ExternalLink } from "./ExternalLink";
 
 const REPO = "https://github.com/aansensei/macro-event-lab";
 
-const PAGES: [Page, string][] = [
-  ["events", "Events"],
-  ["compare", "Compare"],
-  ["scorecard", "Scorecard"],
-  ["revisions", "Revisions"],
-  ["method", "Method"],
-  ["glossary", "Glossary"],
-  ["about", "About"],
-];
+const PAGES: [Page, string][] = [...PRIMARY, ...LEARN];
 
 // each source links to its home page, with what this site takes from it
 const SOURCES: [string, string, string][] = [
@@ -22,12 +15,6 @@ const SOURCES: [string, string, string][] = [
   ["ALFRED", "https://alfred.stlouisfed.org", "First prints, every vintage"],
   ["FRED", "https://fred.stlouisfed.org", "Treasury yields, release dates"],
   ["Federal Reserve", "https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm", "FOMC meeting calendar"],
-];
-
-const PROJECT: [string, string][] = [
-  ["Source code", REPO],
-  ["Build journal", `${REPO}/blob/main/JOURNEY.md`],
-  ["Report an issue", `${REPO}/issues`],
 ];
 
 function Icon({ children }: { children: ReactNode }) {
@@ -106,11 +93,9 @@ export function Footer({ dataThrough, onNavigate }: Props) {
         <div className="footer-col">
           <h2 className="footer-head">Project</h2>
           <ul className="footer-list">
-            {PROJECT.map(([label, href]) => (
-              <li key={label}>
-                <ExternalLink className="footer-link" href={href}>{label}</ExternalLink>
-              </li>
-            ))}
+            <li><ExternalLink className="footer-link" href={REPO}>Source code</ExternalLink></li>
+            <li><ExternalLink className="footer-link" href="https://aansensei.dev/under-construction.html">Build journal</ExternalLink></li>
+            <li><ExternalLink className="footer-link" href={`${REPO}/issues`}>Report an issue</ExternalLink></li>
           </ul>
         </div>
       </div>

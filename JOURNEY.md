@@ -1,12 +1,14 @@
 # Macro Event Lab: build journal
 
-This is the record of what went wrong while building Macro Event Lab, how each problem was found, what caused it, how it was fixed and how the fix was tested. It covers the data pipeline (Kalshi, ALFRED, FRED, the Fed calendar), the statistics, and the React website, from 26 to 29 October 2026.
+This is the working record of Macro Event Lab: discussions, product decisions, research findings, bugs, fixes, checks and unresolved questions. It covers the data pipeline (Kalshi, ALFRED, FRED, the Fed calendar), the statistics and the React website. The record begins on 26 October 2026 and continues as work proceeds.
 
-Every entry follows the same loop:
+The technical entries follow this loop:
 
 **Symptom** what was seen. **Diagnosis** the real cause. **Fix** the change. **Test** how it stays fixed. **Lesson** what to carry forward.
 
-All numbers come from the real data or the commit history. Nothing here is illustrative.
+The dated working log also records the question being discussed, alternatives, the decision, its status and the evidence available. A proposal is not an implemented feature, and passing tests are not evidence that readers find the site interesting. Earlier discussions are reconstructed from the conversation and existing project records, rather than presented as a verbatim transcript.
+
+All numbers come from the real data, test output or commit history. Nothing here is illustrative. Restricted research outputs stay local, and secrets and raw API responses are never included in this journal.
 
 ## Contents
 
@@ -23,6 +25,7 @@ All numbers come from the real data or the commit history. Nothing here is illus
 11. [Repository hygiene](#11-repository-hygiene)
 12. [Lessons in one page](#12-lessons-in-one-page)
 13. [Interview stories](#13-interview-stories)
+14. [Working conversation and decision log](#14-working-conversation-and-decision-log)
 
 ## 1. Ingestion
 
@@ -384,3 +387,218 @@ Short versions for "tell me about a bug you found" or "a time data surprised you
 **The early markets.** A user asked why a 2021 CPI page looked broken. The cause was not a bug: those markets had one contract, so no distribution exists. While fixing the page to explain that, I noticed the 2021 Fed pages had the wrong decision dates, because early markets closed two days before the meeting. I matched them to the Fed calendar, which also corrected their yield reactions.
 
 **The leaked key.** An HTTP library put the full URL, key included, into an exception message. I rotated the key, changed every error to show only the path and masked parameters, and added a test that the key can never appear in an error.
+
+## 14. Working conversation and decision log
+
+Dates use America/Chicago. The entries below consolidate the discussions and work leading to the product review on 29 October 2026. They preserve decisions and rejected directions without treating every earlier message as a separately timestamped event.
+
+### 14.1 How to maintain this record
+
+**Status: DECIDED, 29 October 2026.**
+
+An asked for a record of what we discuss, discover, build and debug, so a later report can explain the reasoning as well as the result. Keep the technical sections above and append dated working entries here. Each entry should contain the request or question, the options considered, the decision and reason, the work actually performed, the checks and the open work. Record corrections instead of quietly turning an abandoned proposal into an achievement.
+
+Use these status words consistently:
+
+- **PROPOSED:** discussed but not approved or implemented.
+- **DECIDED:** the direction has been accepted; implementation may still be pending.
+- **IMPLEMENTED:** the change exists in the working tree or a named commit.
+- **VERIFIED:** a named check passed for the state being described.
+- **OPEN:** a question or requirement still needs work.
+- **DEFERRED:** intentionally outside the immediate priority.
+- **SUPERSEDED:** a previous direction has been replaced, with its reason preserved.
+
+For a bug, record the observed failure, cause, fix and regression check. For a research finding, distinguish descriptive results from held-out evaluation and keep the data scope, cutoff and limitations. For an interface decision, distinguish an engineering check from An's reading feedback. Never invent a measurement, a quotation or a missing part of the conversation.
+
+ROADMAP records what should happen next. This journal records what happened and why. README describes the current product and how to run it. These documents should agree about the product without pretending that pending work is complete.
+
+### 14.2 Reviewing the research before adding more models
+
+**Status: IMPLEMENTED and VERIFIED in commits `9172de8` and `663da3a`.**
+
+The handoff described the GDP nowcast as unfinished, but the repository already contained its initial implementation in `62fcef4`. The first task was therefore to inspect and strengthen the existing work, rather than create another version from the brief alone. The technical details are in sections 9.5 through 9.8.
+
+The review found several ways apparently reasonable evaluation could gain hindsight or change meaning. Inner validation needed to respect when training labels became available. The naive forecast needed the previous GDP print available at that cutoff. Bootstrap coefficients needed a common original feature scale, and resampled blocks could not cross missing quarters. A comparison with the market needed to identify both the statistic being compared and the difference in forecast times. These became implementation changes and regression tests.
+
+Calibration then grew from a fixed-prior MAP model into two explicitly different Bayesian formulations. The event-weighted binary model is a generalized posterior, not a joint model of dependent contracts. The categorical model gives an event one shared outcome at T-1h and derives its contract outcomes together. Its support mixture is an explicit modelling assumption. Neither implementation alone proves better future forecasts.
+
+The evaluation keeps whole events together and checks label availability before each training cutoff. Raw prices, isotonic prices and MAP predictions are compared on paired observations, with event bootstrap uncertainty and prior sensitivity. Multiple-comparison correction matters when interpreting an apparent improvement. The detailed numerical outputs remain local. This log does not claim a robust predictive advantage merely because a model was fitted successfully.
+
+Sampling checks also changed the completion criterion. A fit must pass the convergence and divergence gate; returning samples is insufficient. Comparing posterior medians with a MAP fit using another prior or likelihood would test the wrong claim. Matching objectives and gradients at fixed scales is a valid implementation check, while predictive evaluation is a separate task.
+
+Both named commits were pushed and their CI runs passed. Bayesian walk-forward evaluation, support-mixture sensitivity and hyperprior sensitivity remain open. The later decision to prioritize the reading experience does not erase these research limitations.
+
+### 14.3 Test failures caused by the local environment
+
+**Status: RESOLVED locally.**
+
+A pipeline baseline initially failed because the default temporary directory was not usable in the current environment. An attempt to use a project-local temporary directory also needed its parent directory to exist. Creating the ignored local test directory allowed the tests to run. This was an execution-environment problem, not evidence of a defect in the pipeline's scientific logic.
+
+Other checks caught implementation and test issues during the website work. A mocked fetch without an explicit input type caused TypeScript tuple inference errors when the test inspected its arguments. Giving the mock the proper request type fixed the build. A new Python export test also needed a long line wrapped to satisfy ruff. Numerical equivalence checks needed floating-point tolerances rather than exact equality for round-off differences.
+
+The lesson is to record the failing check and its cause before changing product code. An environment failure, a test typing error and a statistical defect require different fixes.
+
+### 14.4 The website had pages but no clear first read
+
+**Status: DECIDED; navigation and page scaffolding IMPLEMENTED locally.**
+
+An found the site cluttered: seven peer pages competed in the menu, and the initial destination was the dense Events explorer. The request was to create an Overview, simplify navigation, preserve existing event links and add an ALFRED-only GDP Models page. The web baseline passed its tests and production build before this work, and the existing development server at localhost:8000 was reused.
+
+Overview became the default route. An explicit `?page=events` still opens Events, and an existing `?event=...&h=...` link still opens the selected event rather than being redirected to the new home page. The Events links in the story path now use the explicit page route. URL tests cover the route distinction.
+
+The initial menu proposal put About inside Learn. An challenged this because a new visitor should be able to find the project's purpose and author directly. The accepted arrangement keeps Overview, Events, Compare, Scorecard, Revisions and About visible. Learn holds supporting pages, including Models, Method and Glossary. The footer retains every page.
+
+The local implementation reuses the designed Select/listbox pattern for Learn. One subtle state issue was that a page outside the dropdown could appear to select an unrelated option. An unmatched selection now stays unmatched, while opening the list gives keyboard navigation a valid starting point. Interaction tests cover the menu and focus behavior. About and Overview have different jobs: Overview invites exploration; About explains the author, motivation and project choices.
+
+### 14.5 Why the first Overview still felt dull
+
+**Status: OPEN, based on An's reading feedback.**
+
+The first Overview offered a large headline, three findings and links to the story pages. The findings came from the existing summary and revisions exports, not invented examples. An still found it boring. The information was present, but the page explained the project before giving a reader a reason to care about the next question.
+
+We considered a stronger opening interaction and researched examples of evidence-led storytelling. References included The Pudding's Gyllenhaal and Kidz Bop stories and Neal's Deep Sea. Their relevance was the way a concrete observation or action opens a larger explanation. A referenced newspaper interactive could not be inspected directly, so its execution was not treated as verified evidence. An also noted that the portfolio already uses a scroll-to-depth idea; copying that device would not solve this project's reading problem.
+
+The design lesson was to borrow a question-and-discovery structure rather than a visual effect. More cyan, a larger headline, more cards or additional animation cannot establish that a reader wants to continue. An's feedback is the evidence that the current introduction still needs work.
+
+### 14.6 A revision reveal was built, then its role was reconsidered
+
+**Status: IMPLEMENTED locally; its role as the main hook is SUPERSEDED.**
+
+A local prototype reveals the difference between a jobs report's first print and a later vintage. The example is selected from the revisions data using an explicit criterion: the largest upward revision among the eligible settled jobs periods. It must not be described as a typical jobs revision. The example and display values are derived from the export rather than hardcoded illustrative numbers.
+
+The component adds a small reveal interaction and motion with a reduced-motion alternative. The guide and hero interaction have tests. These checks establish behavior, not audience engagement.
+
+The revision example makes point-in-time data tangible, but it also shifted the opening toward revisions. That is only one part of Macro Event Lab. The central question starts with market expectations before a release, then asks what arrived and how markets reacted. The revision reveal can support that explanation later without carrying the whole opening. Recentring the actual hero is still pending; changing the roadmap does not mean the page has already changed.
+
+### 14.7 Moving instructions out of About
+
+**Status: IMPLEMENTED locally; final reading review OPEN.**
+
+An asked whether the How to use this site section belonged on Overview instead of About. We moved the reading guidance into a dedicated Overview component. The main sequence is four steps: choose a release, get the plain-language story, rewind expectations and put the result in perspective. Chart inspection, glossary help and sharing a timestamp remain in an expandable tips area.
+
+About links to the guide rather than repeating all of its instructions, and its contents rail no longer advertises the removed section. This keeps the author page focused and places orientation near the reader's entry point.
+
+An's later screenshot showed that a long instructional section could still feel flat. The move was useful information architecture, but instructions alone are not the hook. The next pass needs to reconsider their length and position after the opening gives a reader a question worth exploring.
+
+### 14.8 GDP modelling started to compete with the site's purpose
+
+**Status: GDP page IMPLEMENTED locally; model-led opening SUPERSEDED; scenario controls DEFERRED.**
+
+The requested Models page is a separate GDP nowcast based on ALFRED data. Its small export reads the GDP nowcast and coefficient gold tables through an explicit field allowlist. The page compares the nowcast with the first published estimate over time, shows coefficient intervals and explains the method in plain words. It does not export a market comparison or calibration results. Python export tests and web data tests protect that boundary.
+
+An then asked why a model was present without letting users toggle variables and see how it responded. We discussed making a small model lab more central to the opening. That was a proposal, not an implemented feature. An subsequently pointed out that supervised machine learning felt unrelated to the site's story.
+
+The accepted correction is that calibration belongs naturally beside forecast quality in Scorecard, whereas predicting GDP from monthly indicators answers a separate research question. GDP nowcasting can remain accessible as supplementary research, but it should not redefine Overview or the main journey. We are not adding variable controls merely to make a model feel interactive.
+
+If scenario controls are revisited, changing an input must be distinguished from removing a feature and fitting a new model. Either needs a clear user question, a valid point-in-time fitted state and an explanation that model response is not a causal effect. No such control is complete or promised by the current prototype.
+
+### 14.9 Browser checks need a stable state and an honest completion claim
+
+**Status: PARTIALLY VERIFIED; final acceptance matrix OPEN.**
+
+The Models page was inspected at 375, 768 and 1280px in both themes, and screenshots were saved locally. Narrow layouts and dropdown placement were also investigated. During this work, a viewport check initially measured a different selected tab than expected. Reading the actual viewport width caught the mismatch before treating the narrow-screen result as valid.
+
+A contrast script also produced misleading failures when it sampled text during a theme transition or counted content inside a closed disclosure. Measurements must use visible content after the theme settles. A subsequent stable dark desktop check found no failures in that sampled view, but that does not verify every page, theme, interaction state or width.
+
+The last recorded development checks passed 124 web tests, the TypeScript production build, 194 pipeline tests and ruff. Those results belong to the local implementation at that point. They do not close the requested final browser review after the next hero revision, prove dual-screen behavior or demonstrate that An enjoys the reading flow.
+
+The final pass still needs the specified 375, 768 and 1280px matrix in both themes, additional 280px and wide layouts, focus and menu states, reduced motion and visible text contrast. The website changes remain uncommitted.
+
+### 14.10 Reorienting the roadmap around wanting to read on
+
+**Status: DECIDED and DOCUMENTED, 29 October 2026; website revision OPEN.**
+
+An's acceptance criterion is personal and concrete: if the site makes him interested enough to read the whole main story, it has succeeded. He asked to redesign the roadmap around that goal and preserve our discussions as report material.
+
+The accepted main journey is Overview, Events, Compare, Scorecard and Revisions. It moves from why the question matters to one release, patterns across releases, forecast quality and the changing official record. Supporting pages stay available without becoming required reading. The opening should create curiosity with real evidence, offer one clear action and let experienced readers go directly to the data.
+
+Interaction should reveal information relevant to that story. Rewinding expectations already exists in Events. Hiding the first print and then revealing it, followed by the day's yield change, is a proposed next interaction, not a completed feature. Daily Treasury series cannot support an intraday reaction claim or establish causality.
+
+The current Overview request limits its data inputs to summary.json and revisions.json. That is enough to reconsider the message and findings. A complete event-level distribution replay would need an additional data input and is not silently included in this documentation change.
+
+The local ROADMAP was rewritten around the central question, page roles, current implementation evidence, the immediate reading pass, acceptance criteria, later research and publication gates. The previous plan was archived before the rewrite. Detailed modelling work remains in the research backlog instead of competing with the immediate product task.
+
+The next product step is a short Overview prototype aligned with expectations, first publication and reaction, followed by An's reading feedback. The final layout, browser checks and permission to commit remain separate completion gates. No claim of a successful reading experience has been made yet.
+
+### 14.11 Publication is a separate decision from local exploration
+
+**Status: OPEN permissions; existing restrictions retained.**
+
+The site can use restricted data in its local research preview without gaining permission to publish it. Putting an export in a local public/data folder does not make its contents publishable. Kalshi-derived figures, charts, animations and comparisons remain private pending written permission, and new Kalshi ingestion remains paused. Industry returns from Kenneth French also remain local pending permission.
+
+The ALFRED-only nowcast export has a separate boundary so a future allowed build can avoid restricted outputs. Source terms, attribution and the actual deployed file set still need review before publication. No deployment or publication was performed as part of the roadmap rewrite.
+
+### 14.12 Material available for a later report
+
+**Status: DOCUMENTED; report writing DEFERRED.**
+
+- **Problem and product framing:** sections 14.4 through 14.10 explain the overloaded navigation, weak opening, rejected model-led direction and accepted reader journey.
+- **Data engineering:** sections 1 through 6 cover resumable ingestion, vintages, timing, narrow anomaly exceptions, distribution construction and release matching.
+- **Research discipline:** sections 9.5 through 9.8 and 14.2 explain leakage checks, bootstrap design, paired evaluation, likelihood choices and limits on inference.
+- **Interface reliability:** sections 10 and 14.9 distinguish responsive behavior, accessible controls and motion correctness from reader engagement.
+- **Constraints and judgement:** sections 7, 8 and 14.11 record security and publication boundaries.
+- **Evidence still needed:** An's reading feedback on the next Overview, final browser acceptance and any future out-of-sample research belong in new entries when they actually happen.
+
+This is source material for a later narrative, not a retrospective claim that every idea worked. Preserve the disagreements, corrections and unfinished work so the eventual report can explain why the final product took its shape.
+
+### 14.13 Separating the frontend by responsibility
+
+**Status: IMPLEMENTED and VERIFIED locally, 29 October 2026; uncommitted.**
+
+An asked to split the frontend into multiple files for easier refactoring, believing the site lived in one index.html. Inspection showed that index.html was already a small Vite entry document and React components held the content. The remaining structural problems were a shared folder mixing pages with reusable components, Events orchestration in App and a long stylesheet.
+
+The accepted change keeps one HTML entry and organizes the source by responsibility. Nine page components now live in src/pages. Shared controls and charts remain in src/components. Browser navigation, Events state, chart measurement and animation live in src/hooks. App composes the active page and shared shell. Events state remains above the page so switching pages preserves the selection and filter.
+
+The stylesheet was split into eighteen ordered imports covering theme tokens, shared rules and page rules. Before any visual addition, flattening those files reproduced the original stylesheet exactly, and the production CSS filename hash stayed unchanged. The later TBA card is a deliberate, separately tested footer addition. The web README documents the structure and the importance of CSS import order.
+
+The baseline passed 124 web tests and the production build. New integration tests exercise default and legacy routes, manifest isolation, selection and filter retention, history restoration, loading and error states. Browser checks loaded all nine pages at 375, 768 and 1280px in both themes, with no data alerts or document-level horizontal overflow in those 54 observations. A 280px check confirmed the Learn menu stayed inside the viewport and Escape returned focus to its trigger. These observations do not close the pending Overview content redesign or prove reader engagement.
+
+### 14.14 Browser history exposed two timing problems
+
+**Status: FIXED and VERIFIED locally, 29 October 2026.**
+
+Returning from About to an event at T-24h unexpectedly reset the view to T-1h. One cause was introduced during extraction: the route's restored hour was copied into local state in an effect, after the detail component had already mounted and captured its initial hour. The hook now derives the initial hour synchronously from the route, with a separate marker for a manual event selection that should use the default hour.
+
+An integration regression test failed before that fix and passed afterward, but the real browser still reset the hour. The initial chart mock did not represent a second, pre-existing behavior. A cached Explorer mounts with its event already available. Under StrictMode the initialization effect runs again, and clearing its initial-hour ref during the first run made the second run choose the default. The ref now remains stable for that mounted detail, making initialization repeatable.
+
+A test using the real Explorer warms its cache, unmounts it and mounts it again under StrictMode. It reproduced the T-1h failure before the one-line correction. After both fixes, the test and browser preserved T-24h in the URL and slider after navigating to About and pressing Back. This is why a passing test with a simplified chart stub was insufficient evidence to close the bug.
+
+### 14.15 Keeping the local preview alive
+
+**Status: RESOLVED locally, 29 October 2026.**
+
+The browser initially could not reach localhost:8000. Starting Vite in a restricted execution session produced a listening process that did not serve a successful browser response. An pointed out that repeated server interruptions were disruptive.
+
+Only the process started during this work was stopped. Vite was then started as a hidden, independent background process on the same port, with local logs and its process ID under ignored data/dev-server. The browser successfully loaded the site afterward. Keep reusing that server rather than restarting it for edits or tests. The failed launch was an execution mistake, not a reason to change application code or ask An to troubleshoot the site.
+
+### 14.16 The public journal entry is a placeholder
+
+**Status: IMPLEMENTED and VERIFIED locally, then SUPERSEDED by section 14.17, 29 October 2026.**
+
+An asked that the footer's Build journal action stop linking directly to JOURNEY.md. The journal remains a working document for later report preparation. An initial local version showed a TBA card when the action was activated.
+
+BuildJournal is its own component. It uses a button with an expanded state and a linked status card. Clicking again or pressing Escape closes the card, and Escape returns focus to the button. There is no journal URL or new-tab navigation. A component test covers those interactions, and a footer regression check rejects the Markdown link.
+
+The card was checked at 375, 768 and 1280px in both themes. It stayed within the page, displayed TBA and exposed no footer link to the journal file. Its measured text contrast was above 4.5:1 in each theme. The final local checks passed 137 web tests and the TypeScript production build. No commit, push or deployment was performed.
+
+### 14.17 Reusing the existing construction page
+
+**Status: IMPLEMENTED and VERIFIED locally, 29 October 2026; supersedes the inline TBA card.**
+
+An pointed out an existing construction page on the portfolio and permitted reusing it. Inspection of the local portfolio source found its under-construction.html permalink. A browser visit to the GitHub Pages address redirected to https://aansensei.dev/under-construction.html and showed the Under Construction title, building sticker and animated background.
+
+The footer now opens that existing page in a new tab through the shared ExternalLink component. It does not link to the working journal. The temporary card component, its styles and its superseded interaction test were removed; a footer regression test checks the exact destination, new-tab attributes and absence of the Markdown link. No copy of the portfolio animation or assets was added to this frontend, and no portfolio files were modified.
+
+Clicking the footer link opened the verified Under Construction page in a new browser tab. The final link was also checked at 375, 768 and 1280px in both themes, measuring the actual viewport width. All six checks found the correct destination, no journal Markdown link and no document-level horizontal overflow. The final suite passes 136 web tests and the production build. Flattening the eighteen stylesheet imports again matches the original stylesheet exactly after removal of the temporary card. The local server remains running; no commit, push or deployment was performed.
+
+### 14.18 Asking crawlers to leave the site alone
+
+**Status: IMPLEMENTED and VERIFIED locally, 29 October 2026.**
+
+An requested robots.txt after raising concern about bots cloning websites. The Macro Event Lab frontend now includes public/robots.txt with a wildcard user-agent group and Disallow: /. This asks all conforming crawlers, including search engines, not to crawl any path.
+
+The policy follows the Robots Exclusion Protocol in [RFC 9309](https://www.rfc-editor.org/rfc/rfc9309.html). It is a request to cooperating clients, not authentication or an enforceable barrier against copying. A crawler can ignore it, and it does not protect the locally held research data. The file needs to be served at the deployed origin's /robots.txt; a file under a project subpath alone does not establish an origin-wide policy. No portfolio files were changed, and no publication or deployment was performed.
+
+The local server returned HTTP 200 and text/plain for /robots.txt. The production build copied the file unchanged into dist, and a parser check rejected crawling both the root and a data path for arbitrary crawler names. Before the requested commit and push, the combined changes passed ruff, 194 pipeline tests, 136 web tests and the TypeScript production build. Private data and ignored planning files remain outside the commit scope.
+
+The staged-file audit needed to compare both sides of Git-detected renames rather than only destination names. It also caught trailing blank lines at the ends of the extracted stylesheets, which were normalized before commit. Their production CSS hash remained unchanged. One build command was accidentally issued from the repository root, where there is no package.json; rerunning it from web succeeded. These were packaging and command-location issues, not application defects.

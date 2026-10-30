@@ -16,12 +16,13 @@ interface Props {
   onChange: (value: string) => void;
   // which edge the open list lines up with
   align?: "start" | "end";
+  triggerLabel?: string;
 }
 
 const TYPEAHEAD_RESET_MS = 600;
 
 // a designed dropdown: a button that opens a listbox, with arrow keys, Home and End, type-ahead, Enter and Escape
-export function Select({ label, value, options, onChange, align = "start" }: Props) {
+export function Select({ label, value, options, onChange, align = "start", triggerLabel }: Props) {
   const id = useId();
   const [open, setOpen] = useState(false);
   const [active, setActive] = useState(0);
@@ -29,7 +30,7 @@ export function Select({ label, value, options, onChange, align = "start" }: Pro
   const triggerRef = useRef<HTMLButtonElement>(null);
   const listRef = useRef<HTMLUListElement>(null);
   const typed = useRef({ text: "", at: 0 });
-  const selectedIndex = Math.max(0, options.findIndex((o) => o.value === value));
+  const selectedIndex = options.findIndex((o) => o.value === value);
   const selected = options[selectedIndex];
 
   // a press anywhere outside closes the list
@@ -51,7 +52,7 @@ export function Select({ label, value, options, onChange, align = "start" }: Pro
   }, [open, active, id]);
 
   function openList() {
-    setActive(selectedIndex);
+    setActive(Math.max(0, selectedIndex));
     setOpen(true);
   }
 
@@ -103,11 +104,11 @@ export function Select({ label, value, options, onChange, align = "start" }: Pro
         aria-haspopup="listbox"
         aria-expanded={open}
         aria-controls={`${id}-list`}
-        aria-label={`${label}: ${selected?.label ?? ""}`}
+        aria-label={selected ? `${label}: ${selected.label}` : label}
         onClick={() => (open ? setOpen(false) : openList())}
         onKeyDown={onTriggerKey}
       >
-        <span className="select-value">{selected?.label}</span>
+        <span className="select-value">{triggerLabel ?? selected?.label}</span>
         <svg className="select-chevron" width="12" height="12" viewBox="0 0 12 12" aria-hidden="true">
           <path d="M2.5 4.5 6 8l3.5-3.5" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
         </svg>
