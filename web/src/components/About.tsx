@@ -13,6 +13,14 @@ const RAIL: RailSection[] = [
   { id: "about-faq", label: "FAQ" },
 ];
 
+// the whole project in four lines: the problem, what the site does, how, and with what
+const GLANCE: [string, string][] = [
+  ["The problem", "Headlines call every CPI print or jobs report a beat or a miss, but they measure it against one consensus guess, and the official number often gets revised later anyway."],
+  ["What it does", "Rebuilds, hour by hour, the full set of odds Kalshi traders put on each release since mid 2021, then checks them against the number first published and against how Treasury yields moved that day."],
+  ["How", "An automated pipeline saves every raw download, cleans it into tables, and turns contract prices into probability curves with a weighted isotonic fit. Every number is joined point in time, so nothing uses information published later, and every build runs the tests."],
+  ["Built with", "Python, Polars, DuckDB, Parquet, pytest and Hypothesis for the pipeline; React, TypeScript and Vite with hand-drawn SVG charts for the site; data from Kalshi, ALFRED, FRED and the Federal Reserve."],
+];
+
 const QUESTIONS = [
   "What did the market expect an hour before the number came out, and how sure was it?",
   "How did that view move during the final week before the release?",
@@ -81,6 +89,14 @@ export function About() {
         Macro Event Lab shows what prediction markets expected before each US CPI report, jobs report,
         GDP release and Fed decision, and how that compared with the number first published.
       </p>
+      <dl className="about-rows glance-rows" aria-label="The project at a glance">
+        {GLANCE.map(([term, text]) => (
+          <div key={term}>
+            <dt>{term}</dt>
+            <dd>{text}</dd>
+          </div>
+        ))}
+      </dl>
 
       <section className="about-section" aria-labelledby="about-idea">
         <h2 className="t-h2" id="about-idea">The idea</h2>
@@ -148,8 +164,15 @@ export function About() {
             <p className="author-name">Cao Thien An Nguyen</p>
             <p className="author-role">Data Science and Economics, University of Wisconsin-Madison</p>
             <p className="author-bio">
-              From Ho Chi Minh City, Vietnam, now in Madison. I blend economics with data science to
-              turn raw data into stories about the economy that anyone can follow.
+              From Ho Chi Minh City, Vietnam, now in Madison, where the winters are long enough to build a
+              whole data pipeline indoors. I blend economics with data science to turn raw data into stories
+              about the economy that anyone can follow, and I only trust a number after checking when it was
+              first published.
+            </p>
+            <p className="author-fun">
+              <span className="author-fun-tag">Fun fact</span> Runs on crispy fried noodles (mì xào giòn):
+              one plate a week through all of 2025, about 52 plates. Revisions to this preference since the
+              first print: zero.
             </p>
             <dl className="author-links">
               <div><dt>Portfolio</dt><dd><ExternalLink href="https://aansensei.dev">aansensei.dev</ExternalLink></dd></div>
