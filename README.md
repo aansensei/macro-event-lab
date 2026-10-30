@@ -87,7 +87,9 @@ npm run dev
 | `build` | Rebuild silver tables from raw, then gold tables (contract prices, implied distributions, stats, surprises), then the website JSON in `data/web/` |
 | `check [--show N]` | Data quality checks on silver (duplicates, bid above ask, prices outside [0, 1], missing months, markets without a strike); exits 1 on errors |
 | `nowcast` | Evaluate the GDP nowcast walk-forward: out-of-sample errors against the naive guess, ridge coefficients with block bootstrap intervals, and the Kalshi market on the quarters it covered |
-| `model` | Build local calibration training rows, MAP coefficients, whole-event temporal predictions and Brier/log-loss scores with paired event bootstrap intervals. See [model card](pipeline/MODEL_CARD.md). |
+| `model` | Build local calibration training rows, MAP coefficients and temporal score comparisons of raw prices, isotonic and MAP, with Bonferroni intervals and a fixed prior sensitivity grid. See [model card](pipeline/MODEL_CARD.md). |
+| `model --bayesian` | Sample a hierarchical event-weighted generalized posterior with learned pooling scales, convergence gates and limited marginal predictive checks. Requires the optional `bayes` dependencies; descriptive local results only. |
+| `model --joint` | Fit one categorical outcome per event at T-1h and simulate contract labels from shared event outcomes. Requires `bayes`; includes a documented fixed support mixture and remains local and descriptive. |
 | `asof 2026-10-14T12:31Z` | Print what was public at that moment: newest ALFRED vintages and open Kalshi markets |
 
 ## License
