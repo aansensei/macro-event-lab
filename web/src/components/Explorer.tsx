@@ -31,6 +31,7 @@ import { ReactionBlock } from "./ReactionBlock";
 import { FanChart, OddsChart } from "./OverTimeChart";
 import { ThresholdChart, type ThresholdMode } from "./ThresholdChart";
 import { TimeControls } from "./TimeControls";
+import { StoryNext } from "./Story";
 
 const PLAY_STEP_HOURS = 4;
 const PLAY_TICK_MS = 250;
@@ -495,6 +496,8 @@ export function Explorer({ entry, dataThrough, initialHour, onHourChange }: Prop
       </figure>
 
       <ReactionBlock reaction={ev.reaction} status={status} isFomc={isFomc} />
+
+      <StoryNext current="events" />
     </div>
   );
 }

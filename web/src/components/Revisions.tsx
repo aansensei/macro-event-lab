@@ -8,6 +8,7 @@ import { CountUp } from "./CountUp";
 import { ExternalLink } from "./ExternalLink";
 import { RevisionChart } from "./RevisionChart";
 import { Term } from "./Term";
+import { StoryNext, StoryPath } from "./Story";
 
 type Load = { kind: "loading" } | { kind: "error"; message: string } | { kind: "ready"; data: RevisionData };
 
@@ -130,6 +131,7 @@ export function Revisions() {
   const current = series.find((s) => s.series === selected) ?? series[0];
   return (
     <div className="compare-page page-fade">
+      <StoryPath current="revisions" />
       <h1 className="t-h1">Revisions</h1>
       <p className="about-lead">
         The first number published is rarely the last word. How much did CPI, jobs and GDP numbers change after
@@ -151,6 +153,7 @@ export function Revisions() {
         <ExternalLink href="https://alfred.stlouisfed.org">ALFRED</ExternalLink>, which keeps every published
         version of each series.
       </aside>
+      <StoryNext current="revisions" />
     </div>
   );
 }
