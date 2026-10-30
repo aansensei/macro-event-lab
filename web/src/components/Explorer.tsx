@@ -32,6 +32,8 @@ import { FanChart, OddsChart } from "./OverTimeChart";
 import { ThresholdChart, type ThresholdMode } from "./ThresholdChart";
 import { TimeControls } from "./TimeControls";
 import { StoryNext } from "./Story";
+import { OutcomeControls } from "./OutcomeControls";
+import type { RevealStage } from "../lib/url";
 
 const PLAY_STEP_HOURS = 4;
 const PLAY_TICK_MS = 250;
@@ -48,6 +50,8 @@ interface Props {
   // hour from the shared link, used once for the first event shown
   initialHour: number | null;
   onHourChange: (h: number) => void;
+  revealStage?: RevealStage;
+  onRevealChange?: (stage: RevealStage) => void;
 }
 
 const cache = new Map<string, EventFile>();
@@ -56,7 +60,7 @@ function prefersReducedMotion(): boolean {
   return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 }
 
-export function Explorer({ entry, dataThrough, initialHour, onHourChange }: Props) {
+export function Explorer({ entry, dataThrough, initialHour, onHourChange, revealStage = 2, onRevealChange }: Props) {
   const [load, setLoad] = useState<Load>(() => {
     const cached = cache.get(entry.id);
     return cached ? { kind: "ready", event: cached } : { kind: "loading" };
@@ -183,7 +187,8 @@ export function Explorer({ entry, dataThrough, initialHour, onHourChange }: Prop
   const bins = snap?.bins ?? [];
   const labels = bins.map((b) => binLabel(b, ev.unit, ev.resolution));
   const ghost = weekAgo && weekAgo !== snap ? matchBins(bins, weekAgo.bins) : bins.map(() => null);
-  const printIndex = status === "published" ? binIndexOf(bins, ev.first_print) : -1;
+  const stage = status === "published" && ev.first_print !== null ? revealStage : 2;
+  const printIndex = status === "published" && stage > 0 ? binIndexOf(bins, ev.first_print) : -1;
   const keys = bins.map((b) => `${b[0]}|${b[1]}`);
   const activeKey = pinned ?? hovered;
   const activeIndex = activeKey === null ? null : keys.indexOf(activeKey);
@@ -297,9 +302,12 @@ export function Explorer({ entry, dataThrough, initialHour, onHourChange }: Prop
         </div>
       )}
 
-      <PlainWords event={ev} status={status} expectedMedian={anchor?.p50 ?? null} survival={anchor?.survival ?? null} />
+      {status === "published" && ev.first_print !== null && onRevealChange && <OutcomeControls stage={stage} onChange={onRevealChange} />}
 
-      <KeyStrip event={ev} status={status} anchor={anchor} />
+      <PlainWords event={ev} status={status} expectedMedian={(stage === 0 ? snap : anchor)?.p50 ?? null}
+        survival={(stage === 0 ? snap : anchor)?.survival ?? null} revealStage={stage} />
+
+      <KeyStrip event={ev} status={status} anchor={stage === 0 ? snap : anchor} revealStage={stage} />
 
       <div className="readout-strip" aria-live="polite">
         <div>
@@ -326,7 +334,7 @@ export function Explorer({ entry, dataThrough, initialHour, onHourChange }: Prop
         ) : (
           <FanChart
             snaps={ev.snapshots} h={hour} maxH={max} minH={min} unit={ev.unit}
-            firstPrint={status === "published" ? ev.first_print : null}
+            firstPrint={status === "published" && stage > 0 ? ev.first_print : null}
             onHour={(next) => { setPlaying(false); setHour(next); }}
           />
         )}
@@ -339,7 +347,7 @@ export function Explorer({ entry, dataThrough, initialHour, onHourChange }: Prop
             <p>
               {oddsLines
                 ? "Each line follows the probability of one outcome across the final week, ordered from the lowest value up. A line starts when Kalshi first listed that outcome. The vertical line marks the selected hour."
-                : "The dark line is the implied median for every hour of the final week. The darker band holds the middle 50% of outcomes and the lighter band the middle 90%. The dashed line is the number first published. The vertical line marks the selected hour."}
+                : `The dark line is the implied median for every hour of the final week. The darker band holds the middle 50% of outcomes and the lighter band the middle 90%. ${stage > 0 ? "The dashed line is the number first published. " : "The first print is hidden. "}The vertical line marks the selected hour.`}
             </p>
           </details>
         </div>
@@ -404,7 +412,7 @@ export function Explorer({ entry, dataThrough, initialHour, onHourChange }: Prop
               Each bar is the probability the market gave one outcome at the selected hour, read from
               Kalshi contracts of the form "above k" and made consistent so the bars add up to 100%. The
               dashed outline is the same outcome a week before the close, where that outcome was already
-              listed. The bar with a dark frame holds the number first published. Labels name the printed
+              listed. {stage > 0 ? "The bar with a dark frame holds the number first published." : "The first print's bar is not marked while the result is hidden."} Labels name the printed
               values a bin covers; the open ends cover everything below or above the listed strikes.
             </p>
           </details>
@@ -494,7 +502,8 @@ export function Explorer({ entry, dataThrough, initialHour, onHourChange }: Prop
         </div>
       </figure>
 
-      <ReactionBlock reaction={ev.reaction} status={status} isFomc={isFomc} />
+      {stage === 2 ? <ReactionBlock reaction={ev.reaction} status={status} isFomc={isFomc} />
+        : <p className="muted outcome-pending">Daily yield changes are hidden. Reveal them from the controls above when you are ready.</p>}
 
       <StoryNext current="events" />
     </div>

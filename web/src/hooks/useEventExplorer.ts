@@ -3,7 +3,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import type { Filter } from "../components/EventList";
 import { loadManifest } from "../data/load";
 import type { Manifest } from "../data/types";
-import { urlSearch, type UrlState } from "../lib/url";
+import { parseUrlState, urlSearch, type RevealStage, type UrlState } from "../lib/url";
 
 type State =
   | { kind: "loading" }
@@ -15,6 +15,8 @@ export function useEventExplorer(route: UrlState) {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [filter, setFilter] = useState<Filter>("all");
   const [selectionRoute, setSelectionRoute] = useState<UrlState | null>(null);
+  const [revealOverride, setRevealOverride] = useState<{ route: UrlState; stage: RevealStage } | null>(null);
+  const revealStage = revealOverride?.route === route ? revealOverride.stage : route.reveal ?? 2;
 
   useEffect(() => {
     if (route.page !== "events" || state.kind !== "loading") return;
@@ -39,12 +41,21 @@ export function useEventExplorer(route: UrlState) {
 
   const onHourChange = useCallback((h: number) => {
     if (route.page === "events" && selectedId) {
-      window.history.replaceState(null, "", urlSearch(selectedId, h));
+      window.history.replaceState(null, "", urlSearch(selectedId, h, revealStage));
     }
-  }, [route.page, selectedId]);
+  }, [route.page, selectedId, revealStage]);
+
+  function onRevealChange(stage: RevealStage) {
+    setRevealOverride({ route, stage });
+    if (route.page === "events" && selectedId) {
+      const hour = parseUrlState(window.location.search).h ?? route.h ?? 1;
+      window.history.replaceState(null, "", urlSearch(selectedId, hour, stage));
+    }
+  }
 
   function onSelect(id: string) {
     setSelectionRoute(route);
+    if (revealStage < 2) setRevealOverride({ route, stage: 0 });
     setSelectedId(id);
   }
 
@@ -53,6 +64,6 @@ export function useEventExplorer(route: UrlState) {
     initialHour: selectionRoute === route ? null : route.h,
     entry: events.find((event) => event.id === selectedId),
     dataThrough: state.kind === "ready" ? state.manifest.data_through : null,
-    onFilter: setFilter, onSelect, onHourChange,
+    onFilter: setFilter, onSelect, onHourChange, revealStage, onRevealChange,
   };
 }

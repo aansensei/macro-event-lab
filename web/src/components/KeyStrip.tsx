@@ -12,6 +12,7 @@ import {
 import { releaseWhen, type EventStatus } from "../lib/snapshots";
 import { CountUp } from "./CountUp";
 import { Term } from "./Term";
+import type { RevealStage } from "../lib/url";
 
 function Hero({ value, unit, className }: { value: number; unit: string | null; className: string }) {
   const { lead, rest } = unitParts(unit);
@@ -32,9 +33,10 @@ interface Props {
   status: EventStatus;
   // the snapshot the surprise is measured against: T-1h, or the newest one for an open market
   anchor: Snapshot | null;
+  revealStage?: RevealStage;
 }
 
-export function KeyStrip({ event, status, anchor }: Props) {
+export function KeyStrip({ event, status, anchor, revealStage = 2 }: Props) {
   const unit = event.unit;
   const precise = (v: number) => formatValue(v, unit, true);
   const when = releaseWhen(event);
@@ -43,7 +45,7 @@ export function KeyStrip({ event, status, anchor }: Props) {
     <div className="key-strip" aria-label="Summary figures">
       <div className="key-block">
         <div className="key-label">
-          Market expected (<Term id="t-1h">{anchor ? hourLabel(anchor.h) : "n/a"}</Term>)
+          Market expected ({anchor?.h === 1 ? <Term id="t-1h">{hourLabel(anchor.h)}</Term> : anchor ? hourLabel(anchor.h) : "n/a"})
         </div>
         {anchor && anchor.p50 !== null ? (
           <>
@@ -79,7 +81,7 @@ export function KeyStrip({ event, status, anchor }: Props) {
 
       <div className="key-block">
         <div className="key-label"><Term id="first-print">First print</Term></div>
-        {status === "published" && event.first_print !== null ? (
+        {status === "published" && revealStage === 0 ? <><TextHero>Hidden</TextHero><div className="key-sub">Reveal when you are ready</div></> : status === "published" && event.first_print !== null ? (
           <>
             <Hero value={event.first_print} unit={unit} className="val-actual" />
             <div className="key-sub">
@@ -112,7 +114,7 @@ export function KeyStrip({ event, status, anchor }: Props) {
 
       <div className="key-block">
         <div className="key-label"><Term id="surprise">Surprise</Term></div>
-        {event.surprise_sd !== null && event.surprise !== null ? (
+        {status === "published" && revealStage === 0 ? <><TextHero>Hidden</TextHero><div className="key-sub">Measured after the first print</div></> : event.surprise_sd !== null && event.surprise !== null ? (
           <>
             <div className={`t-hero ${event.surprise_sd >= 0 ? "val-surprise-up" : "val-surprise-down"}`}>
               <CountUp value={event.surprise_sd} format={(v) => signed(v, 1, " SD")} />
@@ -122,7 +124,7 @@ export function KeyStrip({ event, status, anchor }: Props) {
               T&#8722;1h implied mean
             </div>
             <div className="key-sub-micro num">Print minus mean: {formatDelta(event.surprise, unit)}</div>
-            {event.reaction?.dgs2_bp != null && event.reaction.dgs10_bp != null && (
+            {revealStage === 2 && event.reaction?.dgs2_bp != null && event.reaction.dgs10_bp != null && (
               <div className="key-sub-micro num">
                 Release day: <Term id="yield">2y</Term> {formatBp(event.reaction.dgs2_bp)}, 10y{" "}
                 {formatBp(event.reaction.dgs10_bp)}

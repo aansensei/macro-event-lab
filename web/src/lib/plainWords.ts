@@ -4,8 +4,9 @@
 import type { EventFile, SurvivalPoint } from "../data/types";
 import { MINUS, formatValue, seriesKind, type SeriesKind } from "./format";
 import type { EventStatus } from "./snapshots";
+import type { RevealStage } from "./url";
 
-// correlations weaker than this are reported as "barely moved", not as a typical move
+// Weaker correlations are described as a weak linear association.
 const MIN_CORR = 0.3;
 
 const SERIES_WORDS: Record<SeriesKind, string> = {
@@ -100,12 +101,18 @@ export function plainWords(
   status: EventStatus,
   expectedMedian: number | null,
   survival: SurvivalPoint[] | null = null,
+  revealStage: RevealStage = 2,
 ): string[] {
   const kind = seriesKind(event.series);
   const unit = event.unit;
   const series = SERIES_WORDS[kind];
   const paragraphs: string[] = [];
   const expected = expectedMedian === null ? null : measure(kind, expectedMedian, unit);
+  if (revealStage === 0) {
+    if (expected) return [`At the selected market snapshot, traders expected ${expected}. The result is hidden while you explore the odds.`];
+    if (survival?.length) return [`At the selected snapshot, the listed threshold odds were ${survival.map(([k, , p]) => `above ${formatValue(k, unit)}: ${pctWords(p)}`).join("; ")}. The result is hidden.`];
+    return ["There is no estimate at the selected snapshot. The result remains hidden."];
+  }
   if (status === "published" && event.first_print !== null && expectedMedian === null && survival && survival.length > 0 && survival.length < 3) {
     paragraphs.push(fewContracts(event, kind, survival));
     return paragraphs;
@@ -156,24 +163,24 @@ export function plainWords(
   }
 
   const r = event.reaction;
-  if (r && r.dgs2_bp !== null && r.dgs10_bp !== null) {
+  if (revealStage === 2 && r && r.dgs2_bp !== null && r.dgs10_bp !== null) {
     let text = `On release day, the 2-year Treasury yield ${moved(r.dgs2_bp)} and the 10-year ${moved(r.dgs10_bp)}.`;
     if (ins && sd !== null && ins.dgs2_bp_per_sd !== null && ins.dgs2_corr !== null) {
       if (Math.abs(ins.dgs2_corr) >= MIN_CORR) {
         const typical = Math.round(ins.dgs2_bp_per_sd * sd);
         text +=
-          ` For ${series}, each 1 SD of surprise has typically moved the 2-year yield about ${Math.abs(ins.dgs2_bp_per_sd).toFixed(1)} bp` +
-          ` ${ins.dgs2_bp_per_sd > 0 ? "in the same direction" : "the other way"}, so this surprise pointed to about ${typical > 0 ? "+" : typical < 0 ? MINUS : ""}${Math.abs(typical)} bp.` +
+          ` For ${series}, each 1 SD of surprise was associated with a 2-year yield change of about ${Math.abs(ins.dgs2_bp_per_sd).toFixed(1)} bp` +
+          ` ${ins.dgs2_bp_per_sd > 0 ? "in the same direction" : "the other way"}; the fitted relationship gives about ${typical > 0 ? "+" : typical < 0 ? MINUS : ""}${Math.abs(typical)} bp for this surprise.` +
           (Math.round(r.dgs2_bp) > 0
             ? " A rising 2-year yield usually means markets expect interest rates to stay higher for longer."
             : Math.round(r.dgs2_bp) < 0
               ? " A falling 2-year yield usually means markets expect interest rates to come down sooner."
               : "");
       } else {
-        text += ` For ${series}, surprises have barely moved yields on the day, so this move likely reflects other news too.`;
+        text += ` For ${series}, the linear association between surprises and daily yield changes is weak.`;
       }
     }
-    paragraphs.push(text);
+    paragraphs.push(text + " This daily comparison does not isolate the release's effect.");
   }
   return paragraphs;
 }

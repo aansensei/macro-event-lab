@@ -1,6 +1,6 @@
 import { expect, it } from "vitest";
-import type { Revisions, Summary } from "../data/types";
-import { overviewFindings, revisionHook } from "./overview";
+import type { Revisions, Summary, SummaryPoint } from "../data/types";
+import { overviewFindings, releaseExamples, revisionHook } from "./overview";
 import { PRIMARY, LEARN } from "./navigation";
 import { parseUrlState } from "./url";
 import { STORY, storyHref } from "./story";
@@ -44,4 +44,32 @@ it("selects the largest upward settled jobs revision without modifying the input
     latest: 500, vintage: "2026-10-02" });
   expect(JSON.stringify(revisions)).toBe(before);
   expect(revisionHook({ series: [] } as unknown as Revisions)).toBeNull();
+});
+
+it("selects the largest absolute surprise with a 2-year yield observation for each supported series", () => {
+  const point: SummaryPoint = { id: "cpi-small", series: "KXCPI", title: "Fixture", surprise_sd: 1,
+    dgs2_bp: 0, dgs10_bp: null, in_50: false, in_90: true };
+  const summary: Summary = { schema_version: 1, series: [], points: [
+    point, { ...point, id: "cpi-extreme", surprise_sd: -3 },
+    { ...point, id: "cpi-no-yield", surprise_sd: 9, dgs2_bp: null },
+    { ...point, id: "jobs-sample", series: "KXPAYROLLS" },
+    { ...point, id: "fed-sample", series: "KXFED" },
+    { ...point, id: "gdp-sample", series: "KXGDP" },
+    { ...point, id: "other-series", series: "UNKNOWN" },
+  ] };
+  const before = JSON.stringify(summary);
+  const selected = releaseExamples(summary);
+  expect(selected.map(({ label }) => label)).toEqual(["CPI", "Jobs", "GDP", "Fed"]);
+  expect(selected[0]!.point.id).toBe("cpi-extreme");
+  expect(selected[0]!.point.dgs10_bp).toBeNull();
+  expect(JSON.stringify(summary)).toBe(before);
+});
+
+it("resolves equal surprises by identifier and handles empty or unobserved series", () => {
+  const point: SummaryPoint = { id: "b", series: "KXCPI", title: "Fixture", surprise_sd: 0,
+    dgs2_bp: 0, dgs10_bp: null, in_50: true, in_90: true };
+  const summary: Summary = { schema_version: 1, series: [], points: [point, { ...point, id: "a" }] };
+  expect(releaseExamples(summary)[0]!.point.id).toBe("a");
+  expect(releaseExamples({ ...summary, points: [] })).toEqual([]);
+  expect(releaseExamples({ ...summary, points: [{ ...point, dgs2_bp: null }] })).toEqual([]);
 });

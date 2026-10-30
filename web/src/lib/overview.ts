@@ -1,5 +1,16 @@
 import type { Revisions, Summary } from "../data/types";
 
+const EXAMPLE_SERIES = [["KXCPI", "CPI"], ["KXPAYROLLS", "Jobs"], ["KXGDP", "GDP"], ["KXFED", "Fed"]] as const;
+
+export function releaseExamples(summary: Summary) {
+  return EXAMPLE_SERIES.flatMap(([series, label]) => {
+    const point = summary.points.filter((p) => p.series === series && p.dgs2_bp !== null)
+      .sort((a, b) => Math.abs(b.surprise_sd) - Math.abs(a.surprise_sd) || a.id.localeCompare(b.id))[0];
+    return point ? [{ label, point }] : [];
+  });
+}
+
+
 export function revisionHook(revisions: Revisions) {
   const jobs = revisions.series.find((s) => s.series === "KXPAYROLLS");
   const point = jobs?.points.filter((p) => p.settled && p.latest !== null && p.latest > p.first)

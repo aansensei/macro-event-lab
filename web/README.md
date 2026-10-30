@@ -28,6 +28,7 @@ npm run dev
 - `src/main.tsx`: mounts React and imports the stylesheet entry.
 - `src/App.tsx`: composes the shared header, active page and footer.
 - `src/pages/`: Overview, Events, Compare, Scorecard, Revisions, Models, Method, Glossary and About, each in its own file.
+- Overview reads only `summary.json` and `revisions.json`. Its release preview selects the largest absolute surprise in each supported series with an observed 2-year yield change, reveals surprise and daily yields in sequence, and links to the full Events view. Selection and source notes identify these as extreme examples; the SD axis is a standardized distance, not a probability distribution.
 - `src/components/`: reusable controls, charts, reading blocks and shared layout. Explorer is the event detail component composed by the Events page.
 - `src/hooks/`: browser navigation, persistent Events selection and loading state, chart measurement and animation hooks. Keeping Events state above the page preserves the selected release and filter across navigation.
 - `src/styles.css`: ordered CSS imports only. Keep import order stable because later rules can override earlier rules.
@@ -41,6 +42,10 @@ npm run dev
 - `public/`: logo and favicons, copied as is into the build.
 - `public/robots.txt`: asks all crawlers not to crawl the site. Vite copies it to `dist/robots.txt`; hosting must serve it at the origin's `/robots.txt`. This also asks search engines not to crawl and does not block clients that ignore the policy or protect private data.
 - Links keep the view: `?event=kxcpi-26sep&h=48` opens that event 48 hours before its market closed.
+- Events supports an optional reveal sequence. `reveal=0` hides the first print, surprise and daily yields; `reveal=1` shows the print and surprise; omitting it shows all results and keeps existing links compatible. The URL preserves this state as the hour changes. Choosing a different release while in the sequence starts with its results hidden.
+- The hidden view reads its expectation figures from the selected snapshot. Once the first print is visible, the summary comparison returns to its labelled anchor snapshot. The historical timeline still displays the full pre-close path, and downloaded JSON retains the results. Use the pipeline's temporal evaluation for forecast claims.
+- Overview's Open this release link carries the current reveal stage into Events. Browser history restores both the snapshot hour and stage, including a return to the same release.
+- Daily Treasury yield changes describe an association over the day. Missing maturities stay unavailable while recorded maturities remain visible. The source notes link to the Federal Reserve H.15 description.
 - `?page=events` opens Events explicitly; the root opens Overview. Models reads its separate ALFRED-only nowcast export.
 - `prototype/`: the static design prototype the site is being built from.
 - `DESIGN_RESEARCH.md`, `DESIGN_BRIEF.md`: design research and the brief behind the prototype.

@@ -3,6 +3,8 @@
 @import "./styles/header.css";
 @import "./styles/layout.css";
 @import "./styles/pages/overview.css";
+@import "./styles/components/event-reveal.css";
+@import "./styles/components/outcome-controls.css";
 @import "./styles/pages/models.css";
 @import "./styles/navigation-responsive.css";
 @import "./styles/pages/events.css";

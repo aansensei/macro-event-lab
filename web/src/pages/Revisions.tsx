@@ -134,8 +134,7 @@ export function Revisions() {
       <StoryPath current="revisions" />
       <h1 className="t-h1">Revisions</h1>
       <p className="about-lead">
-        The first number published is rarely the last word. How much did CPI, jobs and GDP numbers change after
-        release day, and when did the changes arrive?
+        Which number is the answer? Compare the first CPI, jobs and GDP prints with later vintages to see what was known then and what changed.
       </p>
 
       <div className="rev-picks" role="group" aria-label="Choose a release type">

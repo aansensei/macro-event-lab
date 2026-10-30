@@ -1,0 +1,49 @@
+.event-reveal { min-width: 0; padding: 24px; border: 1px solid var(--border); border-radius: 10px; background: var(--surface); }
+.event-reveal-types { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 20px; user-select: none; }
+.event-reveal-types button { border: 1px solid transparent; border-radius: 5px; background: transparent; color: var(--text-muted); font-size: 13px; line-height: 20px; min-height: 36px; padding: 6px 12px; cursor: pointer; }
+.event-reveal-types button[aria-pressed="true"] { color: var(--accent); background: var(--accent-tint); border-color: var(--border-control); }
+.event-reveal-types button:hover { background: var(--surface-hover); }
+.event-reveal h2 { font-size: 20px; line-height: 28px; }
+.event-snapshot { font-size: 12px; line-height: 18px; color: var(--text-muted); margin: 4px 0 20px; }
+.event-phase { display: flex; gap: 16px; align-items: center; font-size: 13px; line-height: 20px; color: var(--text-muted); padding-top: 16px; margin: 0 0 16px; border-top: 1px solid var(--border); user-select: none; }
+.event-phase .mono { color: var(--accent); }
+.event-reveal-result { min-height: 146px; margin-bottom: 20px; }
+.event-reveal-result h3 { font-size: 15px; line-height: 22px; font-weight: 500; margin: 0; }
+.event-number { margin: 12px 0 8px; font-size: clamp(32px, 4vw, 46px); line-height: 1.1; letter-spacing: -0.035em; color: var(--actual); }
+.event-number span { font-size: 15px; letter-spacing: 0; color: var(--text-muted); }
+.event-unrevealed { color: var(--text-muted); }
+.event-result-note { font-size: 12px; line-height: 18px; color: var(--text-muted); margin: 0; }
+.event-scale { margin: 24px 0 0; }
+.event-scale-line { position: relative; height: 18px; margin: 0 8px; }
+.event-scale-line::before { content: ""; position: absolute; inset: 8px 0 auto; height: 2px; background: var(--border-control); }
+.event-mean { position: absolute; width: 2px; height: 18px; left: 50%; background: var(--market); }
+.event-actual { position: absolute; width: 10px; height: 10px; top: 4px; border-radius: 50%; background: var(--actual); transform: translateX(-50%); animation: event-dot-in 200ms ease both; }
+@keyframes event-dot-in { from { opacity: 0; } to { opacity: 1; } }
+.event-scale-labels { display: flex; justify-content: space-between; color: var(--text-muted); margin-top: 6px; }
+.event-scale-note { font-size: 12px; line-height: 18px; color: var(--text-muted); margin: 8px 0 0; }
+.event-yield-result { animation: reveal-answer 250ms ease both; }
+.event-yield-result dl { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; margin: 12px 0 0; }
+.event-yield-result dt { font-size: 12px; line-height: 18px; color: var(--text-muted); }
+.event-yield-result dd { margin: 6px 0 0; font-size: 25px; line-height: 32px; color: var(--text); }
+.event-yield-result dd span { font-size: 13px; }
+.event-yield-result p { font-size: 12px; line-height: 18px; color: var(--text-muted); margin: 12px 0 0; }
+.event-reveal-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 16px; user-select: none; }
+.event-reveal-next { background: var(--accent); color: var(--bg); border: 1px solid var(--accent); border-radius: 5px; min-height: 44px; padding: 10px 14px; font-size: 13px; line-height: 20px; font-weight: 600; cursor: pointer; }
+.event-reveal-next:hover { filter: brightness(0.93); }
+.event-reveal-actions a { font-size: 13px; line-height: 20px; }
+.event-selection { font-size: 12px; line-height: 18px; color: var(--text-muted); margin: 20px 0 0; }
+.event-example-note { margin-top: 16px; }
+.event-example-note summary { list-style: none; display: flex; align-items: center; gap: 8px; cursor: pointer; color: var(--text-muted); font-size: 12px; line-height: 20px; user-select: none; }
+.event-example-note summary::-webkit-details-marker { display: none; }
+.event-example-note summary::before { content: "+"; color: var(--accent); font-size: 16px; }
+.event-example-note[open] summary::before { content: "−"; }
+.event-example-note .event-selection { margin-top: 8px; }
+@media (max-width: 374px) {
+  .event-reveal { padding: 16px; }
+  .event-reveal-types button { padding: 6px 10px; }
+  .event-reveal-result { min-height: 166px; }
+  .event-reveal-next { width: 100%; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .event-actual, .event-yield-result { animation: none; }
+}

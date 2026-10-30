@@ -3,20 +3,13 @@ import { useEffect, useState } from "react";
 import { loadSummary } from "../data/load";
 import type { SeriesSummary, Summary } from "../data/types";
 import { missSize, scoreFinding } from "../lib/scoreWords";
+import { SkillBadge } from "../components/SkillBadge";
 import { CountUp } from "../components/CountUp";
 import { PitHistogram } from "../components/PitHistogram";
 import { Term } from "../components/Term";
 import { StoryNext, StoryPath } from "../components/Story";
 
 type Load = { kind: "loading" } | { kind: "error"; message: string } | { kind: "ready"; summary: Summary };
-
-function SkillBadge({ skill }: { skill: number | null }) {
-  if (skill === null) return <span className="verdict">No benchmark</span>;
-  const pct = Math.round(Math.abs(skill) * 100);
-  return skill > 0
-    ? <span className="verdict verdict-calibrated">Beats the naive guess by {pct}%</span>
-    : <span className="verdict verdict-overconfident">Naive guess does as well</span>;
-}
 
 function SeriesCard({ s }: { s: SeriesSummary }) {
   const sc = s.scores;
@@ -81,8 +74,7 @@ export function Scorecard() {
       <StoryPath current="scorecard" />
       <h1 className="t-h1">Scorecard</h1>
       <p className="about-lead">
-        How good were the market's forecasts an hour before each release? Scored with the tools
-        professional forecasters use, and against the simplest guess: repeating the last number.
+        Can you trust the forecast? Check its errors and uncertainty against a simple baseline: repeating the previous first print.
       </p>
       {scored.length === 0 ? (
         <p className="state-banner">Scores appear once the pipeline has scored the releases.</p>

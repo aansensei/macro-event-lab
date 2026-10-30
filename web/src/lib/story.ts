@@ -15,26 +15,26 @@ export const STORY: StoryStep[] = [
   {
     page: "events",
     label: "Events",
-    question: "One release, hour by hour",
-    lead: "You have seen one release. Compare puts it beside every release of the same kind.",
+    question: "What was priced in?",
+    lead: "One release is a starting point. Does the same pattern hold across other releases?",
   },
   {
     page: "compare",
     label: "Compare",
-    question: "Patterns across every release",
-    lead: "Those are the patterns. Scorecard grades the forecasts with the tools forecasters use.",
+    question: "Does surprise matter?",
+    lead: "A relationship with yields is one test. How do the forecasts score against a simple baseline?",
   },
   {
     page: "scorecard",
     label: "Scorecard",
-    question: "How good the forecasts were",
-    lead: "Every grade uses the first print as the answer. Revisions shows how much that answer moves later.",
+    question: "Can you trust the forecast?",
+    lead: "The scores use the first published result. What happens to that answer as revisions arrive?",
   },
   {
     page: "revisions",
     label: "Revisions",
-    question: "Whether the answer itself changes",
-    lead: "That is the whole story. Method shows how each number on the site is made.",
+    question: "Which number is the answer?",
+    lead: "Expectations, outcomes and revisions depend on when you look. Method shows how each number is assembled and checked.",
   },
 ];
 

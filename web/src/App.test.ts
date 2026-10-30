@@ -26,12 +26,13 @@ vi.mock("./components/EventList", () => ({
       ...events.map((event) => createElement("button", { key: event.id, onClick: () => onSelect(event.id) }, event.id))),
 }));
 vi.mock("./components/Explorer", () => ({
-  Explorer: ({ entry, initialHour, onHourChange }: ComponentProps<typeof Explorer>) => {
+  Explorer: ({ entry, initialHour, onHourChange, revealStage, onRevealChange }: ComponentProps<typeof Explorer>) => {
     const [hour, setHour] = useState(() => initialHour ?? 1);
     useEffect(() => onHourChange(hour), [hour, onHourChange]);
     return createElement("section", {
-      "data-event": entry.id, "data-hour": String(initialHour), "data-latched-hour": String(hour),
-    }, createElement("button", { onClick: () => setHour(24) }, "Show 24 hours"));
+      "data-event": entry.id, "data-hour": String(initialHour), "data-latched-hour": String(hour), "data-reveal": revealStage,
+    }, createElement("button", { onClick: () => setHour(24) }, "Show 24 hours"),
+    createElement("button", { onClick: () => onRevealChange?.(1) }, "Reveal fixture"));
   },
 }));
 
@@ -75,6 +76,36 @@ it("opens Overview without requesting an Events manifest", async () => {
   await render();
   expect(host.querySelector("h1")?.textContent).toBe("Overview page");
   expect(loadManifest).not.toHaveBeenCalled();
+});
+
+it("shares reveal state, resets it for a new event and restores it from history", async () => {
+  await render("?event=old-release&h=48&reveal=0");
+  expect(host.querySelector("[data-event]")?.getAttribute("data-reveal")).toBe("0");
+  const reveal = [...host.querySelectorAll<HTMLButtonElement>("[data-event] button")].find(b => b.textContent === "Reveal fixture")!;
+  await act(async () => reveal.click());
+  expect(window.location.search).toBe("?event=old-release&h=48&reveal=1");
+  await act(async () => host.querySelector<HTMLButtonElement>("[data-event] button")!.click());
+  expect(window.location.search).toBe("?event=old-release&h=24&reveal=1");
+  await act(async () => [...host.querySelectorAll<HTMLButtonElement>("aside button")].find(b => b.textContent === "scored-release")!.click());
+  expect(host.querySelector("[data-event]")?.getAttribute("data-reveal")).toBe("0");
+  await act(async () => {
+    window.history.pushState(null, "", "/?event=old-release&h=7&reveal=1");
+    window.dispatchEvent(new PopStateEvent("popstate"));
+  });
+  expect(host.querySelector("[data-event]")?.getAttribute("data-reveal")).toBe("1");
+  expect(host.querySelector("[data-event]")?.getAttribute("data-hour")).toBe("7");
+});
+
+it("restores the cursor for the same event even when its original requested hour is unchanged", async () => {
+  await render("?event=old-release&h=48&reveal=0");
+  await act(async () => host.querySelector<HTMLButtonElement>("[data-event] button")!.click());
+  expect(host.querySelector("[data-event]")?.getAttribute("data-latched-hour")).toBe("24");
+  await act(async () => {
+    window.history.pushState(null, "", "/?event=old-release&h=48&reveal=0");
+    window.dispatchEvent(new PopStateEvent("popstate"));
+  });
+  expect(host.querySelector("[data-event]")?.getAttribute("data-latched-hour")).toBe("48");
+  expect(host.querySelector("[data-event]")?.getAttribute("data-reveal")).toBe("0");
 });
 
 it("keeps the Models route independent of market data", async () => {
