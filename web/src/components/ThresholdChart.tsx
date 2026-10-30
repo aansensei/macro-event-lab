@@ -1,7 +1,7 @@
 import type { SurvivalPoint } from "../data/types";
 import { formatValue, pct } from "../lib/format";
-import { useTween } from "./useTween";
-import { useWidth } from "./useWidth";
+import { useTween } from "../hooks/useTween";
+import { useWidth } from "../hooks/useWidth";
 
 export type ThresholdMode = "fit" | "raw";
 

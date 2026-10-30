@@ -1,5 +1,5 @@
 import { MINUS } from "../lib/format";
-import { DataLineage } from "./DataLineage";
+import { DataLineage } from "../components/DataLineage";
 
 function Code({ children }: { children: string }) {
   return <span className="mono">{children}</span>;

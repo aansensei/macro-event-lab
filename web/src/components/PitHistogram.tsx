@@ -1,4 +1,4 @@
-import { useWidth } from "./useWidth";
+import { useWidth } from "../hooks/useWidth";
 
 const PAD_L = 28;
 const PAD_R = 8;

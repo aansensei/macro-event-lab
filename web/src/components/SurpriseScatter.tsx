@@ -2,7 +2,7 @@ import type { SummaryPoint } from "../data/types";
 import { niceTicks } from "../lib/charts";
 import { MINUS, fixed, formatBp, signed } from "../lib/format";
 import type { Fit } from "../lib/stats";
-import { useWidth } from "./useWidth";
+import { useWidth } from "../hooks/useWidth";
 
 interface Props {
   points: SummaryPoint[];

@@ -1,0 +1,117 @@
+/* a glossary term keeps the surrounding text color with a dotted underline; its hint appears above on hover or focus */
+.term {
+  color: inherit;
+  text-decoration: underline dotted;
+  text-decoration-color: var(--border-control);
+  text-underline-offset: 3px;
+  position: relative;
+}
+.term:hover { text-decoration-color: var(--accent); }
+/* the hint only exists while shown, so hidden hints never widen the page */
+.term:hover::after, .term:focus-visible::after {
+  content: attr(data-hint);
+  position: absolute;
+  left: 0;
+  bottom: calc(100% + 6px);
+  z-index: 20;
+  width: max-content;
+  max-width: min(260px, 70vw);
+  padding: 8px 10px;
+  border-radius: 6px;
+  background-color: var(--text);
+  color: var(--bg);
+  font-size: 12px;
+  line-height: 16px;
+  font-weight: 400;
+  letter-spacing: 0;
+  text-transform: none;
+  white-space: normal;
+  pointer-events: none;
+  animation: hint-in 0.15s ease both;
+}
+@keyframes hint-in {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: none; }
+}
+
+/* the plain words reading sits first on an event page, as a quiet tinted panel */
+/* the plain words card sits on the quiet surface with a faint accent rim, so it never outshines the numbers */
+.plain-words {
+  background-color: var(--surface);
+  border: 1px solid var(--accent-tint);
+  border-radius: 8px;
+  padding: 14px 16px;
+  margin-bottom: 32px;
+  max-width: 78ch;
+}
+.plain-words p { margin: 6px 0 0 0; line-height: 25px; }
+.plain-words-link { display: inline-block; margin-top: 10px; font-size: 13px; }
+
+.glossary-list { margin: 12px 0 0 0; }
+.glossary-group { margin-top: 40px; }
+/* sections the contents rail jumps to stop below the sticky header */
+.rail-target, .about-page h1, .about-section > .t-h2 { scroll-margin-top: 88px; }
+
+/* contents rail: a column of dots beside long pages from 1180px; narrower screens read straight down */
+.section-rail { display: none; }
+@media (min-width: 1180px) {
+  .with-rail { display: grid; grid-template-columns: 150px minmax(0, 1fr); gap: 32px; }
+  .section-rail { display: block; position: sticky; top: 30vh; align-self: start; }
+}
+.section-rail ol { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; }
+.section-rail a {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 5px 0;
+  text-decoration: none;
+  color: var(--text-muted);
+  -webkit-user-select: none;
+  user-select: none;
+}
+.rail-dot {
+  flex: none;
+  width: 6px;
+  height: 6px;
+  margin: 0 3px;
+  border-radius: 50%;
+  background-color: var(--border-control);
+  opacity: 0.55;
+  transition: width 0.25s ease, height 0.25s ease, margin 0.25s ease, background-color 0.25s ease, opacity 0.25s ease, box-shadow 0.25s ease;
+}
+.rail-label {
+  font-size: 13px;
+  line-height: 18px;
+  white-space: nowrap;
+  opacity: 0;
+  transform: translateX(-4px);
+  transition: opacity 0.2s ease, transform 0.2s ease, color 0.2s ease;
+}
+/* hovering or tabbing into the rail shows every name; the current section always shows its own */
+.section-rail:hover .rail-label, .section-rail:focus-within .rail-label { opacity: 1; transform: none; }
+.section-rail a:hover .rail-dot { opacity: 1; background-color: var(--text-muted); }
+.section-rail a:hover .rail-label { color: var(--text); }
+.section-rail a[aria-current] .rail-dot {
+  width: 10px;
+  height: 10px;
+  margin: 0 1px;
+  opacity: 1;
+  background-color: var(--accent);
+  box-shadow: 0 0 0 4px var(--accent-tint);
+}
+.section-rail a[aria-current] .rail-label { opacity: 1; transform: none; color: var(--accent); font-weight: 600; }
+.section-rail a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 4px; }
+.glossary-entry {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 4px;
+  padding: 16px 0;
+  border-top: 1px solid var(--border);
+  scroll-margin-top: 96px;
+}
+@media (min-width: 640px) {
+  .glossary-entry { grid-template-columns: 220px 1fr; gap: 24px; }
+}
+.glossary-entry dt { font-weight: 600; }
+.glossary-entry dd { margin: 0; color: var(--text-muted); line-height: 26px; }
+.glossary-entry:target { background-color: var(--accent-tint); }

@@ -1,0 +1,14 @@
+.models-page { max-width: 1000px; }
+.models-page > .muted { max-width: 64ch; }
+.model-readout { padding: 20px; background: var(--surface); border-radius: 8px; }
+.chart-legend { display: flex; flex-wrap: wrap; gap: 12px 24px; font-size: 14px; user-select: none; }
+.legend-model { color: var(--accent); }
+.nowcast-chart { min-width: 0; }
+.nowcast-chart svg { display: block; user-select: none; }
+.model-data { margin-top: 16px; }
+.table-scroll { overflow-x: auto; margin-top: 16px; }
+.models-page table { width: 100%; border-collapse: collapse; font-size: 14px; font-variant-numeric: tabular-nums; }
+.models-page caption { text-align: left; color: var(--text-muted); margin-bottom: 12px; }
+.models-page th, .models-page td { text-align: left; padding: 12px 8px; border-bottom: 1px solid var(--border); }
+.models-page td { white-space: nowrap; }
+.models-page th { font-weight: 500; }

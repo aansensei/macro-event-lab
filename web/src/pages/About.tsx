@@ -1,12 +1,11 @@
-import { ExternalLink } from "./ExternalLink";
-import { SectionRail, type RailSection } from "./SectionRail";
+import { ExternalLink } from "../components/ExternalLink";
+import { SectionRail, type RailSection } from "../components/SectionRail";
 
 const REPO = "https://github.com/aansensei/macro-event-lab";
 
 const RAIL: RailSection[] = [
   { id: "about-top", label: "Top" },
   { id: "about-idea", label: "The idea" },
-  { id: "about-howto", label: "How to use" },
   { id: "about-why", label: "Why this way" },
   { id: "about-stack", label: "How it is built" },
   { id: "about-author", label: "Author" },
@@ -54,16 +53,6 @@ const FAQ: [string, string][] = [
   ["Where do the numbers come from?", "From the pipeline described above, run on real data. Numbers derived from Kalshi prices are shown publicly only with Kalshi's permission."],
   ["Can I see the values behind a chart?", "Yes. The outcome and threshold charts have a data table with exactly the values they draw."],
   ["Is this investment advice?", "No. Macro Event Lab is a research and engineering project. Nothing on this site is a recommendation to buy, sell or trade anything."],
-];
-
-const HOW_TO: [string, string][] = [
-  ["Pick a release", "On Events, choose a CPI report, jobs report, GDP release or Fed decision from the list (on a phone, from the two dropdowns at the top). The newest release with a result opens first."],
-  ["Read it in plain words", "The box at the top explains what traders expected, what came out, how unusual the surprise was and how bond yields moved, without jargon."],
-  ["Travel back in time", "Drag the time slider, tap a preset such as T−7d, or press Play to watch the market's odds change hour by hour in the week before the release. You can also click or drag on the chart over time."],
-  ["Inspect the charts", "Hover or tap a bar to read its exact odds and pin it; press Esc to clear. Every chart has a data table and a short note on how to read it."],
-  ["Look up a term", "Words with a dotted underline show a short meaning when you hover or focus them, and open the Glossary when clicked."],
-  ["See the big picture", "Compare shows how well markets judged each kind of release and how yields answered surprises. Scorecard grades the forecasts against a naive guess."],
-  ["Share what you see", "The address bar always holds the release and the hour you are looking at, so copying the link shares exactly that view."],
 ];
 
 function Rows({ rows }: { rows: [string, string][] }) {
@@ -127,17 +116,7 @@ export function About() {
         </ul>
       </section>
 
-      <section className="about-section" aria-labelledby="about-howto">
-        <h2 className="t-h2" id="about-howto">How to use this site</h2>
-        <ol className="howto-steps">
-          {HOW_TO.map(([title, text]) => (
-            <li key={title}>
-              <span className="howto-title">{title}</span>
-              <span className="howto-text">{text}</span>
-            </li>
-          ))}
-        </ol>
-      </section>
+      <p className="about-note" id="about-howto">New here? Start with the <a href="?page=overview#overview-guide">Overview guide</a> to choose a release and explore the data.</p>
 
       <section className="about-section" aria-labelledby="about-why">
         <h2 className="t-h2" id="about-why">Why it is built this way</h2>

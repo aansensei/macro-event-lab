@@ -5,10 +5,10 @@ import type { Summary } from "../data/types";
 import { seriesFinding, verdict, type Verdict } from "../lib/compareWords";
 import { fixed } from "../lib/format";
 import { ols } from "../lib/stats";
-import { CalibrationBars } from "./CalibrationBars";
-import { SurpriseScatter } from "./SurpriseScatter";
-import { Term } from "./Term";
-import { StoryNext, StoryPath } from "./Story";
+import { CalibrationBars } from "../components/CalibrationBars";
+import { SurpriseScatter } from "../components/SurpriseScatter";
+import { Term } from "../components/Term";
+import { StoryNext, StoryPath } from "../components/Story";
 
 const VERDICT_LABEL: Record<Verdict, string> = {
   calibrated: "Well calibrated",

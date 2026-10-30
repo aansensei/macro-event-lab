@@ -1,0 +1,50 @@
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
+  background-color: var(--bg);
+  color: var(--text);
+  font-family: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  font-size: 16px;
+  line-height: 24px;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  /* nothing that pokes past the right edge (a hint near the edge) may create a sideways scroll */
+  overflow-x: clip;
+}
+
+.t-micro { font-size: 12px; line-height: 16px; }
+.t-label { font-size: 14px; line-height: 20px; font-weight: 500; }
+.t-h1 { font-size: 26px; line-height: 32px; font-weight: 600; letter-spacing: -0.02em; margin: 0; }
+.t-h3 { font-size: 17px; line-height: 24px; font-weight: 600; letter-spacing: -0.01em; margin: 0; }
+@media (min-width: 640px) {
+  .t-h1 { font-size: 34px; line-height: 40px; }
+}
+
+.mono { font-family: "IBM Plex Mono", ui-monospace, monospace; font-size: 12px; }
+.num { font-variant-numeric: tabular-nums lining-nums; }
+.muted { color: var(--text-muted); }
+
+/* focus ring stays visible on every control: 2px accent outline with a 2px offset */
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+a { color: var(--accent); text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+button, input, select { font-family: inherit; font-size: inherit; color: inherit; }
+
+/* interface chrome never gets text-selected or flashes on tap; reading text (plain words, method, glossary) stays selectable */
+html { -webkit-tap-highlight-color: transparent; }
+button, summary, .site-header, .site-footer, .event-sidebar, .select, .time-control-bar, .chart-svg,
+.key-label, .section-kicker, .chart-kicker, .slider-top-labels, .verdict, .calibration, .toggle-pair,
+.preset-chips, .filter-chips, .readout-unpin, .text-btn, .logo-slot, .footer-link, .term, .scatter-dot {
+  -webkit-user-select: none;
+  user-select: none;
+}
+img { -webkit-user-drag: none; }

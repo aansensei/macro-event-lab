@@ -4,11 +4,11 @@ import { loadRevisions } from "../data/load";
 import type { Revisions as RevisionData, RevisionSeries } from "../data/types";
 import { formatIsoDate, pct } from "../lib/format";
 import { periodLabel, printValue, revisionFinding, revisionSize, signedSize } from "../lib/revisionWords";
-import { CountUp } from "./CountUp";
-import { ExternalLink } from "./ExternalLink";
-import { RevisionChart } from "./RevisionChart";
-import { Term } from "./Term";
-import { StoryNext, StoryPath } from "./Story";
+import { CountUp } from "../components/CountUp";
+import { ExternalLink } from "../components/ExternalLink";
+import { RevisionChart } from "../components/RevisionChart";
+import { Term } from "../components/Term";
+import { StoryNext, StoryPath } from "../components/Story";
 
 type Load = { kind: "loading" } | { kind: "error"; message: string } | { kind: "ready"; data: RevisionData };
 

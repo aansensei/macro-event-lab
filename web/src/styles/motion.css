@@ -1,0 +1,24 @@
+/* motion: pages and events fade up into place, controls ease their colors, and a theme change cross-fades */
+@keyframes page-in {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: none; }
+}
+.page-fade { animation: page-in 0.32s cubic-bezier(0.2, 0.7, 0.2, 1) both; }
+details[open] > :not(summary) { animation: page-in 0.22s ease-out both; }
+button, a, .event-item-btn, .chip-btn, .nav-btn, .theme-btn, .toggle-pair button {
+  transition: background-color 0.18s ease, color 0.18s ease, text-decoration-color 0.18s ease, opacity 0.18s ease;
+}
+.play-btn { transition: background-color 0.18s ease, transform 0.12s ease; }
+.play-btn:active { transform: scale(0.97); }
+html.theme-switching *, html.theme-switching *::before, html.theme-switching *::after {
+  transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease, fill 0.3s ease, stroke 0.3s ease !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

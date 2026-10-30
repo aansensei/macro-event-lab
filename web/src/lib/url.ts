@@ -1,8 +1,8 @@
 // The page, selected event and hour live in the query string so any view can be shared as a link.
 
-export type Page = "events" | "compare" | "scorecard" | "revisions" | "method" | "glossary" | "about";
+export type Page = "overview" | "events" | "compare" | "scorecard" | "revisions" | "method" | "glossary" | "about" | "models";
 
-const OTHER_PAGES: Page[] = ["compare", "scorecard", "revisions", "method", "glossary", "about"];
+const PAGES: Page[] = ["overview", "events", "compare", "scorecard", "revisions", "method", "glossary", "about", "models"];
 
 export interface UrlState {
   page: Page;
@@ -17,10 +17,11 @@ export function parseUrlState(search: string): UrlState {
   const event = params.get("event");
   const raw = params.get("h");
   const h = raw !== null && /^\d+$/.test(raw) ? Number(raw) : null;
-  const page = OTHER_PAGES.find((p) => p === params.get("page")) ?? "events";
+  const validEvent = event && /^[a-z0-9-]+$/.test(event) ? event : null;
+  const page = PAGES.find((p) => p === params.get("page")) ?? (validEvent ? "events" : "overview");
   return {
     page,
-    event: event && /^[a-z0-9-]+$/.test(event) ? event : null,
+    event: validEvent,
     h: h !== null && h <= MAX_HOURS ? h : null,
   };
 }
@@ -30,6 +31,6 @@ export function urlSearch(event: string, h: number): string {
 }
 
 // link for a page other than the events page, which writes its own link
-export function pageSearch(page: Exclude<Page, "events">): string {
+export function pageSearch(page: Page): string {
   return `?page=${page}`;
 }

@@ -4,8 +4,8 @@ import type { Snapshot } from "../data/types";
 import { dayTicks, fanDomain, fanSegments, niceTicks, oddsSeries, type Quantiles } from "../lib/charts";
 import { MINUS, binLabel, fixed, formatValue, pct } from "../lib/format";
 import { snapshotAt } from "../lib/snapshots";
-import { useTween } from "./useTween";
-import { useWidth } from "./useWidth";
+import { useTween } from "../hooks/useTween";
+import { useWidth } from "../hooks/useWidth";
 
 const PAD_L = 48;
 const PAD_T = 12;

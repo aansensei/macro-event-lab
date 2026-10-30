@@ -17,8 +17,8 @@ describe("story", () => {
     expect(nextStop("about")).toBeNull();
   });
 
-  it("sends Events to the site root", () => {
-    expect(storyHref("events")).toBe("./");
+  it("links Events explicitly so Overview stays the home", () => {
+    expect(storyHref("events")).toBe("?page=events");
     expect(storyHref("scorecard")).toBe("?page=scorecard");
   });
 });

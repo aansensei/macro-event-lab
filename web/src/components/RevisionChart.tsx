@@ -4,7 +4,7 @@ import type { RevisionPoint } from "../data/types";
 import { niceTicks } from "../lib/charts";
 import { MINUS } from "../lib/format";
 import { periodLabel, printValue, signedSize } from "../lib/revisionWords";
-import { useWidth } from "./useWidth";
+import { useWidth } from "../hooks/useWidth";
 
 interface Props {
   series: string;

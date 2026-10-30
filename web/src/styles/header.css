@@ -1,0 +1,88 @@
+.site-header {
+  border-bottom: 1px solid var(--border);
+  background-color: var(--bg);
+  position: sticky;
+  top: 0;
+  z-index: 40;
+}
+.header-inner {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 16px;
+  min-height: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+@media (min-width: 640px) {
+  .header-inner { padding: 0 24px; min-height: 64px; }
+}
+@media (min-width: 1024px) {
+  .header-inner { padding: 0 32px; }
+}
+
+/* the logo keeps its own 2:1 shape: 30px tall on phones, 36px from 640px; the PNG is 3x that */
+.logo-slot {
+  display: flex;
+  align-items: center;
+  height: 30px;
+  padding: 0;
+}
+.logo-slot img { height: 100%; width: auto; display: block; }
+@media (min-width: 640px) {
+  .logo-slot { height: 36px; }
+}
+
+/* logo, menu and theme switch share one row; under 480px (small phones, foldable cover screens) the menu takes its own row */
+.header-inner { flex-wrap: wrap; column-gap: 20px; row-gap: 0; }
+.header-nav { display: flex; gap: 2px; margin-right: auto; }
+@media (max-width: 479px) {
+  .logo-slot { order: 1; }
+  .theme-group { order: 2; }
+  .header-nav { order: 3; flex-basis: 100%; margin: 0 0 4px -4px; overflow-x: auto; scrollbar-width: none; }
+  .nav-btn { flex: none; }
+}
+/* navigation is plain text; the current page is underlined in the accent color */
+.nav-btn {
+  background: transparent;
+  border: none;
+  padding: 6px 8px;
+  min-height: 36px;
+  font-size: 14px;
+  line-height: 20px;
+  font-weight: 500;
+  color: var(--text-muted);
+  cursor: pointer;
+}
+.nav-btn:hover { color: var(--text); }
+.nav-btn[aria-current="page"] {
+  color: var(--text);
+  text-decoration: underline;
+  text-decoration-color: var(--accent);
+  text-decoration-thickness: 2px;
+  text-underline-offset: 8px;
+}
+@media (max-width: 479px) {
+  .nav-btn { padding: 6px 4px; }
+  .theme-btn { min-width: 0; padding: 4px 6px; }
+}
+
+.theme-group { display: inline-flex; gap: 2px; }
+.theme-btn {
+  background: transparent;
+  border: none;
+  border-radius: 4px;
+  padding: 4px 8px;
+  min-height: 28px;
+  min-width: 44px;
+  font-size: 12px;
+  line-height: 16px;
+  font-weight: 500;
+  color: var(--text-muted);
+  cursor: pointer;
+}
+@media (pointer: coarse) {
+  .theme-btn { min-height: 40px; padding: 6px 10px; }
+}
+.theme-btn[aria-pressed="true"] { background-color: var(--surface-hover); color: var(--text); }

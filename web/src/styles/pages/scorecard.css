@@ -1,0 +1,14 @@
+/* scorecard: one card per series with four metrics, a finding and the PIT chart; two cards per row on wide screens */
+.score-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 0 40px; margin-top: 32px; }
+@media (min-width: 900px) {
+  .score-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+.score-card { border-top: 1px solid var(--border); padding: 20px 0 28px; }
+.score-card > p { margin: 12px 0 0 0; color: var(--text-muted); line-height: 25px; }
+.score-metrics { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px 24px; margin: 16px 0 0 0; }
+@media (min-width: 480px) {
+  .score-metrics { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+}
+.score-metrics dt { font-size: 12px; line-height: 16px; color: var(--text-muted); margin-bottom: 4px; }
+.score-metrics dd { margin: 0; font-size: 20px; line-height: 26px; font-weight: 500; color: var(--text); }
+.score-pit { margin-top: 18px; }

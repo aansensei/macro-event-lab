@@ -43,7 +43,7 @@ export function storyIndex(page: Page): number {
 }
 
 export function storyHref(page: Page): string {
-  return page === "events" ? "./" : pageSearch(page);
+  return pageSearch(page);
 }
 
 // where the "next" block of a story page leads: the following step, or Method after the last one

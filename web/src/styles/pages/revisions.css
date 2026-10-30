@@ -1,0 +1,51 @@
+/* revisions: three series buttons that double as a summary, then the chosen series in detail */
+.rev-picks { display: grid; grid-template-columns: minmax(0, 1fr); gap: 10px; margin-top: 28px; }
+@media (min-width: 640px) {
+  .rev-picks { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+.rev-pick {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  padding: 14px 16px;
+  text-align: left;
+  font: inherit;
+  color: var(--text);
+  background-color: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  cursor: pointer;
+  transition: border-color 0.18s ease, background-color 0.18s ease;
+}
+.rev-pick:hover { background-color: var(--surface-hover); }
+.rev-pick[aria-pressed="true"] { border-color: var(--accent); background-color: var(--accent-tint); }
+.rev-pick:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.rev-pick-label { font-size: 13px; font-weight: 600; color: var(--text-muted); }
+.rev-pick[aria-pressed="true"] .rev-pick-label { color: var(--accent); }
+.rev-pick-value { font-size: 22px; line-height: 30px; font-weight: 500; }
+.rev-pick-sub { font-size: 12px; line-height: 16px; color: var(--text-muted); }
+.rev-detail { margin-top: 36px; }
+@media (min-width: 640px) {
+  .rev-metrics { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+}
+.rev-finding { margin: 16px 0 0 0; color: var(--text-muted); line-height: 26px; max-width: 70ch; }
+.rev-figure { margin-top: 28px; }
+.rev-readout { min-height: 22px; margin: 4px 0 8px 0; font-size: 14px; color: var(--text); }
+.rev-chart { cursor: crosshair; }
+.rev-chart:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.rev-table { width: 100%; border-collapse: collapse; font-size: 14px; }
+.rev-table th, .rev-table td { padding: 8px 10px 8px 0; text-align: left; border-bottom: 1px solid var(--border); }
+.rev-table thead th { font-size: 12px; font-weight: 600; color: var(--text-muted); }
+.rev-table tbody th { font-weight: 500; }
+.rev-note {
+  margin-top: 40px;
+  padding: 16px 18px;
+  border-left: 2px solid var(--accent);
+  background-color: var(--surface);
+  border-radius: 0 8px 8px 0;
+  color: var(--text-muted);
+  line-height: 25px;
+}
+.rev-note strong { color: var(--text); }
+.scorecard-how { margin-top: 24px; }

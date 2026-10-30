@@ -1,7 +1,7 @@
 import type { SeriesSummary } from "../data/types";
 import { pct } from "../lib/format";
 import { CountUp } from "./CountUp";
-import { useCountUp } from "./useCountUp";
+import { useCountUp } from "../hooks/useCountUp";
 
 // a bar that grows from zero together with its count-up percentage
 function HitRow({ name, hit, ideal }: { name: string; hit: number | null; ideal: number }) {
