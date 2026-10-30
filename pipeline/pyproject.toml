@@ -16,6 +16,7 @@ dependencies = [
     "duckdb>=1.0",
     "python-dotenv>=1.0",
     "tzdata>=2024.1",  # zoneinfo has no system time zone database on Windows
+    "numpy>=2.0",
 ]
 
 [project.optional-dependencies]

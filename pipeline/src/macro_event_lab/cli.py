@@ -8,7 +8,7 @@ from datetime import UTC, datetime
 
 import polars as pl
 
-from macro_event_lab import config, pit, quality
+from macro_event_lab import config, nowcast, pit, quality
 from macro_event_lab.build import build_silver
 from macro_event_lab.gold import build_gold
 from macro_event_lab.http import RateLimitedClient
@@ -127,6 +127,33 @@ def cmd_check(args: argparse.Namespace) -> None:
         raise SystemExit(1)
 
 
+def cmd_nowcast(_: argparse.Namespace) -> None:
+    """Print the GDP nowcast's out-of-sample errors, its coefficients and, where Kalshi covered
+    the quarter, the market's T-1h mean on the same quarters (local only)."""
+    paths = config.get_paths()
+    rows = nowcast.nowcast_rows(pl.read_parquet(paths.silver / "alfred_observations.parquet"))
+    preds = nowcast.walk_forward(rows)
+    calm = preds.filter(~pl.col("reference_period").is_in(list(nowcast.COVID_QUARTERS)))
+    for label, frame in (("all quarters", preds), ("without 2020 Q2 and Q3", calm)):
+        for column, name in (("nowcast", "nowcast"), ("previous_print", "naive")):
+            e = nowcast.error_summary(frame, column)
+            print(f"{label:<24} {name:<8} n={e['n']:<3} RMSE {e['rmse']:.2f}  MAE {e['mae']:.2f}")
+    print()
+    print("standardised coefficients (pp of GDP growth per 1 SD), 95% block bootstrap:")
+    with pl.Config(tbl_hide_dataframe_shape=True, float_precision=2):
+        print(nowcast.coefficient_table(rows))
+    events_path = paths.gold / "event_surprise.parquet"
+    if events_path.exists():
+        market = pl.read_parquet(events_path).filter(pl.col("series_ticker") == "KXGDP").select(
+            "reference_period", "mean_t1h"
+        )
+        both = preds.join(market.drop_nulls(), on="reference_period")
+        for column, name in (("nowcast", "nowcast"), ("mean_t1h", "market")):
+            e = nowcast.error_summary(both, column)
+            label = "Kalshi quarters"
+            print(f"{label:<24} {name:<8} n={e['n']:<3} RMSE {e['rmse']:.2f}  MAE {e['mae']:.2f}")
+
+
 def cmd_build(_: argparse.Namespace) -> None:
     paths = config.get_paths()
     for table, n in build_silver(paths).items():
@@ -174,6 +201,9 @@ def main(argv: list[str] | None = None) -> None:
 
     p_build = sub.add_parser("build", help="rebuild silver and gold Parquet tables from raw")
     p_build.set_defaults(func=cmd_build)
+
+    p_nowcast = sub.add_parser("nowcast", help="evaluate the GDP nowcast walk-forward")
+    p_nowcast.set_defaults(func=cmd_nowcast)
 
     p_check = sub.add_parser("check", help="data quality checks on silver (exit 1 on errors)")
     p_check.add_argument("--show", type=int, default=5, help="problem rows to print per check")

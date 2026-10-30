@@ -908,12 +908,18 @@ def build_gold(paths: Paths) -> dict[str, int]:
     events = surprises.join(
         release_reactions(surprises, observations), on="event_ticker", how="left"
     )
+    # nowcast builds on first_prints from this module, so it is imported here to avoid a cycle
+    from macro_event_lab import nowcast
+
+    gdp_rows = nowcast.nowcast_rows(observations)
     tables = {
         "contract_prices": prices,
         "implied_survival": survival,
         "implied_bins": with_week_ago(bins),
         "implied_stats": stats,
         "revisions": revisions(observations),
+        "gdp_nowcast": nowcast.walk_forward(gdp_rows),
+        "gdp_nowcast_coefs": nowcast.coefficient_table(gdp_rows),
         "event_surprise": events.join(event_insights(events, stats), on="event_ticker", how="left")
         .join(forecast_scores(events, bins, survival, stats), on="event_ticker", how="left"),
     }
