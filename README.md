@@ -10,14 +10,14 @@ Macro Event Lab is an automated, point-in-time data pipeline that:
 4. Measures how Treasury yields and sector stocks reacted to the surprise.
 5. Serves everything on a fully interactive website.
 
-**Status:** the pipeline (ingestion, point-in-time tables, implied distributions, surprises, release-day yield moves, forecast scores, revisions) and all seven website pages (Events, Compare, Scorecard, Revisions, Method, Glossary, About) run locally. Publishing waits on written permission from Kalshi for its market data. A Bayesian calibration model comes next. [JOURNEY.md](JOURNEY.md) records every problem found along the way and how it was fixed.
+**Status:** the pipeline and nine website pages (Overview, Events, Compare, Scorecard, Revisions, Models, Method, Glossary, About) run locally. Overview introduces the main story through a historical release reveal; Models holds the supplementary ALFRED-only GDP nowcast. Calibration research includes MAP evaluation and Bayesian models with documented limits in the [model card](pipeline/MODEL_CARD.md). Publishing market-derived results waits on written permission from Kalshi. [JOURNEY.md](JOURNEY.md) records discussions, decisions, findings, bugs, checks and open work.
 
 ## Repo layout
 
 | Folder | What | Stack |
 | --- | --- | --- |
 | [`pipeline/`](pipeline) | Ingestion, point-in-time tables, analytics, tests | Python, Polars, DuckDB, Parquet |
-| [`web/`](web) | Interactive website: Events, Compare, Scorecard, Revisions, Method, Glossary, About | React, TypeScript, Vite, hand-drawn SVG charts |
+| [`web/`](web) | Overview, four story pages and supporting research and reference pages | React, TypeScript, Vite, hand-drawn SVG charts |
 | [`api/`](api) | MCP server for as-of-date questions (Spring 2027) | FastAPI, MCP |
 | `data/` | raw / silver / gold tables, shared by pipeline and web (not committed) | |
 

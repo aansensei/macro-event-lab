@@ -1,18 +1,19 @@
 import type { EventFile, SurvivalPoint } from "../data/types";
 import { plainWords } from "../lib/plainWords";
 import type { EventStatus } from "../lib/snapshots";
-import { pageSearch } from "../lib/url";
+import { pageSearch, type RevealStage } from "../lib/url";
 
 interface Props {
   event: EventFile;
   status: EventStatus;
   expectedMedian: number | null;
   survival: SurvivalPoint[] | null;
+  revealStage?: RevealStage;
 }
 
 // the event read out in plain English, from its numbers and how it compares with its series
-export function PlainWords({ event, status, expectedMedian, survival }: Props) {
-  const paragraphs = plainWords(event, status, expectedMedian, survival);
+export function PlainWords({ event, status, expectedMedian, survival, revealStage = 2 }: Props) {
+  const paragraphs = plainWords(event, status, expectedMedian, survival, revealStage);
   return (
     <section className="plain-words" aria-labelledby="plain-words-title">
       <h2 className="section-kicker" id="plain-words-title">In plain words</h2>

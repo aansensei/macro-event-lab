@@ -30,6 +30,17 @@ describe("closeness", () => {
 });
 
 describe("plainWords", () => {
+  it("uses only selected-snapshot expectations before reveal and hides daily yields at the first-print step", () => {
+    const hidden = plainWords(cpi, "published", 0.1, null, 0).join(" ");
+    expect(hidden).toContain("selected market snapshot");
+    expect(hidden).toContain("rise 0.1%");
+    expect(hidden).not.toContain("0.6%");
+    expect(hidden).not.toContain("28%");
+    expect(hidden).not.toContain("3 bp");
+    expect(plainWords(cpi, "published", 0.1, null, 1).join(" ")).not.toContain("On release day");
+    expect(plainWords(cpi, "published", null, [[0.2, 0.25, 0.3]], 0)[0]).toContain("30%");
+    expect(plainWords(cpi, "published", null, [], 0)[0]).toContain("no estimate");
+  });
   it("explains a published CPI release with its context and the yield move", () => {
     const [first, context, yields] = plainWords(cpi, "published", 0.58);
     expect(first).toBe(
@@ -40,7 +51,7 @@ describe("plainWords", () => {
     expect(context).toContain("inside the market's middle range");
     expect(context).toContain("90% range 88% of the time");
     expect(yields).toContain("the 2-year Treasury yield rose 3 bp and the 10-year fell 2 bp");
-    expect(yields).toContain("about 6.1 bp in the same direction, so this surprise pointed to about +1 bp");
+    expect(yields).toContain("about 6.1 bp in the same direction; the fitted relationship gives about +1 bp");
     expect(yields).toContain("A rising 2-year yield usually means");
   });
 
@@ -60,7 +71,7 @@ describe("plainWords", () => {
     expect(first).toContain("the economy to add about 89,000 jobs in one month");
     expect(first).toContain(`came in at ${MINUS}23,000 jobs, far below what traders expected, a big surprise`);
     expect(context).toContain("outside the range the market saw as 90% likely");
-    expect(yields).toContain("surprises have barely moved yields on the day");
+    expect(yields).toContain("the linear association between surprises and daily yield changes is weak");
   });
 
   it("describes an upcoming release by the current expectation only", () => {

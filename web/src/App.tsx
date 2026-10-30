@@ -14,14 +14,14 @@ import { Revisions } from "./pages/Revisions";
 import { Scorecard } from "./pages/Scorecard";
 
 export function App() {
-  const { route, navigate } = useNavigation();
+  const { route, navigate, navigationKey } = useNavigation();
   const explorer = useEventExplorer(route);
 
   return <>
     <Header page={route.page} onNavigate={navigate} />
     <main className="main-container" id="app-main" tabIndex={-1}>
       {route.page === "overview" && <Overview />}
-      {route.page === "events" && <Events {...explorer} />}
+      {route.page === "events" && <Events {...explorer} navigationKey={navigationKey} />}
       {route.page === "compare" && <Compare />}
       {route.page === "scorecard" && <Scorecard />}
       {route.page === "revisions" && <Revisions />}

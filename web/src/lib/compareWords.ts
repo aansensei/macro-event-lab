@@ -32,9 +32,8 @@ export function seriesFinding(s: SeriesSummary): string {
   const v = verdict(s);
   if (v === "priced-in") {
     return (
-      `Fed decisions were almost never a surprise: across ${s.n} meetings the average miss was just ` +
-      `${(s.mean_abs_sd as number).toFixed(2)} SD, because traders had priced each decision well before the ` +
-      "meeting. With so little surprise, yield moves on decision days mostly reflect what the Fed said, not the rate itself."
+      `Across ${s.n} Fed meetings the average absolute surprise was ${(s.mean_abs_sd as number).toFixed(2)} SD. ` +
+      "Daily yield changes also include the statement and other news. These data do not isolate the effect of the rate decision."
     );
   }
   const parts: string[] = [];
@@ -53,8 +52,8 @@ export function seriesFinding(s: SeriesSummary): string {
   if (s.dgs2_corr !== null && s.dgs2_bp_per_sd !== null) {
     parts.push(
       Math.abs(s.dgs2_corr) >= MIN_CORR
-        ? `A 1 SD surprise moved the 2-year Treasury yield about ${Math.abs(s.dgs2_bp_per_sd).toFixed(1)} bp ${s.dgs2_bp_per_sd > 0 ? "in the same direction" : "the other way"} on the day (correlation ${s.dgs2_corr.toFixed(2)}).`
-        : `Surprises barely moved the 2-year Treasury yield on the day (correlation ${s.dgs2_corr.toFixed(2)}).`,
+        ? `A 1 SD surprise was associated with a daily 2-year Treasury yield change of about ${Math.abs(s.dgs2_bp_per_sd).toFixed(1)} bp ${s.dgs2_bp_per_sd > 0 ? "in the same direction" : "the other way"} (correlation ${s.dgs2_corr.toFixed(2)}).`
+        : `The linear association between surprises and daily 2-year yield changes was weak (correlation ${s.dgs2_corr.toFixed(2)}).`,
     );
   }
   return parts.join(" ");

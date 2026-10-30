@@ -3,6 +3,16 @@ import { describe, expect, it } from "vitest";
 import { pageSearch, parseUrlState, urlSearch } from "./url";
 
 describe("url state", () => {
+  it("shares each reveal state and leaves legacy full-result links unchanged", () => {
+    for (const reveal of [0, 1] as const) {
+      expect(parseUrlState(urlSearch("cpi-fixture", 24, reveal)))
+        .toEqual({ page: "events", event: "cpi-fixture", h: 24, reveal });
+    }
+    expect(urlSearch("cpi-fixture", 24, 2)).toBe("?event=cpi-fixture&h=24");
+    for (const bad of ["no", "-1", "1.5", "9", "2"]) {
+      expect(parseUrlState(`?event=cpi-fixture&reveal=${bad}`).reveal).toBeUndefined();
+    }
+  });
   it("round trips an event and hour on the events page", () => {
     expect(parseUrlState(urlSearch("kxcpi-26sep", 48))).toEqual({ page: "events", event: "kxcpi-26sep", h: 48 });
   });

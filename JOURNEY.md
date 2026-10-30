@@ -602,3 +602,89 @@ The policy follows the Robots Exclusion Protocol in [RFC 9309](https://www.rfc-e
 The local server returned HTTP 200 and text/plain for /robots.txt. The production build copied the file unchanged into dist, and a parser check rejected crawling both the root and a data path for arbitrary crawler names. Before the requested commit and push, the combined changes passed ruff, 194 pipeline tests, 136 web tests and the TypeScript production build. Private data and ignored planning files remain outside the commit scope.
 
 The staged-file audit needed to compare both sides of Git-detected renames rather than only destination names. It also caught trailing blank lines at the ends of the extracted stylesheets, which were normalized before commit. Their production CSS hash remained unchanged. One build command was accidentally issued from the repository root, where there is no package.json; rerunning it from web succeeded. These were packaging and command-location issues, not application defects.
+
+### 14.19 Returning the Overview to expectations and surprise
+
+**Status: IMPLEMENTED and VERIFIED locally, 30 October 2026; reading feedback OPEN; uncommitted.**
+
+An asked to continue after commit 23a200a and its successful CI. The next task in the rewritten roadmap was to correct the revision-led opening. The accepted product question still starts with expectations, the first published outcome and market reaction. GDP modelling remains supplementary research under Learn.
+
+The new headline asks what catches markets off guard. A dedicated EventReveal component opens with a question about one historical release. The reader reveals its standardized surprise, then its release-day Treasury yield changes. CPI, jobs, GDP and Fed buttons choose a different example and reset both reveals. A direct link to the selected release at T-1h remains available throughout, so the interaction is optional.
+
+The data scope stays within summary.json and revisions.json. The summary contains event surprises and daily yields, but not the full distribution or the raw first-print and market-mean pair. The opening therefore shows standardized distance from the market mean; its axis is not a probability distribution. It does not draw an invented bell curve, reconstruct missing odds or claim that a new forecast has been made. The full event history remains in Events.
+
+Selection is deterministic: for each supported series, take the largest absolute surprise among points with an observed 2-year yield change; break ties by event identifier. The interface calls each an extreme example and explains the selection in a disclosure. Missing 10-year changes stay unavailable. It never assumes yields must move in the direction of the surprise. Source labels distinguish the Fed example from the ALFRED first-print examples, and the notes identify the daily horizon and lack of causal identification. Numerical market-derived examples remain local.
+
+The evidence summaries and their destination links now follow the hook. The four story links come next. The ALFRED revision reveal becomes a later turn in the story, and the guide is shorter and placed last. The Overview loader still requests only the same two sources; tests check that no Events manifest is requested and that a source error leaves a direct route to Events instead of invented fallback results.
+
+### 14.20 Testing and adjusting the release reveal
+
+**Status: VERIFIED locally, 30 October 2026; owner reading review OPEN.**
+
+The baseline passed 136 web tests and the production build. Seven tests were added for deterministic example selection, missing observations, nonmutation, staged visibility, reset, missing yields, deep links, section order, source isolation and error states. The resulting suite passes 143 tests and the TypeScript production build.
+
+An initial implementation omitted the closing brace of the selection helper; the transform and type checks rejected it before browser review. When the scale was moved to appear only after the reveal, one test still assumed the hidden graphic existed. The assertion now verifies that it is absent before the first action. Both issues were corrected and the checks rerun.
+
+The first mobile review showed that the action appeared too far down the page. The introductory copy was shortened, and the action moved before the scale. The initial state now asks the question without displaying an empty axis. The scale appears after the surprise, and the final step puts the two yield values in the main result area. Values appear directly, with short transitions rather than fabricated intermediate numbers. Existing theme tokens are unchanged.
+
+Browser review covered all four release types and all three steps at 375, 768 and 1280px in light and dark themes, plus the expanded provenance, revision and guide states. Those 78 checks found no document-level horizontal overflow or computed text contrast below 4.5:1 in the visible Overview content. The three reveal steps were exercised with keyboard activation. Additional 280px and 1920px checks passed in both themes. The full release link opened the matching event with its slider at T-1h.
+
+The browser's read-only DOM interface did not provide tree-walking APIs, so the contrast audit used the supported element collection and computed styles, excluding closed disclosure content. Text is checked in its settled theme colors. Reduced-motion styles were retained and extended to the reveal markers and yield transition; a changed operating-system preference and a physical dual-screen hinge were not emulated in this browser pass. These limits must not be presented as completed device testing.
+
+The previous background server was no longer listening when this session began. After confirming the port was unused, Vite was started as a hidden, independent background process on port 8000. No existing server was stopped. Screenshots and detailed checks remain in the ignored local research folder.
+
+This is a tested reading prototype. It does not establish that An wants to read the whole site. The next product decision needs his response to this opening before further visual polish, model controls or extra pages are added. No commit, push or deployment was performed for this pass.
+
+### 14.21 A larger batch along the main reading path
+
+**Status: IMPLEMENTED locally, 30 October 2026; uncommitted.**
+
+An asked to continue and handle more tasks in one pass. The batch stayed on the main product path: an optional result reveal in Events, shareable reveal state, reliable history restoration, stronger questions connecting the four story pages, accurate forecast-skill labels and more careful daily-yield explanations. Models is explicitly labelled supplementary research and links back to Events. No model training, new ingestion or publication was added.
+
+Events still opens existing links with full results. Its new controls let a reader hide the result, inspect expectations, reveal the first print and surprise, then reveal daily yields. A direct Show all results action keeps the sequence optional. The sidebar and mobile menu hide surprise badges; the key strip and plain-language reading hide outcome values; chart markers, hover readouts and open data-table annotations no longer identify the first print while it is hidden. The yield section and inline yield readings remain absent until the final stage.
+
+The expectation-only summary uses the selected snapshot. Using the fixed T-1h anchor while a reader inspected T-24h would have mixed two information times. The hidden view now reads both its median and threshold odds from the selected snapshot, and labels its hour. After the result is revealed, the summary returns to its explicitly labelled comparison anchor.
+
+This is a guided historical view. The timeline still displays the full pre-close price path, and the downloaded event payload contains outcomes. Hiding them from the rendered view does not create a blind forecast experiment or an access-control boundary. The pipeline's temporal evaluation remains the source for predictive claims.
+
+### 14.22 Sharing and restoring what the reader actually sees
+
+**Status: IMPLEMENTED and VERIFIED locally, 30 October 2026.**
+
+Optional reveal=0 and reveal=1 query parameters preserve the hidden and first-print stages. The full stage omits the parameter, so existing event-and-hour links keep their format and behavior. Invalid stage values use the full view. Slider changes keep the current stage; selecting a different event while in the guided sequence resets it to hidden. Overview's Open this release link carries its current stage into Events.
+
+History review found a related cursor issue: Explorer captures an initial hour when it mounts. Restoring the same event after its cursor changed could leave the old cursor in place when the original requested hour had not changed. Navigation now has a generation key, and actual navigation or history restoration mounts the detail with the restored hour. Reveal actions and slider updates do not change this key, so they do not reset the cursor. Selection and filter state remain above the detail component.
+
+Integration tests cover stage serialization, invalid values, hour updates, new-event reset and history restoration. The real detail test draws the charts at a nonzero measured width, ensuring a missing marker assertion cannot pass merely because no SVG was rendered. It also opens the data tables before checking hidden annotations. A separate menu test checks both desktop badges and the opened mobile listbox.
+
+### 14.23 A negative skill score is worse, not equal
+
+**Status: FIXED and VERIFIED locally, 30 October 2026.**
+
+Reviewing Scorecard found that its badge said Naive guess does as well for both zero and negative skill. Skill is defined as one minus market MAE divided by naive MAE. A negative value means market error is higher relative to the naive baseline, rather than equal to it.
+
+The badge is now a small independently tested component. It distinguishes a lower error, a higher error, equal error and an unavailable benchmark. The negative percentage describes extra market error relative to naive MAE; it is not described as the naive forecast's percentage improvement relative to market MAE, because that would change the denominator. Tests use explicit error ratios to check that interpretation. No score or underlying dataset was changed.
+
+### 14.24 Daily yield observations cannot isolate an announcement
+
+**Status: CORRECTED and VERIFIED locally, 30 October 2026.**
+
+The reaction description said a morning release arrived before trading opened and that the whole day reflected it. That was too strong. The [Federal Reserve H.15 notes](https://www.federalreserve.gov/releases/h15/) describe daily constant-maturity Treasury yields derived from closing market bid yields. A difference between daily readings includes other trading and news; it does not identify the isolated effect of one announcement.
+
+The reaction panel now states the observation dates and this daily horizon. A Fed decision-day comparison explicitly includes trading before the announcement. Compare and the plain-language reading describe fitted slopes as associations. A weak correlation is described as a weak linear association, rather than evidence that surprises caused no movement. The Fed summary no longer attributes the day's move mainly to statement content that this dataset does not analyse.
+
+The panel also used to suppress both maturities if only one reading was present. It now retains the available maturity and labels the other unavailable. When an event has no recorded first print, the text describes a missing dataset outcome rather than asserting that the real-world release never happened. Tests cover positive, negative and unchanged moves, partial and missing readings, upcoming events and absent outcomes. These are interpretation and display corrections; the yield calculations and market-derived numbers are unchanged.
+
+### 14.25 Checking the larger reading pass
+
+**Status: VERIFIED locally, 30 October 2026; owner reading feedback OPEN.**
+
+The baseline passed 143 web tests and the production build. This batch passes 155 web tests and the TypeScript production build. A new expectation-label assertion initially expected T-1d; the existing formatter actually labels that hour T-24h. The assertion was corrected to check the selected hour, rather than changing the formatter.
+
+Browser review recorded 76 states: the reveal stages and open tables across 375, 768 and 1280px in both themes; the changed supporting and story pages at those sizes; additional jobs, GDP, Fed, early few-contract and absent-outcome cases; and 280px and 1920px edge checks. No recorded state had document-level horizontal overflow. The computed text-color checks passed for the audited page states, including SVG text fill. Recorded hidden states had no outcome badges, first-print SVG markers, table annotations or visible first-print values. The live table buttons were re-queried after opening one because their accessible names change to Hide data table.
+
+The reading path was clicked from Events through Compare, Scorecard and Revisions to Method. A real link from Overview opened the matching release with results hidden. Keyboard reveal and slider actions preserved the stage in the URL. Navigating to About and pressing Back restored the selected hour and first-print stage. Screenshots and state records remain in the ignored local research folder.
+
+The browser could not reach the previous preview server. The port was confirmed unused before a hidden, independent Vite process was started. No existing server was stopped. The server is left running for An to review the result.
+
+Physical dual-screen hinges and a changed operating-system motion preference were not emulated. Existing reduced-motion handling and both theme palettes remain intact. The larger batch is technically checked, but An's willingness to read the full story is still an open product judgement. No commit, push or deployment was performed.

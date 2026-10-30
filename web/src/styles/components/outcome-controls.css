@@ -1,0 +1,7 @@
+.outcome-controls { border: 1px solid var(--border); border-left: 2px solid var(--accent); border-radius: 8px; background: var(--surface); padding: 18px 20px; margin-bottom: 24px; }
+.outcome-controls p { font-size: 14px; line-height: 22px; color: var(--text-muted); margin: 8px 0 0; max-width: 66ch; }
+.outcome-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 12px 20px; margin-top: 16px; user-select: none; }
+.outcome-primary { background: var(--accent); color: var(--bg); border: 1px solid var(--accent); border-radius: 5px; padding: 10px 14px; min-height: 44px; font-size: 14px; font-weight: 500; cursor: pointer; }
+.outcome-primary:hover { filter: brightness(0.93); }
+.outcome-pending { border-top: 1px solid var(--border); padding-top: 20px; font-size: 14px; line-height: 22px; }
+@media (max-width: 374px) { .outcome-controls { padding: 16px; } .outcome-primary { width: 100%; } }

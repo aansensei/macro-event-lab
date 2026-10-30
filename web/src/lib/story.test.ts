@@ -8,7 +8,7 @@ describe("story", () => {
   });
 
   it("links each step to the next and the last one to Method", () => {
-    expect(nextStop("events")).toEqual({ href: "?page=compare", label: "Compare", question: "Patterns across every release" });
+    expect(nextStop("events")).toEqual({ href: "?page=compare", label: "Compare", question: "Does surprise matter?" });
     expect(nextStop("revisions")?.href).toBe("?page=method");
   });
 

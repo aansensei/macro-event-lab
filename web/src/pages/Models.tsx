@@ -18,7 +18,8 @@ export function Models() {
   }, []);
   const errors = data && nowcastErrors(data.points);
   return <div className="models-page page-fade">
-    <p className="section-kicker">Models</p><h1 className="t-h1">Reading GDP before release day</h1>
+    <p className="section-kicker">Supplementary research</p><h1 className="t-h1">Reading GDP before release day</h1>
+    <p className="t-label muted">A separate ALFRED study. The main market-expectations story starts on <a href="?page=events">Events</a>.</p>
     <p className="about-lead">A simple model uses the economic numbers already published to estimate the first GDP release.</p>
     <p className="muted">Data source: <ExternalLink href="https://alfred.stlouisfed.org/">ALFRED, Federal Reserve Bank of St. Louis</ExternalLink>. This page uses official economic data only.</p>
     {error && <p role="alert">The nowcast could not be loaded: {error}</p>}

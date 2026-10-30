@@ -20,12 +20,14 @@ interface Props {
   filter: Filter;
   onFilter: (f: Filter) => void;
   onSelect: (id: string) => void;
+  hideResults?: boolean;
 }
 
-function Badge({ event, dataThrough }: { event: ManifestEvent; dataThrough: string | null }) {
+function Badge({ event, dataThrough, hideResults }: { event: ManifestEvent; dataThrough: string | null; hideResults?: boolean }) {
   const status = eventStatus(event, dataThrough);
   if (status === "upcoming") return <span>Upcoming</span>;
   if (status === "not_published") return <span>No outcome</span>;
+  if (hideResults) return <span>Result hidden</span>;
   // early markets listed one or two contracts: odds for a threshold, but no distribution to score
   if (event.surprise_sd === null) {
     return <span>{event.strikes !== null && event.strikes > 0 && event.strikes < 3 ? (event.strikes === 1 ? "One contract" : "Two contracts") : "No surprise"}</span>;
@@ -35,7 +37,7 @@ function Badge({ event, dataThrough }: { event: ManifestEvent; dataThrough: stri
 }
 
 // events arrive newest first; the filter only hides rows, it never changes the selection
-export function EventList({ events, dataThrough, selectedId, filter, onFilter, onSelect }: Props) {
+export function EventList({ events, dataThrough, selectedId, filter, onFilter, onSelect, hideResults = false }: Props) {
   const shown = events.filter((e) => filter === "all" || seriesKind(e.series) === filter);
   const selectedRef = useRef<HTMLButtonElement>(null);
 
@@ -61,7 +63,7 @@ export function EventList({ events, dataThrough, selectedId, filter, onFilter, o
             // the selected event stays listed even when the filter hides its type
             ...(shown.some((e) => e.id === selectedId) ? [] : events.filter((e) => e.id === selectedId)),
             ...shown,
-          ].map((e) => ({ value: e.id, label: e.title, meta: <Badge event={e} dataThrough={dataThrough} /> }))}
+          ].map((e) => ({ value: e.id, label: e.title, meta: <Badge event={e} dataThrough={dataThrough} hideResults={hideResults} /> }))}
           onChange={onSelect}
         />
       </div>
@@ -95,7 +97,7 @@ export function EventList({ events, dataThrough, selectedId, filter, onFilter, o
                 <span className="event-item-title">{e.title}</span>
                 <span className="event-item-meta">
                   <span>{KIND_LABEL[seriesKind(e.series)]}</span>
-                  <Badge event={e} dataThrough={dataThrough} />
+                  <Badge event={e} dataThrough={dataThrough} hideResults={hideResults} />
                 </span>
               </button>
             </li>

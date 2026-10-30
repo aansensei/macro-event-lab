@@ -58,8 +58,7 @@ export function Compare() {
       <StoryPath current="compare" />
       <h1 className="t-h1">Compare</h1>
       <p className="about-lead">
-        Every release side by side: how well the market judged its own uncertainty, and how bond
-        yields answered when the number surprised.
+        Does surprise matter? Compare how well markets judged uncertainty and how surprises lined up with daily Treasury yield changes.
       </p>
 
       <section className="about-section" aria-labelledby="findings-title">
