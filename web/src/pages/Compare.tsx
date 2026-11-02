@@ -1,7 +1,8 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 import { loadSummary } from "../data/load";
-import type { Summary } from "../data/types";
+import { useResource } from "../hooks/useResource";
+import { ResourceError } from "../components/ResourceError";
 import { seriesFinding, verdict, type Verdict } from "../lib/compareWords";
 import { fixed } from "../lib/format";
 import { ols } from "../lib/stats";
@@ -18,31 +19,18 @@ const VERDICT_LABEL: Record<Verdict, string> = {
   unknown: "Not enough data",
 };
 
-type Load = { kind: "loading" } | { kind: "error"; message: string } | { kind: "ready"; summary: Summary };
-
 // every release side by side: how well markets judged their own uncertainty, and how yields answered surprises
 export function Compare() {
-  const [load, setLoad] = useState<Load>({ kind: "loading" });
+  const { state: load, retry } = useResource(loadSummary);
   const [series, setSeries] = useState("KXCPI");
   const [yieldKey, setYieldKey] = useState<"dgs2_bp" | "dgs10_bp">("dgs2_bp");
 
-  useEffect(() => {
-    loadSummary()
-      .then((summary) => setLoad({ kind: "ready", summary }))
-      .catch((err: Error) => setLoad({ kind: "error", message: err.message }));
-  }, []);
-
   if (load.kind === "loading") return <p className="t-label page-fade">Loading the comparison</p>;
   if (load.kind === "error") {
-    return (
-      <div className="state-banner" role="alert">
-        <h1 className="t-h3">The comparison could not be loaded</h1>
-        <p>{load.message}</p>
-      </div>
-    );
+    return <ResourceError heading="h1" title="The comparison could not be loaded" message={load.message} onRetry={retry} />;
   }
 
-  const { summary } = load;
+  const summary = load.data;
   const chosen = summary.series.find((s) => s.series === series) ?? summary.series[0];
   const points = summary.points.filter((p) => p.series === chosen?.series);
   const fit = ols(

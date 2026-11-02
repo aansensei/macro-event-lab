@@ -98,7 +98,7 @@ export function Explorer({ entry, dataThrough, initialHour, onHourChange, reveal
   }, [entry, attempt]);
 
   const event = load.kind === "ready" ? load.event : null;
-  const bounds = useMemo(() => (event ? hourBounds(event.snapshots) : null), [event]);
+  const bounds = useMemo(() => (event?.snapshots.length ? hourBounds(event.snapshots) : null), [event]);
 
   // a new event starts at T-1h, or at the hour in the shared link when it falls inside the event
   useEffect(() => {
@@ -153,7 +153,7 @@ export function Explorer({ entry, dataThrough, initialHour, onHourChange, reveal
     </div>
   );
 
-  if (load.kind === "loading" || (event && (h === null || !bounds))) {
+  if (load.kind === "loading" || (event && event.snapshots.length > 0 && (h === null || !bounds))) {
     return (
       <div className="page-fade" aria-live="polite">
         {heading}
@@ -178,6 +178,14 @@ export function Explorer({ entry, dataThrough, initialHour, onHourChange, reveal
   }
 
   const ev = load.event;
+  if (ev.snapshots.length === 0) return <div className="page-fade">
+    {heading}
+    <section className="state-banner" role="status">
+      <h2 className="t-h3">No market snapshots</h2>
+      <p>This release has no hourly market observations in this dataset. Choose another release to explore its expectations.</p>
+    </section>
+    <StoryNext current="events" />
+  </div>;
   const hour = h as number;
   const { max, min } = bounds as { max: number; min: number };
   const snap = snapshotAt(ev.snapshots, hour);

@@ -14,7 +14,8 @@ let root: Root;
 const summary = { schema_version: 1, series: [], points: [{ id: "cpi-fixture", series: "KXCPI", title: "CPI fixture",
   surprise_sd: 2, dgs2_bp: 4, dgs10_bp: null, in_50: false, in_90: false }] } as Summary;
 const revisions = { schema_version: 1, settled_months: 24, series: [{ series: "KXPAYROLLS",
-  latest_vintage: "2026-10-02", points: [{ period: "2025-01-01", first: 10, latest: 20, settled: true }] }] } as Revisions;
+  latest_vintage: "2026-10-02", n: 1, mean_abs_revision: 10,
+  points: [{ period: "2025-01-01", first: 10, latest: 20, settled: true }] }] } as Revisions;
 
 beforeEach(() => {
   vi.clearAllMocks();
@@ -45,5 +46,35 @@ it("shows a source error and leaves a direct path to Events without made-up resu
   expect(host.querySelector('[role="alert"]')?.textContent).toContain("Summary unavailable");
   expect(host.querySelector(".overview-secondary")?.getAttribute("href")).toBe("?page=events");
   expect(host.querySelector(".event-reveal")).toBeNull();
-  expect(host.querySelector(".finding-value")).toBeNull();
+  const cards = host.querySelectorAll(".overview-findings article");
+  expect(cards[0]?.querySelector(".finding-value")).toBeNull();
+  expect(cards[1]?.querySelector(".finding-value")).toBeNull();
+  expect(cards[2]?.textContent).toContain("10 jobs");
+  expect(host.querySelector(".revision-reveal")).not.toBeNull();
+  await act(async () => host.querySelector<HTMLButtonElement>('[role="alert"] button')!.click());
+  expect(host.querySelector(".event-reveal")).not.toBeNull();
+  expect(loadSummary).toHaveBeenCalledTimes(2);
+  expect(loadRevisions).toHaveBeenCalledOnce();
+});
+
+it("keeps the market hook when revisions fail and retries only revisions", async () => {
+  vi.mocked(loadRevisions).mockRejectedValueOnce(new Error("Revisions unavailable"));
+  await act(async () => root.render(createElement(Overview)));
+  expect(host.querySelector(".event-reveal")).not.toBeNull();
+  expect(host.querySelector(".overview-revisions [role='alert']")?.textContent).toContain("Revisions unavailable");
+  await act(async () => host.querySelector<HTMLButtonElement>(".overview-revisions button")!.click());
+  expect(host.querySelector(".revision-reveal")).not.toBeNull();
+  expect(loadSummary).toHaveBeenCalledOnce();
+  expect(loadRevisions).toHaveBeenCalledTimes(2);
+});
+
+it("shows the release hook while the independent revision source is still pending", async () => {
+  let finish!: (value: Revisions) => void;
+  vi.mocked(loadRevisions).mockReturnValueOnce(new Promise((resolve) => { finish = resolve; }));
+  await act(async () => root.render(createElement(Overview)));
+  expect(host.querySelector(".event-reveal")).not.toBeNull();
+  expect(host.querySelector(".overview-revisions [role='status']")?.textContent).toBe("Loading the revision example");
+  await act(async () => finish(revisions));
+  expect(host.querySelector(".revision-reveal")).not.toBeNull();
+  expect(loadManifest).not.toHaveBeenCalled();
 });

@@ -714,3 +714,59 @@ A new sparse-data regression test failed before its fix: when the only snapshots
 The web suite now passes 172 tests and the TypeScript production build. New checks cover all nine page titles, skip behavior, page and history focus, Learn selection, control focus retention, changing motion preferences, frame cancellation, listener cleanup, settled-number fallback, replay stopping and sparse-snapshot stepping. A browser review recorded six keyboard flows and six Events focus/history flows at 375, 768 and 1280px in both themes, plus four skip-link edge checks at 280 and 1920px. The recorded states had no document-level horizontal overflow, and the browser reported no captured console errors. The preview server was reused throughout.
 
 The live preference transitions were tested through media-query events in Vitest. Changing the operating-system preference, assistive-technology announcements and physical dual-screen hinges were not emulated in this browser pass. An's reading feedback remains open. This continuation has not been committed, pushed or deployed.
+
+## 15. Recovery when a data source fails
+
+### 15.1 Committing the accessibility pass
+
+**Status: COMMITTED, PUSHED and CI VERIFIED, 2 November 2026.**
+
+An requested another commit and push, then asked to complete as much useful work as possible. The existing accessibility pass was checked again with 172 web tests and a passing TypeScript production build. Twelve explicit file paths, their full staged contents and the commit message were scanned before commit `cdd8b2c8ff9cada2fbae633c452e805e99d7c5b6`, Improve keyboard navigation and live motion preferences. An Nguyen is the sole author and committer. The commit is on origin/main and its [CI run](https://github.com/aansensei/macro-event-lab/actions/runs/41516096154) completed successfully.
+
+The continuation stays on the existing reading path. The chosen tasks improve recovery, source independence, empty states and the integrity of what a selected release displays. No extra page, model controls or new research result was added to make the task count larger. Reader engagement still needs An's response.
+
+### 15.2 Recovering without losing the whole page
+
+**Status: IMPLEMENTED and VERIFIED locally, 2 November 2026; uncommitted.**
+
+Compare, Scorecard, Revisions and Models previously exposed source failures without an in-page retry. Their loading effects also repeated similar state transitions. A shared useResource hook now handles loading, success, failure and retry for these pages and Overview. ResourceError supplies a designed Try again control, an alert label and an appropriate heading level. Before the control disappears during retry, it moves focus to the stable main region. Retrying does not change the route.
+
+The hook ignores a response or rejection from an older request after a retry, loader change or unmount. It also reports a synchronous loader failure and a non-Error rejection without creating an unhandled rejection. The Events manifest loader retains its selection-specific state, adds its own retry action and ignores a response from a previous visit. Tests reproduce an older empty manifest arriving after a later successful visit and verify that the current release remains visible.
+
+### 15.3 Independent evidence on Overview
+
+**Status: FIXED and VERIFIED locally, 2 November 2026.**
+
+Overview previously used Promise.all for summary.json and revisions.json. A failure or long wait in either source blocked the release hook, every finding and the revision example together. That linked two independent sources unnecessarily.
+
+The two files now load independently. A failed summary hides only market evidence; the jobs revision finding and revision example remain available. A failed revisions file leaves the market hook and market findings usable. Each source has its own retry. Findings distinguish a source that is loading or unavailable from an available source without a statistic. No missing source is replaced with a numerical estimate. The data scope remains summary.json and revisions.json; Overview does not request the Events manifest.
+
+Browser recovery verified both directions. Reloading the market source retained the revision content. Reloading the revisions source retained the release hook's already revealed stage. Unit tests also check that a revision request still pending does not block a completed summary.
+
+### 15.4 Empty observations and the wrong release file
+
+**Status: FIXED with regression tests, 2 November 2026.**
+
+Two tests exposed separate problems before their fixes. An event without snapshots passed through hourBounds, which returned Infinity and negative Infinity, and reached a slider and URL callback. An empty manifest returned no page content. The interface now gives explicit explanations for both cases. A release with no observations has no timeline or invented snapshot, while its heading and next story link remain available. An empty event list offers a reload action. Retrying that list keeps focus on the main content.
+
+The event loader also accepted a validly shaped file belonging to another release. That could combine one release's heading with another release's data. It now compares the parsed ID, series and event ticker with the selected manifest entry and reports the mismatched field before rendering. Regression tests cover each identity independently.
+
+### 15.5 Valid numbers still need valid domains
+
+**Status: IMPLEMENTED and VERIFIED locally, 2 November 2026.**
+
+Parser tests found that a NaN bin probability, a reversed finite bin interval, out-of-range raw or fitted survival values, negative or fractional snapshot hours and coverage greater than one were accepted. Validation now rejects those values with their field paths. Existing open-ended bins, null statistics and an empty snapshot list remain supported. A missing observation remains distinct from a malformed observation.
+
+The actual browser parsers were then run against all 171 local event files, the manifest, summary and revisions. All passed, including the manifest identity comparisons. These were validation gaps exposed by controlled inputs, not corrupt observations discovered in the existing dataset. The first local audit command used the wrong output directory, and a subsequent attempt assumed a compiler API that the installed package did not expose. The successful audit used the runtime's type-stripping support and printed only validation counts. No dependency or dataset was changed for this audit.
+
+### 15.6 Browser fault injection and limits
+
+**Status: VERIFIED locally, 2 November 2026; owner reading feedback OPEN.**
+
+The final suite passes 202 web tests and the production build. Thirty tests were added to the 172-test baseline. Browser review recorded 54 normal page states across all nine pages at 375, 768 and 1280px in both themes. It also recorded 44 source-failure states, including the final heading checks at 280 and 1920px, and six recovery actions. The recorded states had no document-level horizontal overflow. Seventy-two computed text-contrast readings for the error panels met 4.5:1. This is a bounded check of those panels, not certification of every accessibility criterion.
+
+To exercise real failures, four local static JSON files were temporarily moved to named backup paths inside the ignored data directory. This was done without changing their contents or stopping the server. Every file was restored and its SHA-256 checked against the original. Events recovered its requested release, T-24h hour and hidden-result stage. Overview retained its other source's interaction. Revisions and Models recovered through their own buttons. The last Events retry also confirmed its main content focus and absence of visible errors. Screenshots and state records remain in the ignored research folder.
+
+No preview server was listening when this session began. An initial hidden process launched inside the test environment did not survive the command. After confirming the port was unused, an independent hidden Vite process was started on localhost:8000 and kept running. No existing server was stopped. Temporary browser tabs were closed after verification; the healthy Events preview remains available.
+
+Physical dual-screen hinges, operating-system preference changes and screen-reader announcements were not emulated in this pass. Restricted data stays local, ingestion remains paused and no deployment occurred. The recovery changes after cdd8b2c remain uncommitted pending An's next commit request.

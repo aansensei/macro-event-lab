@@ -64,6 +64,12 @@ function numOrNull(o: Json, key: string, where: string): number | null {
   return v;
 }
 
+function probabilityOrNull(o: Json, key: string, where: string): number | null {
+  const value = numOrNull(o, key, where);
+  if (value !== null && (value < 0 || value > 1)) throw new DataError(`${where}.${key}: expected a probability in [0, 1]`);
+  return value;
+}
+
 function list(o: Json, key: string, where: string): unknown[] {
   const v = o[key];
   if (!Array.isArray(v)) throw new DataError(`${where}.${key}: expected a list`);
@@ -87,7 +93,8 @@ function parseBin(value: unknown, where: string): Bin {
     throw new DataError(`${where}: expected [lower, upper, probability]`);
   }
   const [lo, hi, p] = value;
-  if (!finiteOrNull(lo) || !finiteOrNull(hi) || typeof p !== "number" || p < 0 || p > 1) {
+  if (!finiteOrNull(lo) || !finiteOrNull(hi) || typeof p !== "number" || !Number.isFinite(p) || p < 0 || p > 1
+    || (lo !== null && hi !== null && lo >= hi)) {
     throw new DataError(`${where}: bounds must be numbers or null, probability in [0, 1]`);
   }
   return [lo, hi, p];
@@ -100,13 +107,18 @@ function parseSurvival(value: unknown, where: string): SurvivalPoint {
   ) {
     throw new DataError(`${where}: expected [strike, raw price, fitted]`);
   }
+  if (value[1] < 0 || value[1] > 1 || value[2] < 0 || value[2] > 1) {
+    throw new DataError(`${where}: raw and fitted probabilities must be in [0, 1]`);
+  }
   return value as SurvivalPoint;
 }
 
 function parseSnapshot(value: unknown, where: string): Snapshot {
   const o = obj(value, where);
+  const h = num(o, "h", where);
+  if (h < 0 || !Number.isInteger(h)) throw new DataError(`${where}.h: expected a nonnegative whole hour`);
   return {
-    h: num(o, "h", where),
+    h,
     ts: str(o, "ts", where),
     mean: numOrNull(o, "mean", where),
     sd: numOrNull(o, "sd", where),
@@ -249,7 +261,11 @@ export async function loadManifest(base = "data/", fetchImpl: typeof fetch = fet
 export async function loadEvent(
   entry: ManifestEvent, base = "data/", fetchImpl: typeof fetch = fetch,
 ) {
-  return parseEvent(await fetchJson(`${base}${entry.file}`, fetchImpl));
+  const event = parseEvent(await fetchJson(`${base}${entry.file}`, fetchImpl));
+  for (const key of ["id", "series", "event_ticker"] as const) {
+    if (event[key] !== entry[key]) throw new DataError(`event.${key}: does not match the selected release`);
+  }
+  return event;
 }
 
 function parseSeriesSummary(value: unknown, where: string): SeriesSummary {
@@ -259,8 +275,8 @@ function parseSeriesSummary(value: unknown, where: string): SeriesSummary {
     label: str(o, "label", where),
     n: num(o, "n", where),
     yield_n: numOrNull(o, "yield_n", where),
-    hit_50: numOrNull(o, "hit_50", where),
-    hit_90: numOrNull(o, "hit_90", where),
+    hit_50: probabilityOrNull(o, "hit_50", where),
+    hit_90: probabilityOrNull(o, "hit_90", where),
     dgs2_bp_per_sd: numOrNull(o, "dgs2_bp_per_sd", where),
     dgs10_bp_per_sd: numOrNull(o, "dgs10_bp_per_sd", where),
     dgs2_corr: numOrNull(o, "dgs2_corr", where),

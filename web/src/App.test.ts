@@ -233,6 +233,40 @@ it("shows the manifest error instead of mounting the explorer", async () => {
   expect(host.querySelector("[data-event]")).toBeNull();
 });
 
+it("retries a failed manifest while keeping a linked event, hour and reveal stage", async () => {
+  vi.mocked(loadManifest).mockRejectedValueOnce(new Error("Manifest unavailable"));
+  await render("?event=old-release&h=48&reveal=0");
+  await act(async () => host.querySelector<HTMLButtonElement>('[role="alert"] button')!.click());
+  expect(host.querySelector("[data-event]")?.getAttribute("data-event")).toBe("old-release");
+  expect(host.querySelector("[data-event]")?.getAttribute("data-latched-hour")).toBe("48");
+  expect(window.location.search).toBe("?event=old-release&h=48&reveal=0");
+  expect(loadManifest).toHaveBeenCalledTimes(2);
+});
+
+it("explains an empty manifest and lets the reader reload it", async () => {
+  vi.mocked(loadManifest).mockResolvedValueOnce({ ...manifest, events: [] });
+  await render("?page=events");
+  expect(host.querySelector("h1")?.textContent).toBe("No releases in this dataset");
+  const reload = host.querySelector<HTMLButtonElement>("main button")!;
+  reload.focus();
+  await act(async () => reload.click());
+  expect(host.querySelector("[data-event]")).not.toBeNull();
+  expect(document.activeElement).toBe(host.querySelector("main"));
+  expect(loadManifest).toHaveBeenCalledTimes(2);
+});
+
+it("ignores a manifest response from an earlier visit to Events", async () => {
+  let finish!: (value: Manifest) => void;
+  vi.mocked(loadManifest).mockReturnValueOnce(new Promise((resolve) => { finish = resolve; }));
+  await render("?page=events");
+  await navigate("About");
+  await navigate("Events");
+  expect(host.querySelector("[data-event]")).not.toBeNull();
+  await act(async () => finish({ ...manifest, events: [] }));
+  expect(host.querySelector("[data-event]")).not.toBeNull();
+  expect(host.textContent).not.toContain("No releases in this dataset");
+});
+
 it("falls back to a scored event when a linked identifier is not in the manifest", async () => {
   await render("?event=unknown-release&h=1");
   expect(host.querySelector("[data-event]")?.getAttribute("data-event")).toBe("scored-release");

@@ -32,6 +32,24 @@ const event: EventFile = {
   snapshots: [snapshot, { ...snapshot, h: 1, ts: "2025-01-15T12:00:00Z" }],
 };
 
+it("explains an event without snapshots without writing a nonfinite hour or drawing a slider", async () => {
+  const emptyEntry = { ...entry, id: "empty-snapshot-fixture" };
+  vi.mocked(loadEvent).mockResolvedValue({ ...event, id: emptyEntry.id, snapshots: [] });
+  const host = document.createElement("div"); document.body.append(host);
+  const root = createRoot(host);
+  const onHourChange = vi.fn();
+  try {
+    await act(async () => root.render(createElement(Explorer, {
+      entry: emptyEntry, dataThrough: "2025-01-15", initialHour: 24, onHourChange,
+    })));
+    expect(host.textContent).toContain("No market snapshots");
+    expect(host.querySelector('input[type="range"]')).toBeNull();
+    expect(host.querySelector("svg.chart-svg")).toBeNull();
+    expect(onHourChange).not.toHaveBeenCalled();
+    expect(host.querySelector("h1")?.textContent).toBe(entry.title);
+  } finally { await act(async () => root.unmount()); host.remove(); }
+});
+
 it("keeps a linked hour when a cached event remounts under StrictMode", async () => {
   vi.mocked(loadEvent).mockResolvedValue(event);
   const onHourChange = vi.fn();

@@ -1,5 +1,6 @@
-import { useEffect, useState } from "react";
-import { loadNowcast, nowcastErrors, type Nowcast } from "../data/nowcast";
+import { loadNowcast, nowcastErrors } from "../data/nowcast";
+import { useResource } from "../hooks/useResource";
+import { ResourceError } from "../components/ResourceError";
 import { ExternalLink } from "../components/ExternalLink";
 import { NowcastChart } from "../components/NowcastChart";
 
@@ -8,22 +9,16 @@ const LABELS: Record<string, string> = { INDPRO: "Industrial production", PCEC96
   UNRATE: "Unemployment rate", GDP_PREV: "Previous GDP growth" };
 
 export function Models() {
-  const [data, setData] = useState<Nowcast | null>(null);
-  const [error, setError] = useState("");
-  useEffect(() => {
-    let active = true;
-    loadNowcast().then((value) => { if (active) setData(value); })
-      .catch((e: Error) => { if (active) setError(e.message); });
-    return () => { active = false; };
-  }, []);
+  const { state, retry } = useResource(loadNowcast);
+  const data = state.kind === "ready" ? state.data : null;
   const errors = data && nowcastErrors(data.points);
   return <div className="models-page page-fade">
     <p className="section-kicker">Supplementary research</p><h1 className="t-h1">Reading GDP before release day</h1>
     <p className="t-label muted">A separate ALFRED study. The main market-expectations story starts on <a href="?page=events">Events</a>.</p>
     <p className="about-lead">A simple model uses the economic numbers already published to estimate the first GDP release.</p>
     <p className="muted">Data source: <ExternalLink href="https://alfred.stlouisfed.org/">ALFRED, Federal Reserve Bank of St. Louis</ExternalLink>. This page uses official economic data only.</p>
-    {error && <p role="alert">The nowcast could not be loaded: {error}</p>}
-    {!data && !error && <p role="status">Loading the GDP model</p>}
+    {state.kind === "error" && <ResourceError title="The nowcast could not be loaded" message={state.message} onRetry={retry} />}
+    {state.kind === "loading" && <p role="status">Loading the GDP model</p>}
     {data && <>
       <section className="about-section" aria-labelledby="model-performance">
         <h2 className="t-h3" id="model-performance">Forecast versus first print</h2>
