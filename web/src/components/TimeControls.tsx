@@ -18,15 +18,16 @@ interface Props {
   playing: boolean;
   onHour: (h: number) => void;
   onPlay: () => void;
+  reducedMotion?: boolean;
 }
 
 // the slider runs left to right toward the close, so its value is minus the hours before close
-export function TimeControls({ h, ts, max, min, playing, onHour, onPlay }: Props) {
+export function TimeControls({ h, ts, max, min, playing, onHour, onPlay, reducedMotion = false }: Props) {
   const when = ts ? formatEt(ts) : "";
   return (
     <div className="time-control-bar" role="group" aria-label="Point-in-time controls">
-      <button type="button" className="play-btn" onClick={onPlay} aria-label={playing ? "Pause" : "Play hour by hour"}>
-        {playing ? "Pause" : "Play"}
+      <button type="button" className="play-btn" onClick={onPlay} aria-label={reducedMotion ? "Step forward in time" : playing ? "Pause" : "Play hour by hour"}>
+        {reducedMotion ? "Step" : playing ? "Pause" : "Play"}
       </button>
       <div className="slider-wrap">
         <div className="slider-top-labels">

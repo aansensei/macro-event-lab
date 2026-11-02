@@ -1,20 +1,18 @@
 import { useEffect, useRef, useState } from "react";
 
 import { easeOutCubic } from "../lib/tween";
+import { useReducedMotion } from "./useReducedMotion";
 
 const DURATION_MS = 700;
 
-function reducedMotion(): boolean {
-  return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-}
-
 // counts up from 0 to `target` when first shown, and glides from the shown value when the target changes
 export function useCountUp(target: number): number {
-  const [shown, setShown] = useState(() => (reducedMotion() ? target : 0));
+  const reduced = useReducedMotion();
+  const [shown, setShown] = useState(() => (reduced ? target : 0));
   const shownRef = useRef(shown);
 
   useEffect(() => {
-    if (reducedMotion()) {
+    if (reduced || shownRef.current === target) {
       shownRef.current = target;
       setShown(target);
       return;
@@ -39,7 +37,7 @@ export function useCountUp(target: number): number {
       cancelAnimationFrame(frame);
       window.clearTimeout(settle);
     };
-  }, [target]);
+  }, [target, reduced]);
 
   return shown;
 }

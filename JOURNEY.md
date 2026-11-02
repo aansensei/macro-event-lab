@@ -688,3 +688,29 @@ The reading path was clicked from Events through Compare, Scorecard and Revision
 The browser could not reach the previous preview server. The port was confirmed unused before a hidden, independent Vite process was started. No existing server was stopped. The server is left running for An to review the result.
 
 Physical dual-screen hinges and a changed operating-system motion preference were not emulated. Existing reduced-motion handling and both theme palettes remain intact. The larger batch is technically checked, but An's willingness to read the full story is still an open product judgement. No commit, push or deployment was performed.
+
+### 14.26 Publishing the reading pass to source control
+
+**Status: COMMITTED, PUSHED and CI VERIFIED, 30 October 2026.**
+
+An requested a commit and push, followed by continued work. Commit `6210ed88a68c23ba8fbe877e7219abe33144974c` records the Overview release hook, Events reveal sequence, navigation restoration, story transitions and interpretation corrections. It was pushed to origin/main with An Nguyen as the sole author and committer. The 44 explicit staged paths and full staged contents were scanned before the commit. Private data, personal planning, research notes and local configuration were excluded.
+
+The web baseline passed 155 tests and the production build. Ruff passed. The pipeline's first run could not create fixtures in the environment's default temporary directory. Repeating the suite with a fresh temporary directory under ignored data/test-runs passed all 194 tests without changing pipeline code. This repeats an environment limitation already noted earlier in this journal.
+
+The [CI run for this commit](https://github.com/aansensei/macro-event-lab/actions/runs/41108894143) completed successfully: both test and web jobs passed. A source push is not a website deployment. Restricted data remains local and ingestion remains paused.
+
+### 14.27 Continuing with keyboard navigation and live motion preferences
+
+**Status: IMPLEMENTED and VERIFIED locally, 30 October 2026; uncommitted.**
+
+The continuation addresses practical barriers in the existing reading path rather than adding a page or model. Previously, the shared menu had no keyboard shortcut past it, client-side navigation left focus on its trigger, and every browser tab had the same generic title. A first-focus Skip to content link now targets a named main region. Actual page navigation and browser history move focus there. Slider and reveal actions retain control focus. Titles identify each page or the selected release without revealing its hidden result. Choosing a Learn page focuses its destination; Escape still returns to Learn.
+
+The design follows the [WAI bypass-block guidance](https://w3c.github.io/wcag/understanding/bypass-blocks) and retains the existing theme tokens. The skip link appears on keyboard focus, stays within the viewport and uses measured text contrast of 5.93:1 in light mode and 10.48:1 in dark mode. These are calculations from the observed rendered colors, not a claim of a complete accessibility certification.
+
+Motion review found that replay and number animation checked the preference when starting, but did not respond to a change during playback. A small shared hook now listens for preference changes and removes its listener on unmount. Turning reduced motion on cancels replay and settles numbers to their actual target. Turning it off does not resume a stopped replay or replay a settled number. Timeline playback becomes a manual Step action, with a short explanation in the expandable guide. Existing CSS motion limits remain in place, consistent with [WAI's reduced-motion technique](https://www.w3.org/WAI/WCAG22/Techniques/css/C39.html).
+
+A new sparse-data regression test failed before its fix: when the only snapshots were T-24h and T-1h, a manual step requested an intermediate hour, the as-of lookup returned T-24h again, and the cursor did not move. Step now advances to the next recorded snapshot when the normal step would remain at the same snapshot or move backward. At the final snapshot, the next manual action returns to the start. This does not interpolate or invent an observation.
+
+The web suite now passes 172 tests and the TypeScript production build. New checks cover all nine page titles, skip behavior, page and history focus, Learn selection, control focus retention, changing motion preferences, frame cancellation, listener cleanup, settled-number fallback, replay stopping and sparse-snapshot stepping. A browser review recorded six keyboard flows and six Events focus/history flows at 375, 768 and 1280px in both themes, plus four skip-link edge checks at 280 and 1920px. The recorded states had no document-level horizontal overflow, and the browser reported no captured console errors. The preview server was reused throughout.
+
+The live preference transitions were tested through media-query events in Vitest. Changing the operating-system preference, assistive-technology announcements and physical dual-screen hinges were not emulated in this browser pass. An's reading feedback remains open. This continuation has not been committed, pushed or deployed.

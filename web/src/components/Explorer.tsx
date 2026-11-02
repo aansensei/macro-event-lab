@@ -34,6 +34,7 @@ import { TimeControls } from "./TimeControls";
 import { StoryNext } from "./Story";
 import { OutcomeControls } from "./OutcomeControls";
 import type { RevealStage } from "../lib/url";
+import { useReducedMotion } from "../hooks/useReducedMotion";
 
 const PLAY_STEP_HOURS = 4;
 const PLAY_TICK_MS = 250;
@@ -56,11 +57,8 @@ interface Props {
 
 const cache = new Map<string, EventFile>();
 
-function prefersReducedMotion(): boolean {
-  return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-}
-
 export function Explorer({ entry, dataThrough, initialHour, onHourChange, revealStage = 2, onRevealChange }: Props) {
+  const reduced = useReducedMotion();
   const [load, setLoad] = useState<Load>(() => {
     const cached = cache.get(entry.id);
     return cached ? { kind: "ready", event: cached } : { kind: "loading" };
@@ -114,7 +112,8 @@ export function Explorer({ entry, dataThrough, initialHour, onHourChange, reveal
   }, [h, onHourChange]);
 
   useEffect(() => {
-    if (!playing || !bounds) return;
+    if (reduced) setPlaying(false);
+    if (!playing || !bounds || reduced) return;
     const timer = window.setInterval(() => {
       setH((cur) => {
         const next = Math.max(bounds.min, (cur ?? bounds.max) - PLAY_STEP_HOURS);
@@ -123,7 +122,7 @@ export function Explorer({ entry, dataThrough, initialHour, onHourChange, reveal
       });
     }, PLAY_TICK_MS);
     return () => window.clearInterval(timer);
-  }, [playing, bounds]);
+  }, [playing, bounds, reduced]);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -218,9 +217,13 @@ export function Explorer({ entry, dataThrough, initialHour, onHourChange, reveal
   }
 
   function togglePlay() {
-    if (prefersReducedMotion()) {
+    if (reduced) {
       setPlaying(false);
-      setHour(hour <= min ? max : Math.max(min, hour - REDUCED_STEP_HOURS));
+      const next = hour <= min ? max : Math.max(min, hour - REDUCED_STEP_HOURS);
+      const found = snapshotAt(ev.snapshots, next);
+      if (hour > min && found && found.h >= hour) {
+        setH(ev.snapshots.filter((s) => s.h < hour).reduce((best, s) => Math.max(best, s.h), min));
+      } else setHour(next);
       return;
     }
     if (!playing && hour <= min) setH(max);
@@ -431,6 +434,7 @@ export function Explorer({ entry, dataThrough, initialHour, onHourChange, reveal
           setHour(next);
         }}
         onPlay={togglePlay}
+        reducedMotion={reduced}
       />
 
       <figure className="chart-figure" aria-labelledby="threshold-chart-title">
