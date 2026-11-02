@@ -23,6 +23,13 @@ it("does not invent results when source series are missing", () => {
     .toEqual(["Not available", "Not available", "Not available"]);
 });
 
+it("derives findings independently when only one source is available", () => {
+  const summary = { series: [{ series: "KXCPI", hit_90: 0.8, n: 5, scores: null }] } as Summary;
+  const revisions = { settled_months: 24, series: [{ series: "KXPAYROLLS", n: 4, mean_abs_revision: 50 }] } as Revisions;
+  expect(overviewFindings(summary, null).map(f => f.value)).toEqual(["80%", "Not available", "Not available"]);
+  expect(overviewFindings(null, revisions).map(f => f.value)).toEqual(["Not available", "Not available", "50 jobs"]);
+});
+
 it("keeps About and Overview outside Learn, with every page reachable once", () => {
   expect(PRIMARY.map(([p]) => p)).toEqual(["overview", "events", "compare", "scorecard", "revisions", "about"]);
   expect(LEARN.map(([p]) => p)).toEqual(["models", "method", "glossary"]);

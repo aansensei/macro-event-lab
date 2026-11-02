@@ -20,9 +20,9 @@ export function revisionHook(revisions: Revisions) {
   return { period: point.period, first: point.first, latest: point.latest, vintage: jobs.latest_vintage };
 }
 
-export function overviewFindings(summary: Summary, revisions: Revisions) {
-  const cpi = summary.series.find((s) => s.series === "KXCPI");
-  const jobs = revisions.series.find((s) => s.series === "KXPAYROLLS");
+export function overviewFindings(summary: Summary | null, revisions: Revisions | null) {
+  const cpi = summary?.series.find((s) => s.series === "KXCPI");
+  const jobs = revisions?.series.find((s) => s.series === "KXPAYROLLS");
   return [
     { title: "How often the range held", value: cpi?.hit_90 == null ? "Not available" : `${Math.round(cpi.hit_90 * 100)}%`,
       detail: cpi?.hit_90 == null ? "CPI coverage is not available in this dataset."
@@ -33,6 +33,6 @@ export function overviewFindings(summary: Summary, revisions: Revisions) {
     { title: "The answer can change", value: jobs?.mean_abs_revision == null ? "Not available"
         : `${Math.round(jobs.mean_abs_revision).toLocaleString("en-US")} jobs`,
       detail: jobs?.mean_abs_revision == null ? "Jobs revision size is not available in this dataset."
-        : `Average absolute revision across ${jobs.n} jobs reports at least ${revisions.settled_months} months old. Source: ALFRED.` },
+        : `Average absolute revision across ${jobs.n} jobs reports at least ${revisions!.settled_months} months old. Source: ALFRED.` },
   ];
 }

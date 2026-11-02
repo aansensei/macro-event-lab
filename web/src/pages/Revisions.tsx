@@ -1,7 +1,9 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 import { loadRevisions } from "../data/load";
-import type { Revisions as RevisionData, RevisionSeries } from "../data/types";
+import type { RevisionSeries } from "../data/types";
+import { useResource } from "../hooks/useResource";
+import { ResourceError } from "../components/ResourceError";
 import { formatIsoDate, pct } from "../lib/format";
 import { periodLabel, printValue, revisionFinding, revisionSize, signedSize } from "../lib/revisionWords";
 import { CountUp } from "../components/CountUp";
@@ -9,8 +11,6 @@ import { ExternalLink } from "../components/ExternalLink";
 import { RevisionChart } from "../components/RevisionChart";
 import { Term } from "../components/Term";
 import { StoryNext, StoryPath } from "../components/Story";
-
-type Load = { kind: "loading" } | { kind: "error"; message: string } | { kind: "ready"; data: RevisionData };
 
 // jobs open first: their revisions are the largest and the easiest to see
 const DEFAULT_SERIES = "KXPAYROLLS";
@@ -108,23 +108,12 @@ function SeriesDetail({ s, settledMonths }: { s: RevisionSeries; settledMonths: 
 
 // how much official numbers changed after release day, from ALFRED vintages alone
 export function Revisions() {
-  const [load, setLoad] = useState<Load>({ kind: "loading" });
+  const { state: load, retry } = useResource(loadRevisions);
   const [selected, setSelected] = useState(DEFAULT_SERIES);
-
-  useEffect(() => {
-    loadRevisions()
-      .then((data) => setLoad({ kind: "ready", data }))
-      .catch((err: Error) => setLoad({ kind: "error", message: err.message }));
-  }, []);
 
   if (load.kind === "loading") return <p className="t-label page-fade">Loading revisions</p>;
   if (load.kind === "error") {
-    return (
-      <div className="state-banner" role="alert">
-        <h1 className="t-h3">Revisions could not be loaded</h1>
-        <p>{load.message}</p>
-      </div>
-    );
+    return <ResourceError heading="h1" title="Revisions could not be loaded" message={load.message} onRetry={retry} />;
   }
 
   const { series, settled_months: settledMonths } = load.data;

@@ -1,15 +1,13 @@
-import { useEffect, useState } from "react";
-
 import { loadSummary } from "../data/load";
-import type { SeriesSummary, Summary } from "../data/types";
+import type { SeriesSummary } from "../data/types";
+import { useResource } from "../hooks/useResource";
+import { ResourceError } from "../components/ResourceError";
 import { missSize, scoreFinding } from "../lib/scoreWords";
 import { SkillBadge } from "../components/SkillBadge";
 import { CountUp } from "../components/CountUp";
 import { PitHistogram } from "../components/PitHistogram";
 import { Term } from "../components/Term";
 import { StoryNext, StoryPath } from "../components/Story";
-
-type Load = { kind: "loading" } | { kind: "error"; message: string } | { kind: "ready"; summary: Summary };
 
 function SeriesCard({ s }: { s: SeriesSummary }) {
   const sc = s.scores;
@@ -50,25 +48,14 @@ function SeriesCard({ s }: { s: SeriesSummary }) {
 
 // how good the market's forecasts were, scored the way forecasters are scored
 export function Scorecard() {
-  const [load, setLoad] = useState<Load>({ kind: "loading" });
-
-  useEffect(() => {
-    loadSummary()
-      .then((summary) => setLoad({ kind: "ready", summary }))
-      .catch((err: Error) => setLoad({ kind: "error", message: err.message }));
-  }, []);
+  const { state: load, retry } = useResource(loadSummary);
 
   if (load.kind === "loading") return <p className="t-label page-fade">Loading the scorecard</p>;
   if (load.kind === "error") {
-    return (
-      <div className="state-banner" role="alert">
-        <h1 className="t-h3">The scorecard could not be loaded</h1>
-        <p>{load.message}</p>
-      </div>
-    );
+    return <ResourceError heading="h1" title="The scorecard could not be loaded" message={load.message} onRetry={retry} />;
   }
 
-  const scored = load.summary.series.filter((s) => s.scores);
+  const scored = load.data.series.filter((s) => s.scores);
   return (
     <div className="compare-page page-fade">
       <StoryPath current="scorecard" />

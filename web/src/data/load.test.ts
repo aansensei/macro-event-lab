@@ -78,6 +78,24 @@ describe("parseManifest", () => {
 });
 
 describe("parseEvent", () => {
+  it.each([NaN, Infinity, -0.1, 1.1])("rejects an invalid bin probability %s", (probability) => {
+    const snap = { ...event.snapshots[0], bins: [[null, 0.5, probability]] };
+    expect(() => parseEvent({ ...event, snapshots: [snap] })).toThrow("event.snapshots[0].bins[0]");
+  });
+
+  it("rejects a reversed finite bin interval", () => {
+    const snap = { ...event.snapshots[0], bins: [[0.6, 0.5, 1]] };
+    expect(() => parseEvent({ ...event, snapshots: [snap] })).toThrow("event.snapshots[0].bins[0]");
+  });
+
+  it.each([[0.5, -0.1, 0.2], [0.5, 0.2, 1.1]])("rejects survival values outside probability bounds", (...survival) => {
+    const snap = { ...event.snapshots[0], survival: [survival] };
+    expect(() => parseEvent({ ...event, snapshots: [snap] })).toThrow("event.snapshots[0].survival[0]");
+  });
+
+  it.each([-1, 0.5])("rejects an invalid snapshot hour %s", (h) => {
+    expect(() => parseEvent({ ...event, snapshots: [{ ...event.snapshots[0], h }] })).toThrow("event.snapshots[0].h");
+  });
   it("reads bins with open ends and the survival curve", () => {
     const e = parseEvent(event);
     expect(e.snapshots[0]?.bins[0]).toEqual([null, 0.5, 0.3]);
@@ -128,6 +146,11 @@ describe("parseEvent", () => {
 });
 
 describe("loading over fetch", () => {
+  it.each(["id", "series", "event_ticker"])("rejects a file whose %s belongs to another event", async (key) => {
+    const wrong = { ...event, [key]: "OTHER" };
+    const fetcher = fakeFetch({ "data/events/kxcpi-26sep.json": wrong });
+    await expect(loadEvent(parseManifest(manifest).events[0]!, "data/", fetcher)).rejects.toThrow(`event.${key}`);
+  });
   it("loads the manifest and then an event file", async () => {
     const fetcher = fakeFetch({
       "data/manifest.json": manifest,
@@ -163,6 +186,11 @@ describe("parseSummary", () => {
     const s = parseSummary(summary);
     expect(s.series[0]?.hit_90).toBe(0.88);
     expect(s.points[0]?.id).toBe("kxcpi-26sep");
+  });
+
+  it.each(["hit_50", "hit_90"])("rejects %s outside probability bounds", (key) => {
+    expect(() => parseSummary({ ...summary, series: [{ ...summary.series[0], [key]: 1.1 }] }))
+      .toThrow(`summary.series[0].${key}`);
   });
 
   it("reads forecast scores and treats missing ones as none", () => {

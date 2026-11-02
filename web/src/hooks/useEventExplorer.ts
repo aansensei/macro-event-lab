@@ -20,9 +20,11 @@ export function useEventExplorer(route: UrlState) {
 
   useEffect(() => {
     if (route.page !== "events" || state.kind !== "loading") return;
+    let active = true;
     loadManifest()
-      .then((manifest) => setState({ kind: "ready", manifest }))
-      .catch((err: Error) => setState({ kind: "error", message: err.message }));
+      .then((manifest) => { if (active) setState({ kind: "ready", manifest }); })
+      .catch((err: Error) => { if (active) setState({ kind: "error", message: err.message }); });
+    return () => { active = false; };
   }, [route.page, state.kind]);
 
   const events = useMemo(
@@ -59,11 +61,15 @@ export function useEventExplorer(route: UrlState) {
     setSelectedId(id);
   }
 
+  function onRetry() {
+    setState({ kind: "loading" });
+  }
+
   return {
     state, events, filter,
     initialHour: selectionRoute === route ? null : route.h,
     entry: events.find((event) => event.id === selectedId),
     dataThrough: state.kind === "ready" ? state.manifest.data_through : null,
-    onFilter: setFilter, onSelect, onHourChange, revealStage, onRevealChange,
+    onFilter: setFilter, onSelect, onHourChange, revealStage, onRevealChange, onRetry,
   };
 }

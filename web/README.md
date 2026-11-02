@@ -29,6 +29,7 @@ npm run dev
 - `src/App.tsx`: composes the shared header, active page and footer.
 - `src/pages/`: Overview, Events, Compare, Scorecard, Revisions, Models, Method, Glossary and About, each in its own file.
 - Overview reads only `summary.json` and `revisions.json`. Its release preview selects the largest absolute surprise in each supported series with an observed 2-year yield change, reveals surprise and daily yields in sequence, and links to the full Events view. Selection and source notes identify these as extreme examples; the SD axis is a standardized distance, not a probability distribution.
+- Those two sources load independently. A missing summary leaves revision evidence usable; a missing revisions file leaves the release hook usable. Each source can be retried without resetting the other interaction.
 - `src/components/`: reusable controls, charts, reading blocks and shared layout. Explorer is the event detail component composed by the Events page.
 - `src/hooks/`: browser navigation, persistent Events selection and loading state, chart measurement and animation hooks. Keeping Events state above the page preserves the selected release and filter across navigation.
 - The first keyboard link skips repeated navigation. Page navigation and browser history focus the named main content region; changing an hour or revealing a result keeps focus on the control. Browser titles identify the page or selected release.
@@ -38,6 +39,8 @@ npm run dev
 - `src/styles/pages/`: styles for individual pages. Shared base, layout, navigation, reading, charts, footer, story and motion rules live in the other `src/styles/` files.
 - `src/data/types.ts`: shapes of the JSON files, matching `pipeline/src/macro_event_lab/web_export.py`.
 - `src/data/load.ts`: fetches and validates the JSON; a wrong or outdated file fails with the name of the bad field.
+- Event files must match the selected manifest entry's ID, series and event ticker. Validation also rejects invalid bin bounds, nonfinite or out-of-range probabilities, invalid snapshot hours and out-of-range coverage. Empty observation lists remain valid and show an explicit empty state.
+- `useResource` handles loading, retry and stale responses for Overview, Compare, Scorecard, Revisions and Models. `ResourceError` preserves a meaningful heading and focuses the main content before its retry control disappears. Events also retries its manifest and explains an empty event list.
 - `src/lib/`: formatting, point-in-time snapshot lookup, URL state, the plain words reading of each event and the glossary, all unit tested.
 - Tests live next to the code they check. `src/App.test.ts` exercises routing, history restoration, Events state retention and loading failures with the chart rendering isolated.
 - `summary.json` (next to `manifest.json`): per series calibration and yield response, and one point per scored event, for the Compare page.
