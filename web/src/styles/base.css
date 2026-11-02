@@ -37,6 +37,23 @@ html, body {
 a { color: var(--accent); text-decoration: none; }
 a:hover { text-decoration: underline; }
 
+.skip-link {
+  position: fixed;
+  top: 8px;
+  left: 8px;
+  z-index: 100;
+  padding: 10px 16px;
+  max-width: calc(100vw - 16px);
+  background: var(--bg);
+  color: var(--accent);
+  border: 1px solid var(--border-control);
+  border-radius: 4px;
+  transform: translateY(calc(-100% - 12px));
+  user-select: none;
+}
+.skip-link:focus { transform: none; }
+.main-container { scroll-margin-top: 130px; }
+
 button, input, select { font-family: inherit; font-size: inherit; color: inherit; }
 
 /* interface chrome never gets text-selected or flashes on tap; reading text (plain words, method, glossary) stays selectable */

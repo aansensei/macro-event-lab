@@ -17,6 +17,7 @@ export function SiteGuide() {
     </li>)}</ol>
     <details className="guide-tools"><summary>A few useful controls</summary>
       <div><p><strong>Inspect a chart.</strong> Hover or tap a bar for exact odds. Press Escape to clear a pinned value. The outcome and threshold charts include tables and reading notes.</p>
+        <p><strong>Reduce motion.</strong> With reduced motion enabled, Step advances the timeline once instead of starting a replay.</p>
         <p><strong>Look up a term.</strong> Dotted terms show a short meaning on hover or focus and link to the <a href="?page=glossary">Glossary</a>.</p>
         <p><strong>Share a moment.</strong> On Events, the address includes the release and selected hour. Copy it to share the same view.</p></div>
     </details>

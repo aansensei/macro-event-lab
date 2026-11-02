@@ -31,6 +31,8 @@ npm run dev
 - Overview reads only `summary.json` and `revisions.json`. Its release preview selects the largest absolute surprise in each supported series with an observed 2-year yield change, reveals surprise and daily yields in sequence, and links to the full Events view. Selection and source notes identify these as extreme examples; the SD axis is a standardized distance, not a probability distribution.
 - `src/components/`: reusable controls, charts, reading blocks and shared layout. Explorer is the event detail component composed by the Events page.
 - `src/hooks/`: browser navigation, persistent Events selection and loading state, chart measurement and animation hooks. Keeping Events state above the page preserves the selected release and filter across navigation.
+- The first keyboard link skips repeated navigation. Page navigation and browser history focus the named main content region; changing an hour or revealing a result keeps focus on the control. Browser titles identify the page or selected release.
+- `useReducedMotion` follows preference changes while the site is open. Enabling it stops an active replay and settles animated numbers. The timeline then offers a manual Step action, including across missing snapshots. Disabling it does not restart a replay.
 - `src/styles.css`: ordered CSS imports only. Keep import order stable because later rules can override earlier rules.
 - `src/styles/tokens.css`: the light and dark theme variables.
 - `src/styles/pages/`: styles for individual pages. Shared base, layout, navigation, reading, charts, footer, story and motion rules live in the other `src/styles/` files.

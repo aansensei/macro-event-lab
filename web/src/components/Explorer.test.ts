@@ -94,3 +94,53 @@ it("hides outcomes throughout the detail, including SVG markers and open data ta
     expect(host.querySelector<HTMLInputElement>('input[type="range"]')?.value).toBe("-24");
   } finally { await act(async () => root.unmount()); host.remove(); }
 });
+
+it("stops a running replay when reduced motion changes and waits for a new play action", async () => {
+  vi.useFakeTimers();
+  const media = Object.assign(new EventTarget(), { matches: false });
+  vi.stubGlobal("matchMedia", vi.fn(() => media));
+  vi.mocked(loadEvent).mockResolvedValue(event);
+  const host = document.createElement("div");
+  document.body.append(host);
+  const root = createRoot(host);
+  try {
+    await act(async () => root.render(createElement(Explorer, {
+      entry, dataThrough: "2025-01-15", initialHour: 24, onHourChange: vi.fn(),
+    })));
+    await act(async () => host.querySelector<HTMLButtonElement>('[aria-label="Play hour by hour"]')!.click());
+    await act(async () => vi.advanceTimersByTime(250));
+    expect(host.querySelector<HTMLInputElement>('input[type="range"]')?.value).toBe("-20");
+    await act(async () => { media.matches = true; media.dispatchEvent(new Event("change")); });
+    expect(host.querySelector('[aria-label="Step forward in time"]')?.textContent).toBe("Step");
+    await act(async () => vi.advanceTimersByTime(1000));
+    expect(host.querySelector<HTMLInputElement>('input[type="range"]')?.value).toBe("-20");
+    await act(async () => { media.matches = false; media.dispatchEvent(new Event("change")); });
+    expect(host.querySelector('[aria-label="Play hour by hour"]')).not.toBeNull();
+    await act(async () => vi.advanceTimersByTime(1000));
+    expect(host.querySelector<HTMLInputElement>('input[type="range"]')?.value).toBe("-20");
+  } finally {
+    await act(async () => root.unmount()); host.remove(); vi.unstubAllGlobals(); vi.useRealTimers();
+  }
+});
+
+it("advances to a recorded snapshot with reduced motion even across a long data gap", async () => {
+  vi.useFakeTimers();
+  vi.stubGlobal("matchMedia", vi.fn(() => Object.assign(new EventTarget(), { matches: true })));
+  vi.mocked(loadEvent).mockResolvedValue(event);
+  const host = document.createElement("div");
+  document.body.append(host);
+  const root = createRoot(host);
+  try {
+    await act(async () => root.render(createElement(Explorer, {
+      entry, dataThrough: "2025-01-15", initialHour: 24, onHourChange: vi.fn(),
+    })));
+    await act(async () => host.querySelector<HTMLButtonElement>('[aria-label="Step forward in time"]')!.click());
+    expect(host.querySelector<HTMLInputElement>('input[type="range"]')?.value).toBe("-1");
+    await act(async () => vi.advanceTimersByTime(1000));
+    expect(host.querySelector<HTMLInputElement>('input[type="range"]')?.value).toBe("-1");
+    await act(async () => host.querySelector<HTMLButtonElement>('[aria-label="Step forward in time"]')!.click());
+    expect(host.querySelector<HTMLInputElement>('input[type="range"]')?.value).toBe("-24");
+  } finally {
+    await act(async () => root.unmount()); host.remove(); vi.unstubAllGlobals(); vi.useRealTimers();
+  }
+});

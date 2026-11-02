@@ -78,6 +78,54 @@ it("opens Overview without requesting an Events manifest", async () => {
   expect(loadManifest).not.toHaveBeenCalled();
 });
 
+it.each(["overview", "events", "compare", "scorecard", "revisions", "models", "method", "glossary", "about"])(
+  "sets a descriptive browser title for %s", async (page) => {
+    await render(`?page=${page}`);
+    const label = page === "events" ? scored.title : page[0]!.toUpperCase() + page.slice(1);
+    expect(document.title).toBe(`${label} | Macro Event Lab`);
+  },
+);
+
+it("offers the first keyboard link to skip repeated navigation without changing the route", async () => {
+  await render("?page=about");
+  const skip = host.querySelector<HTMLAnchorElement>("a")!;
+  expect(skip.textContent).toBe("Skip to content");
+  expect(skip.getAttribute("href")).toBe("#app-main");
+  const search = window.location.search;
+  await act(async () => skip.click());
+  expect(document.activeElement).toBe(host.querySelector("main"));
+  expect(window.location.search).toBe(search);
+});
+
+it("moves focus on navigation and history, while keeping cursor controls focused", async () => {
+  await render("?event=old-release&h=48&reveal=0");
+  expect(document.title).toBe("Old release | Macro Event Lab");
+  const cursor = host.querySelector<HTMLButtonElement>("[data-event] button")!;
+  cursor.focus();
+  await act(async () => cursor.click());
+  expect(document.activeElement).toBe(cursor);
+  await navigate("About");
+  expect(document.activeElement).toBe(host.querySelector("main"));
+  expect(document.title).toBe("About | Macro Event Lab");
+  await act(async () => {
+    window.history.pushState(null, "", "/?event=old-release&h=24&reveal=0");
+    window.dispatchEvent(new PopStateEvent("popstate"));
+  });
+  expect(document.activeElement).toBe(host.querySelector("main"));
+  expect(document.title).toBe("Old release | Macro Event Lab");
+  expect(host.querySelector("main")?.getAttribute("aria-label")).toBe("Events content");
+});
+
+it("focuses destination content after choosing a Learn page", async () => {
+  await render();
+  const learn = host.querySelector<HTMLButtonElement>('button[aria-haspopup="listbox"]')!;
+  await act(async () => learn.click());
+  await act(async () => host.querySelector('[role="listbox"]')!.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", bubbles: true })));
+  expect(window.location.search).toBe("?page=models");
+  expect(document.activeElement).toBe(host.querySelector("main"));
+  expect(document.title).toBe("Models | Macro Event Lab");
+});
+
 it("shares reveal state, resets it for a new event and restores it from history", async () => {
   await render("?event=old-release&h=48&reveal=0");
   expect(host.querySelector("[data-event]")?.getAttribute("data-reveal")).toBe("0");
