@@ -30,6 +30,14 @@ describe("closeness", () => {
 });
 
 describe("plainWords", () => {
+  it("names the actual comparison timestamp instead of assuming it is just before the release", () => {
+    const text = plainWords(cpi, "published", 0.58, null, 1, "2026-10-13T11:00:00Z")[0];
+    expect(text).toContain("At Oct 13 07:00 ET");
+    expect(text).not.toContain("Just before the release");
+    expect(text).not.toContain("Oct 14");
+    expect(plainWords(cpi, "published", null, [[0.5, 0.12, 0.12]], 1, "2026-10-13T11:00:00Z")[0])
+      .toContain("At Oct 13 07:00 ET");
+  });
   it("uses only selected-snapshot expectations before reveal and hides daily yields at the first-print step", () => {
     const hidden = plainWords(cpi, "published", 0.1, null, 0).join(" ");
     expect(hidden).toContain("selected market snapshot");
@@ -44,7 +52,7 @@ describe("plainWords", () => {
   it("explains a published CPI release with its context and the yield move", () => {
     const [first, context, yields] = plainWords(cpi, "published", 0.58);
     expect(first).toBe(
-      "Just before the release, traders expected consumer prices to rise 0.6% in one month. " +
+      "At the comparison snapshot, traders expected consumer prices to rise 0.6% in one month. " +
         "The official number came in at 0.6%, very close to what traders expected.",
     );
     expect(context).toContain("bigger than 28% of the other 57 CPI reports");
@@ -90,7 +98,7 @@ describe("plainWords", () => {
     const [only] = plainWords(early, "published", null, [[0.7, 0.1, 0.12]]);
     expect(only).toBe(
       "Kalshi listed only one contract for this release: whether monthly CPI would come in above 0.7%. " +
-        "Just before trading closed, traders put that at 12%. The official number came in at 0.5%, " +
+        "At the comparison snapshot, traders put that at 12%. The official number came in at 0.5%, " +
         "so the contract paid no and the market had leaned the right way. With a single contract there " +
         "is no full set of odds, so there is no median or surprise to measure.",
     );

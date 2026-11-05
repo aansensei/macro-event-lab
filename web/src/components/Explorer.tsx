@@ -35,6 +35,7 @@ import { StoryNext } from "./Story";
 import { OutcomeControls } from "./OutcomeControls";
 import type { RevealStage } from "../lib/url";
 import { useReducedMotion } from "../hooks/useReducedMotion";
+import { TimelineData } from "./TimelineData";
 
 const PLAY_STEP_HOURS = 4;
 const PLAY_TICK_MS = 250;
@@ -271,8 +272,8 @@ export function Explorer({ entry, dataThrough, initialHour, onHourChange, reveal
           : `Odds on ${label} ${anchorMode[2] >= start ? "rose" : "fell"} from ${pct(start)} to ${pct(anchorMode[2])}`;
     }
     timeSummary = !fewContracts
-      ? "Each line is one rate outcome that reached 10% at some hour, from its first listing to the close."
-      : "Each line is one side of the listed contract, from its first listing to the close.";
+      ? "Each line follows one of the displayed outcomes that reached 10% in a recorded snapshot."
+      : "Each line follows a displayed outcome from its first available observation.";
   } else if (earliest && anchor && earliest.p05 !== null && earliest.p95 !== null && anchor.p05 !== null && anchor.p95 !== null) {
     const w0 = earliest.p95 - earliest.p05;
     const w1 = anchor.p95 - anchor.p05;
@@ -316,7 +317,8 @@ export function Explorer({ entry, dataThrough, initialHour, onHourChange, reveal
       {status === "published" && ev.first_print !== null && onRevealChange && <OutcomeControls stage={stage} onChange={onRevealChange} />}
 
       <PlainWords event={ev} status={status} expectedMedian={(stage === 0 ? snap : anchor)?.p50 ?? null}
-        survival={(stage === 0 ? snap : anchor)?.survival ?? null} revealStage={stage} />
+        survival={(stage === 0 ? snap : anchor)?.survival ?? null} revealStage={stage}
+        expectedTimestamp={(stage === 0 ? snap : anchor)?.ts ?? null} />
 
       <KeyStrip event={ev} status={status} anchor={stage === 0 ? snap : anchor} revealStage={stage} />
 
@@ -353,12 +355,14 @@ export function Explorer({ entry, dataThrough, initialHour, onHourChange, reveal
           <div className="chart-footer-top t-micro">
             <span>Source: Kalshi {ev.event_ticker}, hourly snapshots</span>
           </div>
+          <p className="t-micro muted">T labels count back from the market's close hour, rounded down. Use the snapshot timestamp for the exact cutoff.</p>
+          <TimelineData snapshots={ev.snapshots} odds={oddsLines} unit={ev.unit} resolution={ev.resolution} />
           <details className="how-to-read">
             <summary>How to read this chart</summary>
             <p>
               {oddsLines
-                ? "Each line follows the probability of one outcome across the final week, ordered from the lowest value up. A line starts when Kalshi first listed that outcome. The vertical line marks the selected hour."
-                : `The dark line is the implied median for every hour of the final week. The darker band holds the middle 50% of outcomes and the lighter band the middle 90%. ${stage > 0 ? "The dashed line is the number first published. " : "The first print is hidden. "}The vertical line marks the selected hour.`}
+                ? "Each line follows the probability of one displayed outcome, ordered from the lowest value up. Gaps mean no usable hourly observation. The vertical line marks the selected hour."
+                : `The line is the implied median at each recorded hour. The darker band holds the middle 50% of outcomes and the lighter band the middle 90%. Gaps mean no usable hourly observation. ${stage > 0 ? "The dashed line is the number first published. " : "The first print is hidden. "}The vertical line marks the selected hour.`}
             </p>
           </details>
         </div>

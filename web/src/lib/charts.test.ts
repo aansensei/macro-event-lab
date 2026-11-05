@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import type { Bin, Snapshot } from "../data/types";
-import { dayTicks, fanDomain, fanSegments, niceTicks, oddsSeries } from "./charts";
+import { dayTicks, fanDomain, fanSegments, niceTicks, oddsSegments, oddsSeries } from "./charts";
 
 function snap(h: number, q: number | null, bins: Bin[] = []): Snapshot {
   return {
@@ -31,6 +31,10 @@ describe("dayTicks", () => {
 });
 
 describe("fanSegments", () => {
+  it("does not connect valid quantiles across an unrecorded hour", () => {
+    expect(fanSegments([snap(5, 0.5), snap(4, 0.6), snap(1, 0.7), snap(0, 0.8)])
+      .map(run => run.map(q => q.h))).toEqual([[5, 4], [1, 0]]);
+  });
   it("splits the bands where a snapshot has no quantiles", () => {
     const segments = fanSegments([snap(4, 0.5), snap(3, 0.5), snap(2, null), snap(1, 0.6)]);
     expect(segments.map((s) => s.map((q) => q.h))).toEqual([[4, 3], [1]]);
@@ -40,6 +44,15 @@ describe("fanSegments", () => {
     const [lo, hi] = fanDomain(fanSegments([snap(1, 0.5)]), [1.3]);
     expect(lo).toBeCloseTo(0.3 - 0.05);
     expect(hi).toBeCloseTo(1.3 + 0.05);
+  });
+});
+
+describe("oddsSegments", () => {
+  it("breaks at both an absent probability and an unrecorded hour, keeping zero odds", () => {
+    expect(oddsSegments([[7, 0], [6, 0.1], [5, null], [4, 0.2], [1, 0.3], [0, 0.4]]))
+      .toEqual([[[7, 0], [6, 0.1]], [[4, 0.2]], [[1, 0.3], [0, 0.4]]]);
+    expect(oddsSegments([])).toEqual([]);
+    expect(oddsSegments([[1, null]])).toEqual([]);
   });
 });
 

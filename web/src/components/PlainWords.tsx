@@ -9,11 +9,12 @@ interface Props {
   expectedMedian: number | null;
   survival: SurvivalPoint[] | null;
   revealStage?: RevealStage;
+  expectedTimestamp?: string | null;
 }
 
 // the event read out in plain English, from its numbers and how it compares with its series
-export function PlainWords({ event, status, expectedMedian, survival, revealStage = 2 }: Props) {
-  const paragraphs = plainWords(event, status, expectedMedian, survival, revealStage);
+export function PlainWords({ event, status, expectedMedian, survival, revealStage = 2, expectedTimestamp = null }: Props) {
+  const paragraphs = plainWords(event, status, expectedMedian, survival, revealStage, expectedTimestamp);
   return (
     <section className="plain-words" aria-labelledby="plain-words-title">
       <h2 className="section-kicker" id="plain-words-title">In plain words</h2>

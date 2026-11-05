@@ -68,7 +68,7 @@ export function Compare() {
         <h2 className="t-h2" id="calibration-title"><Term id="calibration">Calibration</Term></h2>
         <p className="chart-summary">
           How often the real number landed inside the market's <Term id="range">50% and 90% ranges</Term>{" "}
-          an hour before the release. The tick marks the ideal: a market that judges its own
+          at T&#8722;1h on each market's hourly close grid. Earlier contracts could close before release day. The tick marks the ideal: a market that judges its own
           uncertainty well catches the number 50% and 90% of the time.
         </p>
         <CalibrationBars series={summary.series} />

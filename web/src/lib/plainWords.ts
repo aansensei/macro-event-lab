@@ -2,7 +2,7 @@
 // built from the event's own numbers and from how it compares with the rest of its series.
 
 import type { EventFile, SurvivalPoint } from "../data/types";
-import { MINUS, formatValue, seriesKind, type SeriesKind } from "./format";
+import { MINUS, formatEt, formatValue, seriesKind, type SeriesKind } from "./format";
 import type { EventStatus } from "./snapshots";
 import type { RevealStage } from "./url";
 
@@ -73,7 +73,7 @@ const METRIC: Record<SeriesKind, string> = {
 };
 
 // early markets listed one or two "above k" contracts: a few probabilities, but no distribution
-function fewContracts(event: EventFile, kind: SeriesKind, survival: SurvivalPoint[]): string {
+function fewContracts(event: EventFile, kind: SeriesKind, survival: SurvivalPoint[], timestamp: string | null): string {
   const unit = event.unit;
   const y = event.first_print as number;
   const odds = (p: number) => `${Math.round(p * 100)}%`;
@@ -83,7 +83,7 @@ function fewContracts(event: EventFile, kind: SeriesKind, survival: SurvivalPoin
     const leanedYes = p > 0.5;
     return (
       `Kalshi listed only one contract for this ${kind === "fomc" ? "decision" : "release"}: whether ${METRIC[kind]} would come in above ${formatValue(k, unit)}. ` +
-      `Just before trading closed, traders put that at ${odds(p)}. ` +
+      `${timestamp ? `At ${formatEt(timestamp)}` : "At the comparison snapshot"}, traders put that at ${odds(p)}. ` +
       `The official number came in at ${outcome(kind, y, unit)}, so the contract paid ${paidYes ? "yes" : "no"}` +
       (paidYes === leanedYes ? " and the market had leaned the right way." : ", against the market's lean.") +
       " With a single contract there is no full set of odds, so there is no median or surprise to measure."
@@ -102,6 +102,7 @@ export function plainWords(
   expectedMedian: number | null,
   survival: SurvivalPoint[] | null = null,
   revealStage: RevealStage = 2,
+  expectedTimestamp: string | null = null,
 ): string[] {
   const kind = seriesKind(event.series);
   const unit = event.unit;
@@ -114,7 +115,7 @@ export function plainWords(
     return ["There is no estimate at the selected snapshot. The result remains hidden."];
   }
   if (status === "published" && event.first_print !== null && expectedMedian === null && survival && survival.length > 0 && survival.length < 3) {
-    paragraphs.push(fewContracts(event, kind, survival));
+    paragraphs.push(fewContracts(event, kind, survival, expectedTimestamp));
     return paragraphs;
   }
 
@@ -136,7 +137,7 @@ export function plainWords(
 
   const sd = event.surprise_sd;
   const first =
-    (expected ? `Just before the release, traders expected ${expected}. ` : "") +
+    (expected ? `${expectedTimestamp ? `At ${formatEt(expectedTimestamp)}` : "At the comparison snapshot"}, traders expected ${expected}. ` : "") +
     `The official number came in at ${outcome(kind, event.first_print, unit)}` +
     (sd === null ? "." : `, ${closeness(sd)}.`);
   paragraphs.push(first);

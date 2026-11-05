@@ -770,3 +770,55 @@ To exercise real failures, four local static JSON files were temporarily moved t
 No preview server was listening when this session began. An initial hidden process launched inside the test environment did not survive the command. After confirming the port was unused, an independent hidden Vite process was started on localhost:8000 and kept running. No existing server was stopped. Temporary browser tabs were closed after verification; the healthy Events preview remains available.
 
 Physical dual-screen hinges, operating-system preference changes and screen-reader announcements were not emulated in this pass. Restricted data stays local, ingestion remains paused and no deployment occurred. The recovery changes after cdd8b2c remain uncommitted pending An's next commit request.
+
+## 16. Showing exactly which time a chart describes
+
+### 16.1 Committing the recovery work
+
+**Status: COMMITTED locally, 2 November 2026.**
+
+An asked to commit the recovery work, then continue with remaining tasks. The 202 web tests and production build passed again. Commit `6ee2399`, Recover from unavailable data and validate selected releases, contains 21 explicitly staged files. Staged paths, full contents and the message were scanned; private data and planning stayed excluded. An Nguyen is the sole author and committer. This request named a commit without a push, so this commit remains local and no CI run was triggered for it.
+
+The continuation focuses on time interpretation and the evidence behind the existing charts. It does not add a model, a source or a publication step.
+
+### 16.2 One hour before which instant?
+
+**Status: CORRECTED and VERIFIED locally, 2 November 2026; uncommitted.**
+
+Reviewing the pipeline's snapshot_grid found that its anchor is the market's most common close timestamp rounded down to the hour. Relative h is subtracted from that anchor. A close at 08:29 ET therefore produces a close-hour snapshot at 08:00 and T-1h at 07:00. T-1h is not exactly one hour before the close, and older contracts can close well before the release day.
+
+Some interface copy instead described the comparison as just before the release or assumed every T-1h timestamp was on release day. The method note already described hourly rounding, but its example was phrased as a rule for every contract. The glossary, Overview preview, Compare, Scorecard, About and time controls now distinguish the hourly close grid from the release instant. Zero is labelled Close hour. Longer axis labels receive extra spacing. The plain-language reading uses the actual comparison snapshot timestamp when available, including for a single-contract reading; otherwise it says comparison snapshot without assuming a date.
+
+Method also contained an outdated claim that Treasury yields were planned and treated a missing dataset outcome as proof that no release occurred. Its source note now describes the implemented daily yield inputs, and missing outcomes remain unavailable. No timestamp, score or market observation was recalculated.
+
+### 16.3 A table behind the timeline
+
+**Status: IMPLEMENTED and VERIFIED locally, 2 November 2026.**
+
+The time chart now has its own Show timeline data control. A separate TimelineData component mounts rows only while the table is open. Its range view shows recorded hours, actual timestamps, medians and the 50% and 90% intervals. Its outcome view shows the same selected outcome series as the chart. It preserves zero probabilities and labels absent values unavailable. Jobs retain their full display units. Values are explicitly rounded for display.
+
+The table covers the recorded historical timeline, as the time chart does, rather than restricting itself to the selected cursor. It takes no first-print or yield fields, so opening it does not add a hidden outcome column. Caption, column and row headers, datetime attributes, an expanded-state control and a focusable scroll region support keyboard reading. Closing the table removes its rows. Mobile screenshot review found that wrapped ranges made each row unnecessarily tall. Keeping values on one line improved comparison while containing horizontal scrolling inside the table.
+
+### 16.4 Missing hours must not become continuous evidence
+
+**Status: FIXED with tests, 2 November 2026.**
+
+The fan helper already broke at null quantiles, and the outcome renderer already broke at null probabilities. Neither handled an hour omitted from the array: two otherwise valid observations would be joined across that missing hour. Segmentation now breaks both cases. A valid observation isolated by a gap remains visible as a dot rather than a one-point invisible polyline.
+
+Tests cover missing hours, null values, zero odds, isolated observations and bounded keyboard scrubbing. These controlled cases demonstrate the rendering rule; they do not claim that the local dataset contains a new measured outage. Chart notes describe the first available observation and usable hourly data, rather than claiming to know the contract's first listing from a missing plotted value.
+
+### 16.5 Live motion preferences also apply to chart geometry
+
+**Status: FIXED and VERIFIED locally, 2 November 2026.**
+
+The earlier pass updated replay and number animation, but useTween still checked reduced motion only when a target changed. A reader enabling the preference during a chart transition could leave its frames running. The hook now uses the shared live preference, cancels the pending frame and settles to its existing target. Turning the preference off does not animate an already settled value. A different chart shape still draws immediately instead of blending incompatible arrays. Tests check those transitions directly.
+
+### 16.6 Checking the timeline pass
+
+**Status: VERIFIED locally, 2 November 2026; reader feedback OPEN.**
+
+The resulting suite passes 215 web tests and the TypeScript production build, thirteen tests above the committed baseline. Browser review recorded 30 open, keyboard-scroll and close interactions across CPI, jobs, GDP, Fed and few-contract cases at 375, 768 and 1280px in both themes. Forty-two route states checked the seven pages with changed content. After adjusting table wrapping, sixteen final layout states covered CPI and Fed at the requested widths and CPI at 280 and 1920px. None of those recorded states had document-level horizontal overflow or a visible data error. Hidden-result table checks found no first-print marker or outcome column.
+
+Computed text contrast for the open table passed in both themes, including its full mounted rows. The minimum observed ratios were 5.93:1 in light mode and 7.50:1 in dark mode. This is a bounded table check, not a complete accessibility certification. Screenshots and state records stay in the ignored research folder. The existing preview server was reused and kept running.
+
+Live media-query changes were tested in Vitest; the browser pass did not change the operating-system preference or emulate a physical dual-screen hinge or a screen reader. No ingestion, deployment or new publication occurred. The timeline continuation remains uncommitted, and the recovery commit remains local until a push is requested.

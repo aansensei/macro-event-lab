@@ -1,0 +1,5 @@
+.timeline-data { min-width: 0; margin-top: 12px; }
+.timeline-data .data-table-wrap { max-height: 320px; max-width: 100%; overflow: auto; }
+.timeline-data caption { color: var(--text); text-align: left; font-size: 12px; line-height: 18px; padding: 8px 0; }
+.timeline-data th, .timeline-data td { white-space: nowrap; }
+.timeline-data .text-btn { padding: 6px 0; }

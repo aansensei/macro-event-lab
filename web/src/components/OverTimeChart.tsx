@@ -1,7 +1,7 @@
 import type { KeyboardEvent, PointerEvent, ReactNode } from "react";
 
 import type { Snapshot } from "../data/types";
-import { dayTicks, fanDomain, fanSegments, niceTicks, oddsSeries, type Quantiles } from "../lib/charts";
+import { dayTicks, fanDomain, fanSegments, niceTicks, oddsSegments, oddsSeries, type Quantiles } from "../lib/charts";
 import { MINUS, binLabel, fixed, formatValue, pct } from "../lib/format";
 import { snapshotAt } from "../lib/snapshots";
 import { useTween } from "../hooks/useTween";
@@ -46,11 +46,11 @@ function TimeFrame({ maxH, minH, h, padR, label, onHour, children }: FrameProps)
     onHour(clamp(next));
   }
 
-  // day ticks from the close backwards, each at least 48px from the last one kept, so labels never touch
+  // Day ticks leave extra room beside the longer close-hour label.
   const ticks: number[] = [];
   for (const t of [...dayTicks(maxH)].reverse()) {
     const last = ticks[ticks.length - 1];
-    if (last === undefined || x(last) - x(t) >= 48) ticks.push(t);
+    if (last === undefined || x(last) - x(t) >= (last === 0 ? 88 : 48)) ticks.push(t);
   }
 
   return (
@@ -67,7 +67,7 @@ function TimeFrame({ maxH, minH, h, padR, label, onHour, children }: FrameProps)
           aria-valuemin={-maxH}
           aria-valuemax={-minH}
           aria-valuenow={-h}
-          aria-valuetext={h === 0 ? "At the close" : `${h} hours before the close`}
+          aria-valuetext={h === 0 ? "The market close hour" : `${h} ${h === 1 ? "hour" : "hours"} before the market close hour`}
           onKeyDown={onKeyDown}
           onPointerDown={(e) => {
             e.currentTarget.setPointerCapture(e.pointerId);
@@ -79,7 +79,7 @@ function TimeFrame({ maxH, minH, h, padR, label, onHour, children }: FrameProps)
         >
           {ticks.map((t) => (
             <text key={t} x={t === 0 ? x(t) + 6 : x(t)} y={height - 8} textAnchor={t === 0 ? "end" : "middle"} fontSize="12" fill="var(--text-muted)" className="num">
-              {t === 0 ? "Close" : `T${MINUS}${t / 24}d`}
+              {t === 0 ? "Close hour" : `T${MINUS}${t / 24}d`}
             </text>
           ))}
           {children({ width, plotW, plotH, height, x })}
@@ -150,6 +150,7 @@ export function FanChart({ snaps, h, maxH, minH, unit, firstPrint, onHour }: Fan
                   points={seg.map((q) => `${x(q.h).toFixed(1)},${y(q.p50).toFixed(1)}`).join(" ")}
                   fill="none" stroke="var(--median)" strokeWidth={2}
                 />
+                {seg.length === 1 && <circle cx={x(seg[0]!.h)} cy={y(seg[0]!.p50)} r={3} fill="var(--median)" />}
               </g>
             ))}
             {firstPrint !== null && (
@@ -227,16 +228,11 @@ export function OddsChart({ snaps, h, maxH, minH, unit, resolution, onHour }: Od
               </g>
             ))}
             {series.map((s, i) => {
-              const runs: string[][] = [[]];
-              for (const [hour, p] of s.points) {
-                if (p === null) runs.push([]);
-                else runs[runs.length - 1]?.push(`${x(hour).toFixed(1)},${y(p).toFixed(1)}`);
-              }
-              return runs
-                .filter((r) => r.length > 0)
-                .map((r, j) => (
-                  <polyline key={`${s.key}-${j}`} points={r.join(" ")} fill="none" stroke={colors[i]} strokeWidth={2} />
-                ));
+              return oddsSegments(s.points).map((run, j) => <g key={`${s.key}-${j}`}>
+                <polyline points={run.map(([hour, p]) => `${x(hour).toFixed(1)},${y(p).toFixed(1)}`).join(" ")}
+                  fill="none" stroke={colors[i]} strokeWidth={2} />
+                {run.length === 1 && <circle cx={x(run[0]![0])} cy={y(run[0]![1])} r={3} fill={colors[i]} />}
+              </g>);
             })}
             {ends.map((e) => (
               <g key={series[e.i]?.key}>

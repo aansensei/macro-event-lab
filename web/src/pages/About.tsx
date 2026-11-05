@@ -21,8 +21,8 @@ const GLANCE: [string, string][] = [
 ];
 
 const QUESTIONS = [
-  "What did the market expect an hour before the number came out, and how sure was it?",
-  "How did that view move during the final week before the release?",
+  "What did the market expect at its comparison snapshot, and how sure was it?",
+  "How did that view move during the recorded trading window?",
   "How big was the surprise, measured against the market's own uncertainty instead of a single guess?",
   "Did bond yields move the way the surprise suggested?",
   "Across every release, were the markets well calibrated, and did they beat simply repeating the last number?",

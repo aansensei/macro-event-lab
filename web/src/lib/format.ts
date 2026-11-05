@@ -100,7 +100,7 @@ export function pct(p: number, digits = 0): string {
 
 // hours before the market closes; 0 is the close itself
 export function hourLabel(h: number): string {
-  return h === 0 ? "Close" : `T${MINUS}${h}h`;
+  return h === 0 ? "Close hour" : `T${MINUS}${h}h`;
 }
 
 const ET_PARTS = new Intl.DateTimeFormat("en-US", {
