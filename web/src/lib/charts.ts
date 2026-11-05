@@ -36,6 +36,11 @@ export function fanSegments(snaps: Snapshot[]): Quantiles[][] {
       current = [];
       continue;
     }
+    const previous = current.at(-1);
+    if (previous && previous.h - s.h !== 1) {
+      segments.push(current);
+      current = [];
+    }
     current.push({ h: s.h, p05: s.p05, p25: s.p25, p50: s.p50, p75: s.p75, p95: s.p95 });
   }
   if (current.length) segments.push(current);
@@ -59,6 +64,21 @@ export interface OddsSeries {
   peak: number;
   // probability at each snapshot hour; null where the outcome was not listed yet
   points: [h: number, p: number | null][];
+}
+
+export function oddsSegments(points: [number, number | null][]): [number, number][][] {
+  const runs: [number, number][][] = [];
+  let current: [number, number][] = [];
+  for (const [h, p] of points) {
+    const previous = current.at(-1);
+    if (p === null || (previous && previous[0] - h !== 1)) {
+      if (current.length) runs.push(current);
+      current = [];
+    }
+    if (p !== null) current.push([h, p]);
+  }
+  if (current.length) runs.push(current);
+  return runs;
 }
 
 // outcomes that reached minPeak at some hour, the `limit` likeliest of them, ordered low to high

@@ -109,15 +109,15 @@ export function Method() {
           <Code>KXGDP</Code> and <Code>KXFED</Code>, including their older markets for the same
           releases; ALFRED vintages from the Federal Reserve Bank of St. Louis (<Code>CPIAUCSL</Code>,{" "}
           <Code>PAYEMS</Code>, <Code>GDPC1</Code> among others); FRED release calendars and the Federal
-          Reserve FOMC calendar. Treasury yields and sector ETFs are planned.
+          Reserve FOMC calendar. FRED DGS2 and DGS10 supply daily Treasury yields. Industry returns remain local pending permission.
         </p>
       </article>
 
       <aside className="method-notes" aria-label="Notes">
         <div className="sidenote-box">
-          <strong>What T{MINUS}1h means.</strong> CPI, jobs and GDP markets close at 08:25 or 08:29 ET,
-          just before the 08:30 release. Snapshots are taken on the hour, counted back from the hour of
-          the close, so T{MINUS}1h is 07:00 ET on release day.
+          <strong>What T{MINUS}1h means.</strong> The pipeline rounds the market's close down to the hour,
+          then counts back from that time. An 08:29 ET close gives a T{MINUS}1h snapshot at 07:00 ET.
+          Earlier contracts could close well before release day. The displayed timestamp is the exact snapshot cutoff.
         </div>
         <div className="sidenote-box">
           <strong>FOMC outcomes.</strong> Fed contracts ask whether the upper bound of the target range
@@ -127,8 +127,8 @@ export function Method() {
         <div className="sidenote-box">
           <strong>Government shutdowns.</strong> Each event is matched to the period its ticker names,
           so a release pushed back by weeks (September 2025 jobs, Q3 2025 GDP) still finds its market. A
-          release that never came out (October 2025 CPI) keeps its market snapshots, with the first
-          print and surprise left empty.
+          release without a published outcome in this dataset keeps its market snapshots, with the first
+          print and surprise unavailable rather than inferred from the market.
         </div>
       </aside>
     </div>

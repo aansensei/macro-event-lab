@@ -63,6 +63,7 @@ export function Scorecard() {
       <p className="about-lead">
         Can you trust the forecast? Check its errors and uncertainty against a simple baseline: repeating the previous first print.
       </p>
+      <p className="t-micro muted">Scores use T&#8722;1h on each market's hourly close grid. Earlier contracts could close before release day.</p>
       {scored.length === 0 ? (
         <p className="state-banner">Scores appear once the pipeline has scored the releases.</p>
       ) : (

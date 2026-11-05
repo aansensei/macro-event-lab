@@ -20,7 +20,7 @@ export function EventReveal({ examples }: { examples: ReturnType<typeof releaseE
       </button>)}
     </div>
     <h2 className="t-h3">{point.title}</h2>
-    <p className="event-snapshot">Extreme example. Snapshot: one hour before close.</p>
+    <p className="event-snapshot">Extreme example. Snapshot: T−1h on the market's hourly close grid.</p>
     <p className="event-phase"><span className="mono">0{stage + 1} / 03</span>
       {stage === 0 ? "Expectations" : stage === 1 ? "The first print" : "The day's yields"}</p>
     <div className="event-reveal-result" aria-live="polite" aria-atomic="true">

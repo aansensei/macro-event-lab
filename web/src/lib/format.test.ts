@@ -81,7 +81,7 @@ describe("binLabel", () => {
 describe("time", () => {
   it("labels hours before the close", () => {
     expect(hourLabel(48)).toBe(`T${MINUS}48h`);
-    expect(hourLabel(0)).toBe("Close");
+    expect(hourLabel(0)).toBe("Close hour");
   });
 
   it("shows New York time across daylight saving changes", () => {

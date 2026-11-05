@@ -72,13 +72,13 @@ export const GLOSSARY: GlossaryEntry[] = [
     id: "surprise",
     term: "Surprise (in SD)",
     short: "How far the real number was from expectations, in units of uncertainty.",
-    long: "The first published number minus what the market expected an hour before, divided by the market's SD. A surprise of +2 SD means the number came in far above expectations given how confident traders were; under 0.5 SD is close to expected.",
+    long: "The first published number minus the market mean at the T−1h comparison snapshot, divided by that snapshot's SD. T−1h is defined on the market's hourly close grid. A surprise of +2 SD is far above the mean given its uncertainty; an absolute surprise below 0.5 SD is close to expected.",
   },
   {
     id: "t-1h",
     term: "T−1h, T−7d",
-    short: "One hour, or seven days, before the market closed.",
-    long: "Times are counted back from the moment trading stopped, just before the release. T−1h is one hour before; for CPI and jobs that is 07:00 ET on release day.",
+    short: "One hour, or seven days, before the market's close hour.",
+    long: "The market close is rounded down to the hour. T−1h is one hour before that rounded time, and T−7d is seven days before it. For an 08:29 ET close, T−1h is 07:00 ET. Earlier contracts could stop trading well before release day. Use each snapshot's timestamp for the exact cutoff.",
   },
   {
     id: "first-print",

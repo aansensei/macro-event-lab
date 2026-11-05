@@ -1,15 +1,13 @@
 import { useEffect, useRef, useState } from "react";
 
 import { easeOutCubic, lerpArrays } from "../lib/tween";
+import { useReducedMotion } from "./useReducedMotion";
 
 const DURATION_MS = 220;
 
-function reducedMotion(): boolean {
-  return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-}
-
 // glides from the values on screen to new targets; a new `shape` key (other bins, another event) jumps instead
 export function useTween(target: number[], shape: string): number[] {
+  const reduced = useReducedMotion();
   const [shown, setShown] = useState(target);
   const shownRef = useRef(target);
   const shapeRef = useRef(shape);
@@ -17,7 +15,7 @@ export function useTween(target: number[], shape: string): number[] {
 
   useEffect(() => {
     const goal = targetKey === "" ? [] : targetKey.split(",").map(Number);
-    if (shape !== shapeRef.current || reducedMotion()) {
+    if (shape !== shapeRef.current || reduced || shownRef.current.join(",") === targetKey) {
       shapeRef.current = shape;
       shownRef.current = goal;
       setShown(goal);
@@ -34,7 +32,7 @@ export function useTween(target: number[], shape: string): number[] {
     };
     frame = requestAnimationFrame(step);
     return () => cancelAnimationFrame(frame);
-  }, [targetKey, shape]);
+  }, [targetKey, shape, reduced]);
 
   return shape === shapeRef.current ? shown : target;
 }

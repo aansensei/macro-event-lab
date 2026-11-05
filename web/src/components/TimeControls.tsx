@@ -7,7 +7,7 @@ const PRESETS: [number, string][] = [
   [48, `T${MINUS}48h`],
   [24, `T${MINUS}24h`],
   [1, `T${MINUS}1h`],
-  [0, "Close"],
+  [0, "Close hour"],
 ];
 
 interface Props {
@@ -21,7 +21,7 @@ interface Props {
   reducedMotion?: boolean;
 }
 
-// the slider runs left to right toward the close, so its value is minus the hours before close
+// The slider runs toward the close hour, with values stored as negative relative snapshot hours.
 export function TimeControls({ h, ts, max, min, playing, onHour, onPlay, reducedMotion = false }: Props) {
   const when = ts ? formatEt(ts) : "";
   return (
@@ -35,7 +35,7 @@ export function TimeControls({ h, ts, max, min, playing, onHour, onPlay, reduced
           <span className="num slider-current">{hourLabel(h)}{when && ` (${when})`}</span>
           <span className="slider-end">{hourLabel(min)}</span>
         </div>
-        <label htmlFor="time-range-slider" className="sr-only">Hours before the market closes</label>
+        <label htmlFor="time-range-slider" className="sr-only">Market snapshot hour</label>
         <input
           id="time-range-slider"
           type="range"
@@ -46,7 +46,7 @@ export function TimeControls({ h, ts, max, min, playing, onHour, onPlay, reduced
           value={-h}
           // share of the track already passed, painted in the accent color
           style={{ "--fill": `${max === min ? 100 : ((max - h) / (max - min)) * 100}%` } as CSSProperties}
-          aria-valuetext={`${h === 0 ? "At the close" : `${h} hours before the close`}${when && `, ${when}`}`}
+          aria-valuetext={`${h === 0 ? "The market close hour" : `${h} ${h === 1 ? "hour" : "hours"} before the market close hour`}${when && `, ${when}`}`}
           onChange={(e) => onHour(-Number(e.target.value))}
         />
       </div>
