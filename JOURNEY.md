@@ -822,3 +822,51 @@ The resulting suite passes 215 web tests and the TypeScript production build, th
 Computed text contrast for the open table passed in both themes, including its full mounted rows. The minimum observed ratios were 5.93:1 in light mode and 7.50:1 in dark mode. This is a bounded table check, not a complete accessibility certification. Screenshots and state records stay in the ignored research folder. The existing preview server was reused and kept running.
 
 Live media-query changes were tested in Vitest; the browser pass did not change the operating-system preference or emulate a physical dual-screen hinge or a screen reader. No ingestion, deployment or new publication occurred. The timeline continuation remains uncommitted, and the recovery commit remains local until a push is requested.
+
+## 17. Inspecting charts without a pointer
+
+### 17.1 Publishing the recovery and timeline work to source control
+
+**Status: COMMITTED, PUSHED and CI VERIFIED, 4 November 2026.**
+
+An requested a commit and push, followed by continued work. The timeline baseline passed all 215 web tests and the production build. Twenty-six explicit paths, their full staged contents and the commit message were scanned before commit `2f3cbf2c89c3593839cb19bacf071eff5c79f266`, Clarify snapshot timing and expose recorded chart data. An Nguyen is its sole author and committer. It was pushed to origin/main together with the previously local recovery commit `6ee2399`. The [CI run for the new head](https://github.com/aansensei/macro-event-lab/actions/runs/41959511937) passed both test and web jobs. Private data and planning were excluded. This source push did not deploy the website.
+
+### 17.2 The keyboard cursor could still get stuck
+
+**Status: FIXED with regression tests, 4 November 2026; uncommitted.**
+
+The earlier sparse-data fix covered the manual Step action, but the timeline chart still requested the next integer hour on ArrowRight. With controlled observations at T-24h and T-1h, requesting T-23h fell back to T-24h through the correct as-of lookup. Repeating the key never advanced. A new integration test reproduced that failure before the fix.
+
+Arrow inspection on both the SVG timeline and the designed range control now moves to the adjacent recorded observation. The shared adjacentHour helper finds the closest available hour in the requested direction and holds at an endpoint. Tests include unsorted input, a gap, one observation and an empty list. Pointer input and preset requests retain the existing as-of lookup rather than inventing observations. Home and End on the time chart retain their endpoint behavior. Its accessible value now also includes the selected observation's actual ET timestamp.
+
+These gap regressions use controlled fixtures. They are not evidence of a newly discovered outage in the production dataset.
+
+### 17.3 Clearing a pin should leave a useful place to continue
+
+**Status: FIXED and VERIFIED locally, 4 November 2026.**
+
+Clearing a selected outcome removed the focused Clear pin button and left focus on the document. A remaining hover could also keep the same bin active after its pin was cleared. A failing integration test reproduced the lost focus. Clearing through the button or Escape now clears both pin and hover state. When the disappearing button owns focus, focus returns to the outcome chart. Keyboard Escape on the chart retains its focus.
+
+The outcome chart supports Home and End alongside its bounded arrow navigation. It describes those keys and Escape in its accessible label. The chart points to the current probability reading with aria-describedby. Only the reading text is a polite, atomic live region, so changing it does not also announce the clearing control. Tests cover pointer selection, keyboard endpoint selection, clearing, focus return, bounds and hidden first-print markers.
+
+### 17.4 Tables remain available to keyboard readers
+
+**Status: IMPLEMENTED and VERIFIED locally, 4 November 2026.**
+
+The outcome and strike tables were horizontally scrollable but had no keyboard focus target. They now expose separately named, focusable regions. Each disclosure button identifies its own region, and the tables have explicit column and row header scope. Outcome labels retain the first-print annotation only when results are revealed. The Clear pin target also has a minimum height of 32 CSS pixels. Existing theme tokens and chart calculations are unchanged.
+
+### 17.5 Clarifying which work concerns the prediction models
+
+**Status: DISCUSSED, 4 November 2026.**
+
+An asked whether the ongoing work was the prediction model and when prediction work would begin. The distinction was made explicit: the pipeline already has the ALFRED GDP ridge nowcast and separate calibration research. The current continuation changes how readers inspect precomputed evidence in the browser. It does not fit another model or add scenario controls. After discussing possible model priorities, An asked to finish the chart work already underway first. No model priority was selected or silently added to this batch.
+
+### 17.6 Checks, preview ownership and remaining limits
+
+**Status: VERIFIED locally, 4 November 2026; uncommitted and reader feedback OPEN.**
+
+The suite passes 222 web tests in 36 files and the TypeScript production build, seven tests above the pushed baseline. Browser review exercised twelve interaction cases across CPI and Fed at 375, 768 and 1280px in both themes, plus four edge cases at 280 and 1920px. It checked pin clearing, focus return, endpoint keys, timeline movement, native range keyboard input and named table regions. Recorded hidden-result states retained their URL stage and had no first-print SVG marker, visible data alert or document-level horizontal overflow. Screenshots were inspected at all three requested widths in both themes.
+
+Ninety-one computed text contrast readings for the open tables, active reading and clearing control passed per theme after waiting for the theme transition to finish. The minimum ratios were 5.93:1 in light mode and 7.50:1 in dark mode. This is a bounded contrast check, not an accessibility certification. The browser's captured error log was empty. Evidence remains in the ignored research folder. Physical dual-screen hinges and screen-reader speech were not emulated. Reader engagement remains a judgement for An.
+
+The old localhost:8000 address now serves An's portfolio, not this project. That server and the existing portfolio tabs were preserved. A separate hidden Macro Event Lab preview was started on the unused port 8001 and left running. The reviewed preview tab remains open with its temporary viewport override reset. No process was stopped, no ingestion resumed, and no restricted output was deployed. This keyboard continuation remains uncommitted pending another commit request.

@@ -36,6 +36,8 @@ npm run dev
 - The first keyboard link skips repeated navigation. Page navigation and browser history focus the named main content region; changing an hour or revealing a result keeps focus on the control. Browser titles identify the page or selected release.
 - `useReducedMotion` follows preference changes while the site is open. Enabling it stops an active replay and settles animated numbers. The timeline then offers a manual Step action, including across missing snapshots. Disabling it does not restart a replay.
 - Chart transitions also follow the live preference through `useTween`. Fan and outcome paths break across missing observations; isolated valid observations stay visible as dots.
+- Arrow keys on the time chart and hour slider inspect adjacent recorded snapshots, including across missing hours. Pointer requests still use the as-of lookup. The time chart announces the snapshot timestamp alongside its relative hour.
+- The outcome chart supports arrows, Home, End and Escape and references its live probability reading. Clearing a pin also clears hover state and returns focus from the disappearing button to the chart. Both outcome and strike tables have named keyboard scroll regions and scoped headers.
 - `src/styles.css`: ordered CSS imports only. Keep import order stable because later rules can override earlier rules.
 - `src/styles/tokens.css`: the light and dark theme variables.
 - `src/styles/pages/`: styles for individual pages. Shared base, layout, navigation, reading, charts, footer, story and motion rules live in the other `src/styles/` files.

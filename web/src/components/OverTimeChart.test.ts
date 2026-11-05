@@ -48,5 +48,5 @@ it("keeps keyboard scrubbing within recorded time bounds", async () => {
     await act(async () => slider.dispatchEvent(new KeyboardEvent("keydown", { key, bubbles: true })));
   }
   expect(change.mock.calls.map(([h]) => h)).toEqual([1, 4, 1]);
-  expect(slider.getAttribute("aria-valuetext")).toBe("1 hour before the market close hour");
+  expect(slider.getAttribute("aria-valuetext")).toBe("1 hour before the market close hour, Jan 1 08:00 ET");
 });

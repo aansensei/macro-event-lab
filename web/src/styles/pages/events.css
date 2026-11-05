@@ -272,6 +272,7 @@
   background: transparent;
   color: var(--accent);
   font-size: 12px;
+  min-height: 32px;
   padding: 2px 0;
   cursor: pointer;
 }
@@ -371,6 +372,7 @@ details.how-to-read p { margin: 6px 0 0 0; color: var(--text); font-size: 14px; 
 table.mel-table { width: 100%; border-collapse: collapse; font-size: 14px; line-height: 20px; }
 table.mel-table th, table.mel-table td { padding: 8px 12px; border-bottom: 1px solid var(--border); text-align: left; }
 table.mel-table th { font-weight: 500; color: var(--text-muted); font-size: 12px; line-height: 16px; }
+table.mel-table tbody th { color: var(--text); font-size: 14px; line-height: 20px; }
 table.mel-table tr:hover td { background-color: var(--surface-hover); }
 table.mel-table .r { text-align: right; font-variant-numeric: tabular-nums lining-nums; }
 

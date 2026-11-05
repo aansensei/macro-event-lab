@@ -98,7 +98,7 @@ export function pct(p: number, digits = 0): string {
   return `${(p * 100).toFixed(digits)}%`;
 }
 
-// hours before the market closes; 0 is the close itself
+// hours before the market close rounded down to the hour
 export function hourLabel(h: number): string {
   return h === 0 ? "Close hour" : `T${MINUS}${h}h`;
 }

@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import type { Bin, Snapshot } from "../data/types";
 import {
+  adjacentHour,
   binIndexOf,
   defaultHour,
   eventStatus,
@@ -40,6 +41,20 @@ describe("snapshotAt", () => {
 });
 
 describe("hours", () => {
+  it("steps to the nearest recorded hour in each direction without requiring sorted input", () => {
+    expect(adjacentHour([1, 168, 3, 48], 48, "later")).toBe(3);
+    expect(adjacentHour([1, 168, 3, 48], 3, "earlier")).toBe(48);
+    expect(adjacentHour([1, 168, 3, 48], 24, "earlier")).toBe(48);
+    expect(adjacentHour([1, 168, 3, 48], 24, "later")).toBe(3);
+  });
+
+  it("holds the current hour at endpoints, a single observation and an empty list", () => {
+    expect(adjacentHour([24, 1], 24, "earlier")).toBe(24);
+    expect(adjacentHour([24, 1], 1, "later")).toBe(1);
+    expect(adjacentHour([1], 1, "later")).toBe(1);
+    expect(adjacentHour([], 24, "earlier")).toBe(24);
+  });
+
   it("finds the range and prefers T-1h as the default", () => {
     expect(hourBounds(snaps)).toEqual({ max: 168, min: 1 });
     expect(defaultHour(snaps)).toBe(1);

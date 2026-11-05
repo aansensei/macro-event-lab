@@ -14,6 +14,13 @@ export function snapshotAt(snaps: Snapshot[], h: number): Snapshot | null {
   return found;
 }
 
+// Keyboard inspection moves between recorded observations without filling missing hours.
+export function adjacentHour(hours: readonly number[], h: number, direction: "earlier" | "later"): number {
+  const candidates = hours.filter(hour => direction === "earlier" ? hour > h : hour < h);
+  if (candidates.length === 0) return h;
+  return direction === "earlier" ? Math.min(...candidates) : Math.max(...candidates);
+}
+
 export function hourBounds(snaps: Snapshot[]): { max: number; min: number } {
   let max = -Infinity;
   let min = Infinity;
