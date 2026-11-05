@@ -14,6 +14,7 @@ interface Props {
   activeIndex: number | null;
   onHover: (i: number | null) => void;
   onPin: (i: number | null) => void;
+  readoutId?: string;
 }
 
 // columns need room for their labels; narrower charts switch to one row per bin
@@ -30,7 +31,7 @@ function pctLabel(p: number): string {
   return `${Math.round(p * 100)}%`;
 }
 
-export function BinChart({ bins, labels, ghost, firstPrintIndex, activeIndex, onHover, onPin }: Props) {
+export function BinChart({ bins, labels, ghost, firstPrintIndex, activeIndex, onHover, onPin, readoutId }: Props) {
   const [ref, width] = useWidth<HTMLDivElement>();
   const n = bins.length;
   const targetMax = axisMax([...bins.map((b) => b[2]), ...ghost.filter((g): g is number => g !== null)]);
@@ -48,7 +49,12 @@ export function BinChart({ bins, labels, ghost, firstPrintIndex, activeIndex, on
       e.preventDefault();
       const from = activeIndex ?? (step > 0 ? -1 : n);
       onPin(Math.min(n - 1, Math.max(0, from + step)));
+    } else if (e.key === "Home" || e.key === "End") {
+      e.preventDefault();
+      onPin(e.key === "Home" ? 0 : n - 1);
     } else if (e.key === "Escape") {
+      e.preventDefault();
+      onHover(null);
       onPin(null);
     }
   }
@@ -57,7 +63,8 @@ export function BinChart({ bins, labels, ghost, firstPrintIndex, activeIndex, on
     className: "chart-svg",
     tabIndex: 0,
     role: "group",
-    "aria-label": "Outcome probabilities at the selected hour. Use the arrow keys to inspect bins.",
+    "aria-label": "Outcome probabilities at the selected hour. Use arrow keys to inspect bins, Home and End to jump, and Escape to clear.",
+    "aria-describedby": readoutId,
     onKeyDown,
     onMouseLeave: () => onHover(null),
   };

@@ -2,8 +2,8 @@ import type { KeyboardEvent, PointerEvent, ReactNode } from "react";
 
 import type { Snapshot } from "../data/types";
 import { dayTicks, fanDomain, fanSegments, niceTicks, oddsSegments, oddsSeries, type Quantiles } from "../lib/charts";
-import { MINUS, binLabel, fixed, formatValue, pct } from "../lib/format";
-import { snapshotAt } from "../lib/snapshots";
+import { MINUS, binLabel, fixed, formatEt, formatValue, pct } from "../lib/format";
+import { adjacentHour, snapshotAt } from "../lib/snapshots";
 import { useTween } from "../hooks/useTween";
 import { useWidth } from "../hooks/useWidth";
 
@@ -12,6 +12,7 @@ const PAD_T = 12;
 const PAD_B = 28;
 
 interface FrameProps {
+  snaps: Snapshot[];
   maxH: number;
   minH: number;
   h: number;
@@ -22,7 +23,7 @@ interface FrameProps {
 }
 
 // shared time axis: hours before close run left to right toward the close; click or drag to move in time
-function TimeFrame({ maxH, minH, h, padR, label, onHour, children }: FrameProps) {
+function TimeFrame({ snaps, maxH, minH, h, padR, label, onHour, children }: FrameProps) {
   const [ref, width] = useWidth<HTMLDivElement>();
   const height = width < 560 ? 220 : 260;
   const plotW = Math.max(40, width - PAD_L - padR);
@@ -31,6 +32,7 @@ function TimeFrame({ maxH, minH, h, padR, label, onHour, children }: FrameProps)
   const clamp = (hour: number) => Math.min(maxH, Math.max(minH, hour));
   // the hour line glides to a new hour instead of jumping
   const cursor = useTween([h], String(maxH))[0] ?? h;
+  const selected = snapshotAt(snaps, h);
 
   function scrub(e: PointerEvent<SVGSVGElement>) {
     const box = e.currentTarget.getBoundingClientRect();
@@ -39,7 +41,10 @@ function TimeFrame({ maxH, minH, h, padR, label, onHour, children }: FrameProps)
   }
 
   function onKeyDown(e: KeyboardEvent<SVGSVGElement>) {
-    const moves: Record<string, number> = { ArrowLeft: h + 1, ArrowRight: h - 1, Home: maxH, End: minH };
+    const hours = snaps.map(s => s.h);
+    const earlier = adjacentHour(hours, h, "earlier");
+    const later = adjacentHour(hours, h, "later");
+    const moves: Record<string, number> = { ArrowLeft: earlier, ArrowRight: later, Home: maxH, End: minH };
     const next = moves[e.key];
     if (next === undefined) return;
     e.preventDefault();
@@ -67,7 +72,7 @@ function TimeFrame({ maxH, minH, h, padR, label, onHour, children }: FrameProps)
           aria-valuemin={-maxH}
           aria-valuemax={-minH}
           aria-valuenow={-h}
-          aria-valuetext={h === 0 ? "The market close hour" : `${h} ${h === 1 ? "hour" : "hours"} before the market close hour`}
+          aria-valuetext={(h === 0 ? "The market close hour" : `${h} ${h === 1 ? "hour" : "hours"} before the market close hour`) + (selected ? `, ${formatEt(selected.ts)}` : "")}
           onKeyDown={onKeyDown}
           onPointerDown={(e) => {
             e.currentTarget.setPointerCapture(e.pointerId);
@@ -127,8 +132,8 @@ export function FanChart({ snaps, h, maxH, minH, unit, firstPrint, onHour }: Fan
 
   return (
     <TimeFrame
-      maxH={maxH} minH={minH} h={h} padR={12} onHour={onHour}
-      label="Implied median and ranges by hour. Use the arrow keys to move in time."
+      snaps={snaps} maxH={maxH} minH={minH} h={h} padR={12} onHour={onHour}
+      label="Implied median and ranges by hour. Use Left and Right for recorded hours, Home and End for the endpoints."
     >
       {({ plotW, plotH, x }) => {
         const y = (v: number) => PAD_T + plotH - ((v - lo) / (hi - lo)) * plotH;
@@ -200,8 +205,8 @@ export function OddsChart({ snaps, h, maxH, minH, unit, resolution, onHour }: Od
 
   return (
     <TimeFrame
-      maxH={maxH} minH={minH} h={h} padR={padR} onHour={onHour}
-      label="Probability of each rate outcome by hour. Use the arrow keys to move in time."
+      snaps={snaps} maxH={maxH} minH={minH} h={h} padR={padR} onHour={onHour}
+      label="Probability of each rate outcome by hour. Use Left and Right for recorded hours, Home and End for the endpoints."
     >
       {({ plotW, plotH, x }) => {
         const y = (p: number) => PAD_T + plotH - p * plotH;

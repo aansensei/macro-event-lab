@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useId, useMemo, useRef, useState } from "react";
 
 import { loadEvent } from "../data/load";
 import type { EventFile, ManifestEvent } from "../data/types";
@@ -73,6 +73,8 @@ export function Explorer({ entry, dataThrough, initialHour, onHourChange, reveal
   const [thresholdMode, setThresholdMode] = useState<ThresholdMode>("fit");
   const [showThresholdTable, setShowThresholdTable] = useState(false);
   const firstHour = useRef(initialHour);
+  const chartId = useId();
+  const binFigure = useRef<HTMLElement>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -127,7 +129,13 @@ export function Explorer({ entry, dataThrough, initialHour, onHourChange, reveal
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setPinned(null);
+      if (e.key === "Escape") {
+        setPinned(null);
+        setHovered(null);
+        if (document.activeElement?.classList.contains("readout-unpin")) {
+          binFigure.current?.querySelector<SVGSVGElement>('svg[role="group"]')?.focus();
+        }
+      }
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
@@ -322,13 +330,17 @@ export function Explorer({ entry, dataThrough, initialHour, onHourChange, reveal
 
       <KeyStrip event={ev} status={status} anchor={stage === 0 ? snap : anchor} revealStage={stage} />
 
-      <div className="readout-strip" aria-live="polite">
-        <div>
+      <div className="readout-strip">
+        <div id={`${chartId}-readout`} aria-live="polite" aria-atomic="true">
           <span className="t-label">{asOf}: </span>
           <span className="readout-text num">{readout}</span>
         </div>
         {pinned !== null && (
-          <button type="button" className="readout-unpin" onClick={() => setPinned(null)}>Clear pin (Esc)</button>
+          <button type="button" className="readout-unpin" onClick={() => {
+            setPinned(null);
+            setHovered(null);
+            binFigure.current?.querySelector<SVGSVGElement>('svg[role="group"]')?.focus();
+          }}>Clear pin (Esc)</button>
         )}
       </div>
 
@@ -368,13 +380,13 @@ export function Explorer({ entry, dataThrough, initialHour, onHourChange, reveal
         </div>
       </figure>
 
-      <figure className="chart-figure chart-col-bin" aria-labelledby="bin-chart-title">
+      <figure ref={binFigure} className="chart-figure chart-col-bin" aria-labelledby="bin-chart-title">
         <div className="chart-header">
           <div>
             <div className="t-micro chart-kicker">{asOf}</div>
             <h2 className="t-h3" id="bin-chart-title">{title}</h2>
           </div>
-          <button type="button" className="text-btn" aria-expanded={showTable} onClick={() => setShowTable(!showTable)}>
+          <button type="button" className="text-btn" aria-expanded={showTable} aria-controls={`${chartId}-bins`} onClick={() => setShowTable(!showTable)}>
             {showTable ? "Hide data table" : "Show data table"}
           </button>
         </div>
@@ -385,19 +397,20 @@ export function Explorer({ entry, dataThrough, initialHour, onHourChange, reveal
           ghost={ghost}
           firstPrintIndex={printIndex}
           activeIndex={activeIndex !== null && activeIndex >= 0 ? activeIndex : null}
+          readoutId={`${chartId}-readout`}
           onHover={(i) => setHovered(i === null ? null : keys[i] ?? null)}
           onPin={(i) => setPinned(i === null ? null : keys[i] ?? null)}
         />
         {showTable && (
-          <div className="data-table-wrap">
+          <div id={`${chartId}-bins`} className="data-table-wrap" tabIndex={0} role="region" aria-label="Outcome probability data">
             <table className="mel-table">
               <caption className="sr-only">Outcome probabilities at {hourLabel(hour)} and a week earlier</caption>
               <thead>
                 <tr>
-                  <th>Outcome</th>
-                  <th className="r">{hourLabel(hour)}</th>
-                  <th className="r">T{MINUS}7d</th>
-                  <th className="r">Change</th>
+                  <th scope="col">Outcome</th>
+                  <th scope="col" className="r">{hourLabel(hour)}</th>
+                  <th scope="col" className="r">T{MINUS}7d</th>
+                  <th scope="col" className="r">Change</th>
                 </tr>
               </thead>
               <tbody>
@@ -405,7 +418,7 @@ export function Explorer({ entry, dataThrough, initialHour, onHourChange, reveal
                   const g = ghost[i] ?? null;
                   return (
                     <tr key={keys[i]}>
-                      <td>{labels[i]}{i === printIndex ? " (first print)" : ""}</td>
+                      <th scope="row">{labels[i]}{i === printIndex ? " (first print)" : ""}</th>
                       <td className="r">{pct(b[2], 1)}</td>
                       <td className="r">{g === null ? "n/a" : pct(g, 1)}</td>
                       <td className="r">{g === null ? "n/a" : signed((b[2] - g) * 100, 1, " pp")}</td>
@@ -437,6 +450,7 @@ export function Explorer({ entry, dataThrough, initialHour, onHourChange, reveal
 
       <TimeControls
         h={hour}
+        hours={ev.snapshots.map(s => s.h)}
         ts={snap?.ts ?? null}
         max={max}
         min={min}
@@ -465,6 +479,7 @@ export function Explorer({ entry, dataThrough, initialHour, onHourChange, reveal
             </div>
             <button
               type="button" className="text-btn" aria-expanded={showThresholdTable}
+              aria-controls={`${chartId}-strikes`}
               onClick={() => setShowThresholdTable(!showThresholdTable)}
             >
               {showThresholdTable ? "Hide data table" : "Show data table"}
@@ -482,20 +497,20 @@ export function Explorer({ entry, dataThrough, initialHour, onHourChange, reveal
         </p>
         <ThresholdChart survival={survival} unit={ev.unit} mode={thresholdMode} />
         {showThresholdTable && (
-          <div className="data-table-wrap">
+          <div id={`${chartId}-strikes`} className="data-table-wrap" tabIndex={0} role="region" aria-label="Strike probability data">
             <table className="mel-table">
               <caption className="sr-only">Raw and fitted probability above each strike at {hourLabel(hour)}</caption>
               <thead>
                 <tr>
-                  <th>Strike</th>
-                  <th className="r">Raw</th>
-                  <th className="r">Fit</th>
+                  <th scope="col">Strike</th>
+                  <th scope="col" className="r">Raw</th>
+                  <th scope="col" className="r">Fit</th>
                 </tr>
               </thead>
               <tbody>
                 {survival.map(([k, raw, fit]) => (
                   <tr key={k}>
-                    <td className="num">Above {formatValue(k, ev.unit)}</td>
+                    <th scope="row" className="num">Above {formatValue(k, ev.unit)}</th>
                     <td className="r">{pct(raw, 1)}</td>
                     <td className="r">{pct(fit, 1)}</td>
                   </tr>

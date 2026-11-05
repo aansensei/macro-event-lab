@@ -1,6 +1,7 @@
 import type { CSSProperties } from "react";
 
 import { MINUS, formatEt, hourLabel } from "../lib/format";
+import { adjacentHour } from "../lib/snapshots";
 
 const PRESETS: [number, string][] = [
   [168, `T${MINUS}7d`],
@@ -12,6 +13,7 @@ const PRESETS: [number, string][] = [
 
 interface Props {
   h: number;
+  hours: number[];
   ts: string | null;
   max: number;
   min: number;
@@ -22,7 +24,7 @@ interface Props {
 }
 
 // The slider runs toward the close hour, with values stored as negative relative snapshot hours.
-export function TimeControls({ h, ts, max, min, playing, onHour, onPlay, reducedMotion = false }: Props) {
+export function TimeControls({ h, hours, ts, max, min, playing, onHour, onPlay, reducedMotion = false }: Props) {
   const when = ts ? formatEt(ts) : "";
   return (
     <div className="time-control-bar" role="group" aria-label="Point-in-time controls">
@@ -48,6 +50,13 @@ export function TimeControls({ h, ts, max, min, playing, onHour, onPlay, reduced
           style={{ "--fill": `${max === min ? 100 : ((max - h) / (max - min)) * 100}%` } as CSSProperties}
           aria-valuetext={`${h === 0 ? "The market close hour" : `${h} ${h === 1 ? "hour" : "hours"} before the market close hour`}${when && `, ${when}`}`}
           onChange={(e) => onHour(-Number(e.target.value))}
+          onKeyDown={(e) => {
+            const later = e.key === "ArrowRight" || e.key === "ArrowUp";
+            const earlier = e.key === "ArrowLeft" || e.key === "ArrowDown";
+            if (!later && !earlier) return;
+            e.preventDefault();
+            onHour(adjacentHour(hours, h, later ? "later" : "earlier"));
+          }}
         />
       </div>
       <div className="preset-chips" role="group" aria-label="Jump to an hour">

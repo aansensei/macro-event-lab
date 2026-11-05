@@ -32,6 +32,88 @@ const event: EventFile = {
   snapshots: [snapshot, { ...snapshot, h: 1, ts: "2025-01-15T12:00:00Z" }],
 };
 
+it("moves the time chart cursor to the next recorded hour across a gap", async () => {
+  vi.mocked(loadEvent).mockResolvedValue(event);
+  const host = document.createElement("div"); document.body.append(host);
+  const root = createRoot(host);
+  try {
+    await act(async () => root.render(createElement(Explorer, {
+      entry, dataThrough: "2025-01-15", initialHour: 24, onHourChange: vi.fn(), revealStage: 0,
+    })));
+    const chart = host.querySelector<SVGElement>('svg[role="slider"]')!;
+    await act(async () => chart.dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowRight", bubbles: true })));
+    expect(host.querySelector<HTMLInputElement>('input[type="range"]')?.value).toBe("-1");
+    await act(async () => chart.dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowLeft", bubbles: true })));
+    expect(host.querySelector<HTMLInputElement>('input[type="range"]')?.value).toBe("-24");
+    const range = host.querySelector<HTMLInputElement>('input[type="range"]')!;
+    await act(async () => range.dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowRight", bubbles: true })));
+    expect(range.value).toBe("-1");
+    expect(host.querySelector(".reaction-block")).toBeNull();
+  } finally { await act(async () => root.unmount()); host.remove(); }
+});
+
+it("clears a hovered pin and returns focus to the outcome chart", async () => {
+  vi.mocked(loadEvent).mockResolvedValue(event);
+  const host = document.createElement("div"); document.body.append(host);
+  const root = createRoot(host);
+  try {
+    await act(async () => root.render(createElement(Explorer, {
+      entry, dataThrough: "2025-01-15", initialHour: 24, onHourChange: vi.fn(), revealStage: 0,
+    })));
+    const hit = host.querySelector<SVGElement>(".bin-hit")!;
+    await act(async () => {
+      hit.dispatchEvent(new MouseEvent("mouseover", { bubbles: true }));
+      hit.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+    });
+    const clear = host.querySelector<HTMLButtonElement>(".readout-unpin")!;
+    clear.focus();
+    await act(async () => clear.click());
+    const chart = host.querySelector('svg[role="group"]')!;
+    expect(document.activeElement).toBe(chart);
+    expect(host.querySelector(".readout-text")?.textContent).toContain("Implied mean");
+    expect(host.querySelector(".readout-unpin")).toBeNull();
+    await act(async () => hit.dispatchEvent(new MouseEvent("click", { bubbles: true })));
+    const clearWithEscape = host.querySelector<HTMLButtonElement>(".readout-unpin")!;
+    clearWithEscape.focus();
+    await act(async () => clearWithEscape.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true })));
+    expect(document.activeElement).toBe(chart);
+    expect(host.querySelector(".readout-unpin")).toBeNull();
+    expect(chart.getAttribute("aria-describedby")).toBe(host.querySelector(".readout-strip [aria-live]")?.id);
+    await act(async () => {
+      hit.dispatchEvent(new MouseEvent("mouseover", { bubbles: true }));
+      hit.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+      chart.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true }));
+    });
+    expect(host.querySelector(".readout-text")?.textContent).toContain("Implied mean");
+    expect(host.querySelector(".readout-unpin")).toBeNull();
+  } finally { await act(async () => root.unmount()); host.remove(); }
+});
+
+it("labels the outcome and strike tables as keyboard scroll regions", async () => {
+  vi.mocked(loadEvent).mockResolvedValue(event);
+  const host = document.createElement("div"); document.body.append(host);
+  const root = createRoot(host);
+  try {
+    await act(async () => root.render(createElement(Explorer, {
+      entry, dataThrough: "2025-01-15", initialHour: 24, onHourChange: vi.fn(), revealStage: 0,
+    })));
+    const buttons = [...host.querySelectorAll<HTMLButtonElement>("button")].filter(b => b.textContent === "Show data table");
+    for (const button of buttons) await act(async () => button.click());
+    const names = ["Outcome probability data", "Strike probability data"];
+    for (const [i, name] of names.entries()) {
+      const region = host.querySelector<HTMLElement>(`[role="region"][aria-label="${name}"]`)!;
+      expect(region).not.toBeNull();
+      expect(region.tabIndex).toBe(0);
+      expect(buttons[i]!.getAttribute("aria-controls")).toBe(region.id);
+      region.focus();
+      expect(document.activeElement).toBe(region);
+      expect(region.querySelector('th[scope="row"]')).not.toBeNull();
+      expect(region.querySelectorAll('thead th:not([scope="col"])')).toHaveLength(0);
+      expect(region.textContent).not.toContain("(first print)");
+    }
+  } finally { await act(async () => root.unmount()); host.remove(); }
+});
+
 it("explains an event without snapshots without writing a nonfinite hour or drawing a slider", async () => {
   const emptyEntry = { ...entry, id: "empty-snapshot-fixture" };
   vi.mocked(loadEvent).mockResolvedValue({ ...event, id: emptyEntry.id, snapshots: [] });
