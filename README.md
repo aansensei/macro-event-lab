@@ -41,6 +41,22 @@ Five ideas carry the whole project.
 
 ![The daily update from public sources to the live site.](docs/images/daily-update.svg)
 
+## The contestants
+
+Every model is fitted only on data that was public on the forecast date, refit at every origin, and scored against the first published number. The formulas, the features, the penalty grids and the scoring rules are written out in [`docs/MODELS.md`](docs/MODELS.md).
+
+| Contestant | What it does | Targets |
+| --- | --- | --- |
+| Naive | Repeats the previous first published number | GDP, inflation, payrolls |
+| Autoregression | Least squares on the last 1 to 4 first prints, lag chosen by BIC | GDP, inflation, payrolls |
+| Ridge | Ridge regression on lagged first prints and monthly indicators, penalty chosen by an inner walk forward test | GDP, inflation, payrolls |
+| Ridge on principal components | Principal components of the indicators, then ridge on 1 to 4 of them | GDP, inflation, payrolls |
+| LASSO | L1 penalized regression solved by coordinate descent | GDP, inflation, payrolls |
+| Survey median | Median forecast of the Survey of Professional Forecasters | GDP |
+| Two foundation models | Planned, not yet run | not yet |
+
+Intervals are 90 percent split conformal intervals from the last 40 errors. Differences from the naive forecast use a Diebold and Mariano test with the Harvey, Leybourne and Newbold correction. Results are preliminary and the arena names no winner.
+
 ## Repo layout
 
 | Folder | What | Stack |
