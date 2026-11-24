@@ -37,7 +37,8 @@ export function ArenaLeaderboard({ rows, target }: { rows: LeaderboardRow[]; tar
           {(["coverage_90", "n"] as const).map((column) => <th scope="col" role="columnheader" key={column}
             aria-sort={sort === column ? direction === "asc" ? "ascending" : "descending" : "none"}>
             <button type="button" className="text-btn" onClick={() => changeSort(column)}>{column === "n" ? "Periods" : "90% coverage"}</button>
-          </th>)}<th scope="col" role="columnheader">DM p value</th><th scope="col" role="columnheader">Worst period share</th></tr></thead>
+          </th>)}<th scope="col" role="columnheader">DM p value</th><th scope="col" role="columnheader">Worst period share</th>
+          <th scope="col" role="columnheader">RMSE without 2020</th></tr></thead>
         <tbody role="rowgroup">{ordered.map((row) => <tr key={row.contestant} role="row">
           <td data-label="RMSE rank" role="cell">{row.rank ?? "Not ranked"}</td>
           <th scope="row" role="rowheader"><strong>{row.contestantInfo.label}</strong><span className="arena-kind">{contestantKind(row.contestantInfo.kind)}</span><small>{row.contestantInfo.note}</small></th>
@@ -48,8 +49,12 @@ export function ArenaLeaderboard({ rows, target }: { rows: LeaderboardRow[]; tar
           <td data-label="Periods" role="cell">{row.n.toLocaleString("en-US")}</td>
           <td data-label="DM p value" role="cell">{row.dm_vs_naive_p === null ? "Not available" : row.dm_vs_naive_p.toPrecision(3)}</td>
           <td data-label="Worst period share" role="cell">{row.worstShare === null ? "Not available" : `${(100 * row.worstShare).toFixed(0)}%`}</td>
+          <td data-label="RMSE without 2020" role="cell">{row.rmseWithout2020 === null ? "Not available" : <>
+            {arenaValue(row.rmseWithout2020)}
+            {row.relativeWithout2020 !== null && <small>{`${row.relativeWithout2020 > 0 ? "+" : ""}${row.relativeWithout2020.toFixed(1)}% vs naive`}</small>}
+          </>}</td>
         </tr>)}</tbody>
       </table>}
-    <p className="t-micro muted">The RMSE difference is 100 times (contestant RMSE divided by naive RMSE, minus one). It is unavailable when the baseline is missing or zero. P values are two-sided comparisons against naive, not measures of effect direction or evidence of equality. Counts may differ between contestants. No multiple-comparison adjustment is applied. The worst period share is the part of a contestant's total squared error that comes from its single largest miss: a high share means one extreme period, such as spring 2020, drives the RMSE.</p>
+    <p className="t-micro muted">The RMSE difference is 100 times (contestant RMSE divided by naive RMSE, minus one). It is unavailable when the baseline is missing or zero. P values are two-sided comparisons against naive, not measures of effect direction or evidence of equality. Counts may differ between contestants. No multiple-comparison adjustment is applied. The worst period share is the part of a contestant's total squared error that comes from its single largest miss: a high share means one extreme period, such as spring 2020, drives the RMSE. The last column repeats the RMSE with every period of 2020 left out, and the percentage compares it with the naive forecast over the same periods. It is a sensitivity check shown beside the scored result: the scored RMSE and the ranks keep 2020, as the protocol requires, and the column is shown for the all periods window only.</p>
   </>;
 }

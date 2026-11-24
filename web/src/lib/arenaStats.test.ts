@@ -3,7 +3,8 @@ import { describe, expect, it } from "vitest";
 import type { Arena } from "../data/arena";
 import { arenaFixture } from "../data/arenaFixture";
 import {
-  arenaRange, contestantsPerTarget, intervalCovered, leaderboardRows, relativeToNaive, sortLeaderboard, worstPeriodShare,
+  arenaRange, contestantsPerTarget, intervalCovered, leaderboardRows, relativeToNaive, rmseWithoutYear,
+  sortLeaderboard, worstPeriodShare,
 } from "./arenaStats";
 
 it("ranks RMSE with shared competition ranks and unavailable rows last", () => {
@@ -88,5 +89,36 @@ describe("contestantsPerTarget", () => {
   } as unknown as Arena;
   it("counts contestants with a score in the full window for each target", () => {
     expect(contestantsPerTarget(arena)).toEqual([{ label: "GDP growth", count: 2 }, { label: "Inflation", count: 1 }]);
+  });
+});
+
+describe("rmseWithoutYear", () => {
+  const arena = {
+    targets: [{ id: "gdp", label: "GDP growth" }],
+    contestants: [{ id: "naive", label: "Naive", kind: "baseline", note: "" }, { id: "a", label: "A", kind: "classical", note: "" }],
+    forecasts: [
+      { target: "gdp", period: "2019-10-01", made_on: "2019-11-01", actual: 2, values: { naive: 0, a: 1 }, intervals: {} },
+      { target: "gdp", period: "2020-04-01", made_on: "2020-05-01", actual: -30, values: { naive: 0, a: 0 }, intervals: {} },
+      { target: "gdp", period: "2021-01-01", made_on: "2021-02-01", actual: 4, values: { naive: 0, a: 0 }, intervals: {} },
+      { target: "cpi", period: "2021-01-01", made_on: "2021-02-01", actual: 9, values: { a: 0 }, intervals: {} },
+    ],
+    scores: [
+      { target: "gdp", contestant: "naive", window: "all", n: 3, mae: 12, rmse: 17.4, coverage_90: null, dm_vs_naive_p: null },
+      { target: "gdp", contestant: "a", window: "all", n: 3, mae: 11, rmse: 17.3, coverage_90: null, dm_vs_naive_p: null },
+    ],
+  } as unknown as Arena;
+  it("leaves out every period that starts in the year and keeps the target and contestant apart", () => {
+    // naive errors without 2020: 2 and 4, so sqrt((4 + 16) / 2); a: 1 and 4, so sqrt((1 + 16) / 2)
+    expect(rmseWithoutYear(arena, "gdp", "naive", 2020)).toBeCloseTo(Math.sqrt(10), 12);
+    expect(rmseWithoutYear(arena, "gdp", "a", 2020)).toBeCloseTo(Math.sqrt(8.5), 12);
+    expect(rmseWithoutYear(arena, "cpi", "a", 2021)).toBeNull();
+    expect(rmseWithoutYear(arena, "gdp", "missing", 2020)).toBeNull();
+  });
+  it("fills the leaderboard column only for the all periods window and compares with naive over the same periods", () => {
+    const rows = leaderboardRows(arena, "gdp", "all");
+    const a = rows.find((row) => row.contestant === "a")!;
+    expect(a.rmseWithout2020).toBeCloseTo(Math.sqrt(8.5), 12);
+    expect(a.relativeWithout2020).toBeCloseTo(100 * (Math.sqrt(8.5) / Math.sqrt(10) - 1), 10);
+    expect(leaderboardRows(arena, "gdp", "clean").every((row) => row.rmseWithout2020 === null)).toBe(true);
   });
 });

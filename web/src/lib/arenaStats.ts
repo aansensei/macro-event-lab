@@ -4,6 +4,24 @@ export interface LeaderboardRow extends ArenaScore {
   contestantInfo: Contestant; rank: number | null; relative: number | null;
   // share of the contestant's total squared error that comes from its single worst period
   worstShare: number | null;
+  // RMSE over the contestant's periods outside 2020, a sensitivity check beside the scored RMSE
+  rmseWithout2020: number | null;
+  // that RMSE against the naive RMSE over the same periods, in percent
+  relativeWithout2020: number | null;
+}
+
+// root mean squared error over the periods that do not start in the given year, or null with none left
+export function rmseWithoutYear(arena: Arena, target: TargetId, contestant: string, year: number): number | null {
+  let sum = 0;
+  let count = 0;
+  for (const row of arena.forecasts) {
+    const value = row.values[contestant];
+    if (row.target !== target || row.actual === null || value === null || value === undefined) continue;
+    if (row.period.startsWith(`${year}-`)) continue;
+    sum += (row.actual - value) ** 2;
+    count += 1;
+  }
+  return count > 0 ? Math.sqrt(sum / count) : null;
 }
 
 export function worstPeriodShare(arena: Arena, target: TargetId, contestant: string): number | null {
@@ -30,12 +48,15 @@ export function leaderboardRows(arena: Arena, target: TargetId, window: ArenaWin
   const naive = scores.find((score) => score.contestant === "naive")?.rmse ?? null;
   const ordered = [...scores].sort((a, b) => (a.rmse ?? Infinity) - (b.rmse ?? Infinity)
     || a.contestant.localeCompare(b.contestant));
+  const withoutNaive = window === "all" ? rmseWithoutYear(arena, target, "naive", 2020) : null;
   let rank = 0;
   return ordered.map((score, index) => {
+    const without = window === "all" ? rmseWithoutYear(arena, target, score.contestant, 2020) : null;
     if (score.rmse !== null && (index === 0 || score.rmse !== ordered[index - 1]?.rmse)) rank = index + 1;
     return { ...score, contestantInfo: arena.contestants.find((entry) => entry.id === score.contestant)!,
       rank: score.rmse === null ? null : rank, relative: relativeToNaive(score.rmse, naive),
-      worstShare: worstPeriodShare(arena, target, score.contestant) };
+      worstShare: worstPeriodShare(arena, target, score.contestant),
+      rmseWithout2020: without, relativeWithout2020: relativeToNaive(without, withoutNaive) };
   });
 }
 
