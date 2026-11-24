@@ -21,7 +21,7 @@ What the public site shows:
 - **Revisions:** how the first published CPI, payrolls and GDP numbers changed later.
 - **GDP nowcast:** a live nowcast built only from data that was public before each release.
 - **Data status:** the age of each source and the quality checks that ran.
-- **Forecast arena:** professional forecasters, classical models and time series foundation models, scored point in time. Results appear after review. The rules are fixed in advance in [`pipeline/EVAL_PROTOCOL.md`](pipeline/EVAL_PROTOCOL.md).
+- **Forecast arena:** professional forecasters and classical models, scored point in time against the first published number. Every target has a naive baseline and an autoregression; GDP growth also has ridge, principal component ridge, LASSO and the survey median. The monthly ridge models and the two time series foundation models have not run, so the results are preliminary. The rules are fixed in advance in [`pipeline/EVAL_PROTOCOL.md`](pipeline/EVAL_PROTOCOL.md).
 
 A second, local research edition replays hour by hour prediction market odds around each release. It uses market data from Kalshi and is not published, because Kalshi's terms require written permission before anything derived from its data is made public.
 
@@ -96,6 +96,30 @@ SPF payroll forecasts retain quarterly employment levels in thousands of jobs. T
 job gains. Housing starts retain millions of units at an annual rate. No monthly forecast is inferred
 from either quarterly level series.
 
+## Check the claims yourself
+
+Every factual and numerical claim made by this repository and the public site is catalogued in [`CLAIMS.md`](CLAIMS.md). Anyone can clone the repository and verify every claim locally from public data and the code in this repository.
+
+```bash
+git clone https://github.com/aansensei/macro-event-lab.git
+cd macro-event-lab
+python -m venv .venv
+source .venv/bin/activate
+pip install -e "./pipeline[dev]"
+python -m macro_event_lab verify
+```
+
+On Windows PowerShell:
+
+```powershell
+git clone https://github.com/aansensei/macro-event-lab.git
+cd macro-event-lab
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1
+pip install -e ".\pipeline[dev]"
+python -m macro_event_lab verify
+```
+
 ## Quickstart (Windows PowerShell)
 
 Run everything from the repo root:
@@ -141,6 +165,7 @@ npm run dev
 | `model --bayesian` | Sample a hierarchical event-weighted generalized posterior with learned pooling scales, convergence gates and limited marginal predictive checks. Requires the optional `bayes` dependencies; descriptive local results only. |
 | `model --joint` | Fit one categorical outcome per event at T-1h and simulate contract labels from shared event outcomes. Requires `bayes`; includes a documented fixed support mixture and remains local and descriptive. |
 | `asof 2026-10-14T12:31Z` | Print what was public at that moment: newest ALFRED vintages and open Kalshi markets |
+| `verify [--claims-file PATH]` | Run verification tests for all claims documented in CLAIMS.md |
 
 ## License
 

@@ -9,7 +9,7 @@ from datetime import UTC, date, datetime
 
 import polars as pl
 
-from macro_event_lab import calibration, config, nowcast, pit, public_build, quality
+from macro_event_lab import calibration, config, nowcast, pit, public_build, quality, verify
 from macro_event_lab.arena import export as arena_export
 from macro_event_lab.build import build_silver
 from macro_event_lab.gold import build_gold
@@ -293,6 +293,12 @@ def main(argv: list[str] | None = None) -> None:
     p_asof = sub.add_parser("asof", help="print what was public at a moment (point in time)")
     p_asof.add_argument("timestamp", help="ISO time with zone, e.g. 2026-10-14T12:29Z")
     p_asof.set_defaults(func=cmd_asof)
+
+    p_verify = sub.add_parser(
+        "verify", help="run verification tests for claims documented in CLAIMS.md"
+    )
+    p_verify.add_argument("--claims-file", default=None, help="path to CLAIMS.md")
+    p_verify.set_defaults(func=verify.cmd_verify)
 
     args = parser.parse_args(argv)
     args.func(args)
