@@ -1,0 +1,45 @@
+/* public edition home: a live nowcast card, three page cards, a note on the private market pages and the data credit */
+.public-home, .public-notice { max-width: 880px; }
+.live-card {
+  display: grid;
+  gap: 6px;
+  margin-top: 28px;
+  padding: 20px 22px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background-color: var(--surface);
+  color: var(--text);
+  text-decoration: none;
+  transition: border-color 0.18s ease, background-color 0.18s ease;
+}
+.live-card:hover { border-color: var(--accent); background-color: var(--accent-tint); text-decoration: none; }
+.live-card:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.live-kicker { font-size: 12px; font-weight: 600; letter-spacing: 0.07em; text-transform: uppercase; color: var(--accent); }
+.live-value { font-size: 44px; line-height: 52px; font-weight: 600; letter-spacing: -0.02em; color: var(--market); }
+.live-sentence { color: var(--text); line-height: 24px; }
+.live-record { font-size: 13px; line-height: 20px; color: var(--text-muted); }
+.public-cards { list-style: none; margin: 24px 0 0 0; padding: 0; display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px; }
+@media (min-width: 720px) {
+  .public-cards { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+.public-card {
+  display: grid;
+  gap: 4px;
+  height: 100%;
+  padding: 16px 18px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  color: var(--text);
+  text-decoration: none;
+  transition: border-color 0.18s ease;
+  -webkit-user-select: none;
+  user-select: none;
+}
+.public-card:hover { border-color: var(--accent); text-decoration: none; }
+.public-card:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.public-card-title { font-weight: 600; color: var(--accent); }
+.public-card-question { font-size: 14px; line-height: 21px; color: var(--text-muted); }
+.public-note { margin-top: 40px; padding: 16px 18px; border-left: 2px solid var(--accent); background-color: var(--surface); border-radius: 0 8px 8px 0; }
+.public-note p { margin: 8px 0 0 0; color: var(--text-muted); line-height: 25px; max-width: 70ch; }
+.public-credit { margin-top: 32px; max-width: 70ch; line-height: 19px; }
+.public-notice p:not(.about-lead) { margin-top: 20px; line-height: 26px; }

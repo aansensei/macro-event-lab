@@ -86,6 +86,7 @@ npm run dev
 | `ingest releases` | Download CPI, jobs and GDP release dates (FRED); FOMC dates come from `pipeline/src/macro_event_lab/seeds/` |
 | `build` | Rebuild silver tables from raw, then gold tables (contract prices, implied distributions, stats, surprises), then the website JSON in `data/web/` |
 | `check [--show N]` | Data quality checks on silver (duplicates, bid above ask, prices outside [0, 1], missing months, markets without a strike); exits 1 on errors |
+| `build-public` | Rebuild only the ALFRED tables (revisions and the GDP nowcast, including the live nowcast for the quarter not yet released) and write the public website files to `data/web_public/`; this is what the scheduled Public site workflow runs |
 | `nowcast` | Evaluate the GDP nowcast walk-forward: out-of-sample errors against the naive guess, ridge coefficients with block bootstrap intervals, and the Kalshi market on the quarters it covered |
 | `model` | Build local calibration training rows, MAP coefficients and temporal score comparisons of raw prices, isotonic and MAP, with Bonferroni intervals and a fixed prior sensitivity grid. See [model card](pipeline/MODEL_CARD.md). |
 | `model --bayesian` | Sample a hierarchical event-weighted generalized posterior with learned pooling scales, convergence gates and limited marginal predictive checks. Requires the optional `bayes` dependencies; descriptive local results only. |

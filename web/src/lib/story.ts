@@ -1,5 +1,6 @@
 // The four pages that tell the site's story, from one release to the yardstick itself.
 
+import { PUBLIC_EDITION } from "./edition";
 import { pageSearch, type Page } from "./url";
 
 export interface StoryStep {
@@ -11,7 +12,7 @@ export interface StoryStep {
   lead: string;
 }
 
-export const STORY: StoryStep[] = [
+const FULL_STORY: StoryStep[] = [
   {
     page: "events",
     label: "Events",
@@ -37,6 +38,9 @@ export const STORY: StoryStep[] = [
     lead: "Expectations, outcomes and revisions depend on when you look. Method shows how each number is assembled and checked.",
   },
 ];
+
+// the public edition has no market pages, so it shows no story path at all
+export const STORY: StoryStep[] = PUBLIC_EDITION ? [] : FULL_STORY;
 
 export function storyIndex(page: Page): number {
   return STORY.findIndex((s) => s.page === page);

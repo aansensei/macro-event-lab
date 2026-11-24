@@ -4,11 +4,11 @@ from __future__ import annotations
 
 import argparse
 import sys
-from datetime import UTC, datetime
+from datetime import UTC, date, datetime
 
 import polars as pl
 
-from macro_event_lab import calibration, config, nowcast, pit, quality
+from macro_event_lab import calibration, config, nowcast, pit, public_build, quality
 from macro_event_lab.build import build_silver
 from macro_event_lab.gold import build_gold
 from macro_event_lab.http import RateLimitedClient
@@ -177,6 +177,14 @@ def cmd_model(args: argparse.Namespace) -> None:
               else "Fixed-prior MAP with temporal evaluation. No posterior intervals.")
 
 
+def cmd_build_public(args: argparse.Namespace) -> None:
+    paths = config.get_paths()
+    today = date.fromisoformat(args.today) if args.today else None
+    for table, n in public_build.build_public(paths, today).items():
+        print(f"{table}: {n:,}")
+    print(f"website files in {public_build.public_dir(paths)}")
+
+
 def cmd_build(_: argparse.Namespace) -> None:
     paths = config.get_paths()
     for table, n in build_silver(paths).items():
@@ -224,6 +232,12 @@ def main(argv: list[str] | None = None) -> None:
 
     p_build = sub.add_parser("build", help="rebuild silver and gold Parquet tables from raw")
     p_build.set_defaults(func=cmd_build)
+
+    p_public = sub.add_parser(
+        "build-public", help="rebuild the ALFRED-only tables and public website files"
+    )
+    p_public.add_argument("--today", help="information date of the live nowcast (YYYY-MM-DD)")
+    p_public.set_defaults(func=cmd_build_public)
 
     p_nowcast = sub.add_parser("nowcast", help="evaluate the GDP nowcast walk-forward")
     p_nowcast.set_defaults(func=cmd_nowcast)

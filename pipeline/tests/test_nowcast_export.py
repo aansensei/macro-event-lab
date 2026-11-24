@@ -29,3 +29,24 @@ def test_nowcast_export_is_deterministic_and_excludes_all_nonallowlisted_fields(
     }
     assert set(data["coefficients"][0]) == {"feature", "coef", "lo", "hi"}
     assert data["points"][0]["as_of"] == "2025-04-29"
+
+
+def test_nowcast_export_writes_only_the_allowlisted_live_fields(tmp_path):
+    paths = Paths(tmp_path)
+    paths.gold.mkdir()
+    pl.DataFrame({
+        "reference_period": [date(2025, 1, 1)], "release_date": [date(2025, 4, 30)],
+        "as_of": [date(2025, 4, 29)], "first_print": [2.0], "previous_print": [1.0],
+        "nowcast": [1.5],
+    }).write_parquet(paths.gold / "gdp_nowcast.parquet")
+    pl.DataFrame({"feature": ["INDPRO"], "coef": [0.3], "lo": [0.1], "hi": [0.5]}).write_parquet(
+        paths.gold / "gdp_nowcast_coefs.parquet"
+    )
+    live = {"reference_period": date(2025, 4, 1), "as_of": date(2025, 6, 2), "nowcast": 2.4,
+            "lam": 10.0, "n_train": 90, "months_published": 2, "missing": ["PCEC96"]}
+
+    export_nowcast(paths, out_dir=tmp_path / "public", live=live)
+
+    data = json.loads((tmp_path / "public" / "nowcast.json").read_text(encoding="utf-8"))
+    assert data["live"] == {"reference_period": "2025-04-01", "as_of": "2025-06-02",
+                            "nowcast": 2.4, "months_published": 2, "missing": ["PCEC96"]}

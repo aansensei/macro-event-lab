@@ -19,7 +19,7 @@ beforeEach(() => {
   vi.resetAllMocks();
   vi.mocked(loadSummary).mockResolvedValue({ schema_version: 1, series: [], points: [] });
   vi.mocked(loadRevisions).mockResolvedValue({ schema_version: 1, settled_months: 24, series: [] });
-  vi.mocked(loadNowcast).mockResolvedValue({ schema_version: 1, source: "ALFRED", points: [], coefficients: [] });
+  vi.mocked(loadNowcast).mockResolvedValue({ schema_version: 1, source: "ALFRED", points: [], coefficients: [], live: null });
   host = document.createElement("main"); host.tabIndex = -1; document.body.append(host); root = createRoot(host);
 });
 afterEach(async () => { await act(async () => root.unmount()); host.remove(); });

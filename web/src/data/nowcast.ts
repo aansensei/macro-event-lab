@@ -2,9 +2,16 @@ export interface NowcastPoint {
   reference_period: string; release_date: string; as_of: string;
   first_print: number; previous_print: number | null; nowcast: number;
 }
+// the forecast for the first quarter whose GDP is not out yet, from data published by as_of
+export interface LiveNowcast {
+  reference_period: string; as_of: string; nowcast: number; months_published: number;
+  // indicators with no month of the quarter out yet; the model holds them at their average
+  missing: string[];
+}
 export interface Nowcast {
   source: "ALFRED"; schema_version: number; points: NowcastPoint[];
   coefficients: { feature: string; coef: number; lo: number; hi: number }[];
+  live: LiveNowcast | null;
 }
 
 export function parseNowcast(value: unknown): Nowcast {
@@ -19,7 +26,15 @@ export function parseNowcast(value: unknown): Nowcast {
     || (p.previous_print !== null && !number(p.previous_print)))) throw new Error("Invalid nowcast point");
   if (o.coefficients.some((c) => !c || typeof c.feature !== "string"
     || ![c.coef, c.lo, c.hi].every(number) || c.lo > c.hi)) throw new Error("Invalid coefficient");
-  return { ...o, points: [...o.points].sort((a, b) => a.reference_period.localeCompare(b.reference_period)) };
+  // older files have no live forecast; that reads as none
+  const raw = o.live ?? null;
+  const live = raw === null ? null : { ...raw, missing: raw.missing ?? [] };
+  if (live !== null && (!date(live.reference_period) || !date(live.as_of) || !number(live.nowcast)
+    || !Number.isInteger(live.months_published) || live.months_published < 0 || live.months_published > 3
+    || !Array.isArray(live.missing) || live.missing.some((m) => typeof m !== "string"))) {
+    throw new Error("Invalid live nowcast");
+  }
+  return { ...o, live, points: [...o.points].sort((a, b) => a.reference_period.localeCompare(b.reference_period)) };
 }
 
 export async function loadNowcast(fetchImpl: typeof fetch = fetch): Promise<Nowcast> {

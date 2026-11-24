@@ -3,6 +3,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import type { Filter } from "../components/EventList";
 import { loadManifest } from "../data/load";
 import type { Manifest } from "../data/types";
+import { PUBLIC_EDITION } from "../lib/edition";
 import { parseUrlState, urlSearch, type RevealStage, type UrlState } from "../lib/url";
 
 type State =
@@ -19,7 +20,8 @@ export function useEventExplorer(route: UrlState) {
   const revealStage = revealOverride?.route === route ? revealOverride.stage : route.reveal ?? 2;
 
   useEffect(() => {
-    if (route.page !== "events" || state.kind !== "loading") return;
+    // the public edition ships no market files, so there is no manifest to load
+    if (PUBLIC_EDITION || route.page !== "events" || state.kind !== "loading") return;
     let active = true;
     loadManifest()
       .then((manifest) => { if (active) setState({ kind: "ready", manifest }); })

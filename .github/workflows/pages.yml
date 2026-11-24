@@ -1,0 +1,68 @@
+name: Public site
+
+# Rebuilds the public edition from ALFRED and FRED every day and publishes it on GitHub Pages.
+# The runner never has the Kalshi archive, so no market-derived file can reach the site.
+on:
+  push:
+    branches: [main]
+  schedule:
+    # 14:30 UTC, after the 08:30 New York releases have reached ALFRED
+    - cron: "30 14 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    env:
+      MEL_DATA_DIR: ${{ github.workspace }}/../mel-data
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+      - run: pip install -e pipeline
+      - name: Download ALFRED vintages and release dates, then rebuild
+        env:
+          FRED_API_KEY: ${{ secrets.FRED_API_KEY }}
+        run: |
+          python -m macro_event_lab ingest releases
+          python -m macro_event_lab ingest alfred
+          python -m macro_event_lab build-public
+      - name: Copy only the public files into the site
+        run: |
+          mkdir -p web/public/data
+          cp "$MEL_DATA_DIR/web_public/revisions.json" "$MEL_DATA_DIR/web_public/nowcast.json" web/public/data/
+      - uses: actions/setup-node@v7
+        with:
+          node-version: "24"
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+      - run: npm ci
+        working-directory: web
+      - run: npm run build
+        working-directory: web
+        env:
+          VITE_EDITION: public
+      - uses: actions/configure-pages@v6
+      - uses: actions/upload-pages-artifact@v5
+        with:
+          path: web/dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v5

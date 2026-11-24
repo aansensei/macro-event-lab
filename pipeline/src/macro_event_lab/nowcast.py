@@ -284,3 +284,48 @@ def coefficient_table(
         "hi": np.percentile(boot, 97.5, axis=0),
         "lam": [lam] * len(FEATURES),
     })
+
+
+def live_nowcast(observations: pl.DataFrame, today: date) -> dict[str, object] | None:
+    """Nowcast for the first quarter whose advance estimate is not out by `today`.
+
+    Features come from the vintages current on `today`; the model is fitted on every quarter
+    already released, with the penalty chosen the same way as in the walk-forward. An indicator
+    with no month of the quarter out yet sits at its training mean, so it moves nothing, and is
+    listed in `missing`. Returns None when no monthly indicator has data for the quarter yet or
+    too few quarters are released. `months_published` counts the quarter's payroll months
+    already out.
+    """
+    rows = nowcast_rows(observations)
+    released = (
+        rows.filter(pl.col("release_date") <= today).drop_nulls(FEATURES).sort("release_date")
+    )
+    if released.height < MIN_TRAIN:
+        return None
+    quarter = add_months(released["reference_period"].max(), 3)
+    by_series = {s: observations.filter(pl.col("series_id") == s) for s in [*INDICATORS, "GDPC1"]}
+    payrolls = vintage(by_series["PAYEMS"], today)
+    features = {
+        s: quarter_value(vintage(by_series[s], today), quarter, k) for s, k in INDICATORS.items()
+    }
+    features["GDP_PREV"] = gdp_previous(vintage(by_series["GDPC1"], today), quarter)
+    missing = [f for f in FEATURES if features[f] is None]
+    if all(features[s] is None for s in INDICATORS):
+        return None
+    x = released.select(FEATURES).to_numpy()
+    y = released["first_print"].to_numpy()
+    means = dict(zip(FEATURES, x.mean(axis=0), strict=True))
+    lam = choose_lambda(
+        x, y, release_dates=released["release_date"].to_list(),
+        as_of_dates=released["as_of"].to_list(),
+    )
+    point = np.array([[means[f] if features[f] is None else features[f] for f in FEATURES]])
+    return {
+        "reference_period": quarter,
+        "as_of": today,
+        "nowcast": float(ridge_fit(x, y, lam).predict(point)[0]),
+        "lam": lam,
+        "n_train": released.height,
+        "months_published": sum(add_months(quarter, i) in payrolls for i in range(3)),
+        "missing": missing,
+    }

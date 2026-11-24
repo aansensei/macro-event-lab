@@ -3,6 +3,8 @@ import { useResource } from "../hooks/useResource";
 import { ResourceError } from "../components/ResourceError";
 import { ExternalLink } from "../components/ExternalLink";
 import { NowcastChart } from "../components/NowcastChart";
+import { PUBLIC_EDITION } from "../lib/edition";
+import { liveSentence } from "../lib/nowcastWords";
 
 const LABELS: Record<string, string> = { INDPRO: "Industrial production", PCEC96: "Real consumer spending",
   RRSFS: "Real retail sales", HOUST: "Housing starts", PAYEMS: "Payroll employment",
@@ -14,12 +16,18 @@ export function Models() {
   const errors = data && nowcastErrors(data.points);
   return <div className="models-page page-fade">
     <p className="section-kicker">Supplementary research</p><h1 className="t-h1">Reading GDP before release day</h1>
-    <p className="t-label muted">A separate ALFRED study. The main market-expectations story starts on <a href="?page=events">Events</a>.</p>
+    {!PUBLIC_EDITION && <p className="t-label muted">A separate ALFRED study. The main market-expectations story starts on <a href="?page=events">Events</a>.</p>}
     <p className="about-lead">A simple model uses the economic numbers already published to estimate the first GDP release.</p>
     <p className="muted">Data source: <ExternalLink href="https://alfred.stlouisfed.org/">ALFRED, Federal Reserve Bank of St. Louis</ExternalLink>. This page uses official economic data only.</p>
     {state.kind === "error" && <ResourceError title="The nowcast could not be loaded" message={state.message} onRetry={retry} />}
     {state.kind === "loading" && <p role="status">Loading the GDP model</p>}
     {data && <>
+      {data.live && <section className="about-section" aria-labelledby="model-live">
+        <h2 className="t-h3" id="model-live">The quarter not released yet</h2>
+        <p className="model-readout"><strong>{liveSentence(data.live)}.</strong> The model is refitted on every quarter already released, and the forecast moves as new monthly data come out.</p>
+        {data.live.missing.length > 0 && <p className="muted">Not out yet for this quarter: {data.live.missing.map((m) => LABELS[m] ?? m).join(", ")}. The model holds {data.live.missing.length === 1 ? "it" : "them"} at the historical average until the first month is published.</p>}
+        <p className="t-micro muted">The site rebuilds from ALFRED every day, so this forecast is only as current as the latest published monthly numbers.</p>
+      </section>}
       <section className="about-section" aria-labelledby="model-performance">
         <h2 className="t-h3" id="model-performance">Forecast versus first print</h2>
         <p>Every dashed point is a forecast made from vintages available by the day before the advance release. The solid line is what was first published.</p>
@@ -44,7 +52,7 @@ export function Models() {
     <section className="about-section"><h2 className="t-h3">How it works, in plain words</h2>
       <p>Monthly figures describe jobs, production, spending, retail sales, housing and unemployment. The model combines their quarterly changes with the previous quarter's GDP. If a month was not yet published, it uses only the months available at that time.</p>
       <p>Ridge regression keeps individual indicators from receiving extreme weights. For each forecast, the model learns from earlier releases only. It chooses how much to shrink the weights by testing on earlier quarters inside that training period.</p>
-      <p>The model is a historical evaluation, not a live forecast or a causal explanation. A missing month can change what the quarterly average represents. Pandemic observations also make error measures much larger.</p>
+      <p>The track record above is a historical evaluation, and the live forecast uses exactly the same steps on today's data. Neither is a causal explanation. A missing month can change what the quarterly average represents. Pandemic observations also make error measures much larger.</p>
     </section>
   </div>;
 }

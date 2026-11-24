@@ -4,14 +4,17 @@ import numpy as np
 import polars as pl
 import pytest
 
+from macro_event_lab import nowcast
 from macro_event_lab.nowcast import (
     FEATURES,
+    INDICATORS,
     add_months,
     bootstrap_coefs,
     choose_lambda,
     coefficient_table,
     error_summary,
     gdp_previous,
+    live_nowcast,
     market_comparison,
     nowcast_rows,
     quarter_value,
@@ -241,3 +244,54 @@ def test_nowcast_command_reports_median_and_cutoff_difference(tmp_path, monkeypa
     output = capsys.readouterr().out
     assert "Cutoffs differ" in output
     assert "Kalshi quarters" in output
+
+
+def _live_observations(third_month_published: date) -> pl.DataFrame:
+    # the quarter after the synthetic sample (Q3 2017): two months out early, the third later
+    d = date
+    rows = []
+    for series in INDICATORS:
+        for m in range(4, 10):
+            published = third_month_published if m == 9 else d(2017, m + 1, 5)
+            rows.append((series, d(2017, m, 1), 100.0 + m, published, None))
+    rows += [
+        ("GDPC1", d(2017, 1, 1), 100.0, d(2017, 4, 28), None),
+        ("GDPC1", d(2017, 4, 1), 101.0, d(2017, 7, 28), None),
+    ]
+    return _obs(rows)
+
+
+def test_live_nowcast_covers_the_next_unreleased_quarter_with_data_known_today(monkeypatch):
+    monkeypatch.setattr(nowcast, "nowcast_rows", lambda obs: _synthetic_rows())
+    obs = _live_observations(third_month_published=date(2017, 10, 6))
+
+    before = live_nowcast(obs, date(2017, 10, 5))
+    after = live_nowcast(obs, date(2017, 10, 6))
+
+    assert before is not None and after is not None
+    assert before["reference_period"] == date(2017, 7, 1)
+    assert (before["months_published"], after["months_published"]) == (2, 3)
+    assert before["n_train"] == 30
+    assert np.isfinite(before["nowcast"])
+    assert before["nowcast"] != after["nowcast"]  # the September data moved the nowcast
+
+
+def test_live_nowcast_waits_for_the_first_month_of_the_quarter(monkeypatch):
+    monkeypatch.setattr(nowcast, "nowcast_rows", lambda obs: _synthetic_rows())
+    obs = _live_observations(third_month_published=date(2017, 10, 6))
+    assert live_nowcast(obs, date(2017, 8, 1)) is None  # July data is published on 5 August
+
+
+def test_live_nowcast_holds_an_indicator_without_data_at_its_mean(monkeypatch):
+    monkeypatch.setattr(nowcast, "nowcast_rows", lambda obs: _synthetic_rows())
+    full = _live_observations(third_month_published=date(2017, 10, 6))
+    # housing starts for the quarter are not out yet: only its earlier quarter is published
+    partial = full.filter(
+        ~((pl.col("series_id") == "HOUST") & (pl.col("observation_date") >= date(2017, 7, 1)))
+    )
+
+    live = live_nowcast(partial, date(2017, 10, 7))
+
+    assert live is not None
+    assert live["missing"] == ["HOUST"]
+    assert live_nowcast(full, date(2017, 10, 7))["missing"] == []

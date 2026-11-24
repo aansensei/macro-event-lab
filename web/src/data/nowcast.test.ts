@@ -42,3 +42,13 @@ it("renders two distinct lines with an accessible description and an empty state
   expect(html.match(/<path /g)).toHaveLength(2);
   expect(renderToStaticMarkup(createElement(NowcastChart, { points: [] }))).toContain("No evaluated quarters");
 });
+
+it("reads the live forecast and treats a missing one as none", () => {
+  const live = { reference_period: "2025-07-01", as_of: "2025-10-20", nowcast: 2.4, months_published: 3, missing: ["PCEC96"] };
+  expect(parseNowcast({ ...payload, live }).live).toEqual(live);
+  const { missing: _, ...older } = live;
+  expect(parseNowcast({ ...payload, live: older }).live?.missing).toEqual([]);
+  expect(parseNowcast(payload).live).toBeNull();
+  expect(() => parseNowcast({ ...payload, live: { ...live, months_published: 4 } })).toThrow("live");
+  expect(() => parseNowcast({ ...payload, live: { ...live, nowcast: null } })).toThrow("live");
+});
