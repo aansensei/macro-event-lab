@@ -48,3 +48,8 @@
   .arena-page { max-width: env(viewport-segment-width 0 0); margin-inline: 0; }
   .arena-targets { grid-template-columns: minmax(0, 1fr); }
 }
+
+/* the loading, pending and error banners sit below the title with room to breathe and a readable line length */
+.arena-page > h1 + .state-banner,
+.arena-page > h1 + [role="alert"],
+.arena-page > h1 + section { margin-top: 24px; max-width: 720px; }
