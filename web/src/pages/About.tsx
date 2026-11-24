@@ -140,7 +140,10 @@ export function About() {
             draggable={false}
           />
           <div>
-            <p className="author-name">Cao Thien An Nguyen</p>
+            <p className="author-name">
+              Cao Thien An Nguyen
+              <img className="author-mark" src={`${import.meta.env.BASE_URL}ncta.png`} alt="ncta" width="42" height="22" draggable={false} />
+            </p>
             <p className="author-role">Data Science and Economics, University of Wisconsin-Madison</p>
             <p className="author-bio">
               From Ho Chi Minh City, Vietnam, now in Madison, where the winters are long enough to build a

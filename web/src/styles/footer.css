@@ -36,9 +36,10 @@
   .footer-grid { grid-template-columns: minmax(0, 1.5fr) repeat(3, minmax(0, 1fr)); gap: 48px; }
   .footer-brand { grid-column: auto; }
 }
-.footer-mark { display: flex; align-items: center; gap: 10px; }
-.footer-mark img { height: 28px; width: auto; display: block; }
-.footer-name { font-size: 16px; font-weight: 600; color: var(--text); letter-spacing: -0.01em; }
+.footer-mark { display: flex; align-items: center; }
+.footer-mark .logo-svg { height: 28px; width: auto; display: block; }
+.footer-author { display: inline-flex; align-items: center; gap: 10px; }
+.footer-author img { height: 22px; width: auto; display: block; }
 .footer-tagline { margin: 14px 0 0 0; max-width: 36ch; }
 .footer-status {
   display: inline-flex;

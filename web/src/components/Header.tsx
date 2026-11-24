@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import type { Page } from "../lib/url";
 import { PRIMARY } from "../lib/navigation";
 import { LearnMenu } from "./LearnMenu";
+import { Logo } from "./Logo";
 
 type ThemePref = "system" | "light" | "dark";
 
@@ -66,7 +67,7 @@ export function Header({ page, onNavigate }: { page: Page; onNavigate: (p: Page)
     <header className="site-header">
       <div className="header-inner">
         <a className="logo-slot" href="./" aria-label="Macro Event Lab home">
-          <img src={`${import.meta.env.BASE_URL}logo.png`} alt="Macro Event Lab" width="70" height="36" />
+          <Logo />
         </a>
         <nav className="header-nav" aria-label="Primary navigation">
           {PRIMARY.map(([p, label]) => (

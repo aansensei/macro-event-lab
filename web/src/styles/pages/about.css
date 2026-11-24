@@ -83,7 +83,8 @@
   -webkit-user-select: none;
   user-select: none;
 }
-.author-name { font-size: 22px; line-height: 28px; font-weight: 600; letter-spacing: -0.01em; margin: 0; }
+.author-name { font-size: 22px; line-height: 28px; font-weight: 600; letter-spacing: -0.01em; margin: 0; display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }
+.author-mark { height: 22px; width: auto; display: block; }
 .author-role, .author-bio { margin: 6px 0 0 0; color: var(--text-muted); }
 .author-fun { margin: 10px 0 0 0; color: var(--text-muted); line-height: 24px; }
 .author-fun-tag {

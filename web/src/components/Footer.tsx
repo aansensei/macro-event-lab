@@ -4,6 +4,7 @@ import { formatEtDate } from "../lib/format";
 import type { Page } from "../lib/url";
 import { PRIMARY, LEARN } from "../lib/navigation";
 import { ExternalLink } from "./ExternalLink";
+import { Logo } from "./Logo";
 
 const REPO = "https://github.com/aansensei/macro-event-lab";
 
@@ -43,8 +44,7 @@ export function Footer({ dataThrough, onNavigate }: Props) {
       <div className="footer-grid">
         <div className="footer-brand">
           <div className="footer-mark">
-            <img src={`${import.meta.env.BASE_URL}logo.png`} alt="" width="56" height="28" draggable={false} />
-            <span className="footer-name">Macro Event Lab</span>
+            <Logo />
           </div>
           <p className="footer-tagline">
             What markets expected before each US macro release, and what happened when the number came out.
@@ -101,7 +101,10 @@ export function Footer({ dataThrough, onNavigate }: Props) {
       </div>
 
       <div className="footer-bottom">
-        <span>&copy; 2026 Cao Thien An Nguyen</span>
+        <span className="footer-author">
+          <img src={`${import.meta.env.BASE_URL}ncta.png`} alt="ncta" width="42" height="22" draggable={false} />
+          <span>&copy; 2026 Cao Thien An Nguyen</span>
+        </span>
       </div>
     </footer>
   );

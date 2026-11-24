@@ -22,14 +22,14 @@
   .header-inner { padding: 0 32px; }
 }
 
-/* the logo keeps its own 2:1 shape: 30px tall on phones, 36px from 640px; the PNG is 3x that */
+/* the lockup keeps its own shape: 30px tall on phones, 36px from 640px */
 .logo-slot {
   display: flex;
   align-items: center;
   height: 30px;
   padding: 0;
 }
-.logo-slot img { height: 100%; width: auto; display: block; }
+.logo-slot .logo-svg { height: 100%; width: auto; display: block; }
 @media (min-width: 640px) {
   .logo-slot { height: 36px; }
 }
