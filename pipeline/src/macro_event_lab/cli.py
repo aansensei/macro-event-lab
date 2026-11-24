@@ -6,10 +6,20 @@ import argparse
 import json
 import sys
 from datetime import UTC, date, datetime
+from pathlib import Path
 
 import polars as pl
 
-from macro_event_lab import calibration, config, nowcast, pit, public_build, quality, verify
+from macro_event_lab import (
+    calibration,
+    config,
+    freshness,
+    nowcast,
+    pit,
+    public_build,
+    quality,
+    verify,
+)
 from macro_event_lab.arena import export as arena_export
 from macro_event_lab.build import build_silver
 from macro_event_lab.gold import build_gold
@@ -210,6 +220,12 @@ def cmd_build_public(args: argparse.Namespace) -> None:
     print(f"website files in {public_build.public_dir(paths)}")
 
 
+def cmd_check_freshness(args: argparse.Namespace) -> None:
+    exit_code = freshness.check_status_file(args.status)
+    if exit_code != 0:
+        raise SystemExit(exit_code)
+
+
 def cmd_build(_: argparse.Namespace) -> None:
     paths = config.get_paths()
     for table, n in build_silver(paths).items():
@@ -299,6 +315,12 @@ def main(argv: list[str] | None = None) -> None:
     )
     p_verify.add_argument("--claims-file", default=None, help="path to CLAIMS.md")
     p_verify.set_defaults(func=verify.cmd_verify)
+
+    p_fresh = sub.add_parser(
+        "check-freshness", help="check source freshness from status.json"
+    )
+    p_fresh.add_argument("--status", type=Path, required=True, help="path to status.json")
+    p_fresh.set_defaults(func=cmd_check_freshness)
 
     args = parser.parse_args(argv)
     args.func(args)

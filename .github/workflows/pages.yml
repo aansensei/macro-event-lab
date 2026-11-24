@@ -22,6 +22,11 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+      issues: write
     env:
       MEL_DATA_DIR: ${{ github.workspace }}/../mel-data
     steps:
@@ -38,6 +43,19 @@ jobs:
           python -m macro_event_lab ingest alfred
           python -m macro_event_lab ingest spf || echo "Survey download failed; the site is built without it"
           python -m macro_event_lab build-public
+      - name: Check source freshness
+        id: fresh
+        continue-on-error: true
+        shell: bash
+        run: |
+          set -euo pipefail
+          report_file="${RUNNER_TEMP:-/tmp}/freshness_report.txt"
+          set +e
+          python -m macro_event_lab check-freshness --status "$MEL_DATA_DIR/web_public/status.json" > "$report_file" 2>&1
+          status_code=$?
+          set -e
+          cat "$report_file"
+          exit "$status_code"
       - name: Copy only the public files into the site
         run: |
           mkdir -p web/public/data
@@ -57,6 +75,40 @@ jobs:
       - uses: actions/upload-pages-artifact@v5
         with:
           path: web/dist
+      - name: Close resolved build issue
+        if: success() && steps.fresh.outcome == 'success'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          issue_number="$(gh issue list --repo "$GH_REPO" --state open --limit 100 --json number,title --jq '[.[] | select(.title == "Daily build problem")][0].number // ""')"
+          if [ -n "$issue_number" ]; then
+            gh issue close "$issue_number" --repo "$GH_REPO" --comment "Resolved: the latest build is fresh and complete."
+          fi
+      - name: Alert on daily build problem
+        if: failure() || steps.fresh.outcome == 'failure'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          FRESH_OUTCOME: ${{ steps.fresh.outcome }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          body="Daily build problem reported in run: $RUN_URL"
+          report_file="${RUNNER_TEMP:-/tmp}/freshness_report.txt"
+          if [ "$FRESH_OUTCOME" = "failure" ] && [ -s "$report_file" ]; then
+            report_text="$(cat "$report_file")"
+            body="${body}"$'\n\n'"${report_text}"
+          fi
+          issue_number="$(gh issue list --repo "$GH_REPO" --state open --limit 100 --json number,title --jq '[.[] | select(.title == "Daily build problem")][0].number // ""')"
+          if [ -n "$issue_number" ]; then
+            gh issue comment "$issue_number" --repo "$GH_REPO" --body "$body"
+          else
+            gh issue create --repo "$GH_REPO" --title "Daily build problem" --body "$body"
+          fi
 
   deploy:
     needs: build
