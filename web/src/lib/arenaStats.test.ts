@@ -1,7 +1,10 @@
-import { expect, it } from "vitest";
+import { describe, expect, it } from "vitest";
 
+import type { Arena } from "../data/arena";
 import { arenaFixture } from "../data/arenaFixture";
-import { arenaRange, intervalCovered, leaderboardRows, relativeToNaive, sortLeaderboard } from "./arenaStats";
+import {
+  arenaRange, intervalCovered, leaderboardRows, relativeToNaive, sortLeaderboard, worstPeriodShare,
+} from "./arenaStats";
 
 it("ranks RMSE with shared competition ranks and unavailable rows last", () => {
   const data = structuredClone(arenaFixture);
@@ -52,4 +55,22 @@ it("uses the existing zero-based percentile convention, margin and explicit outl
   expect(range.clipped[100]).toBe(false);
   expect(arenaRange([1, 2, 100]).maximum).toBeCloseTo(115);
   expect(arenaRange([null, 0])).toEqual({ maximum: 0.1, clipped: [false, false] });
+});
+
+describe("worstPeriodShare", () => {
+  const arena = {
+    forecasts: [
+      { target: "gdp", period: "2020-01-01", made_on: "2020-02-01", actual: 3, values: { a: 1, b: 3 }, intervals: {} },
+      { target: "gdp", period: "2020-04-01", made_on: "2020-05-01", actual: 0, values: { a: 0, b: null }, intervals: {} },
+      { target: "gdp", period: "2020-07-01", made_on: "2020-08-01", actual: 1, values: { a: -1 }, intervals: {} },
+      { target: "cpi", period: "2020-07-01", made_on: "2020-08-01", actual: 9, values: { a: 0 }, intervals: {} },
+    ],
+  } as unknown as Arena;
+  it("is the largest squared error divided by the total, for one target and contestant", () => {
+    expect(worstPeriodShare(arena, "gdp", "a")).toBeCloseTo(0.5, 12);
+  });
+  it("is null when the contestant has no error or no forecast", () => {
+    expect(worstPeriodShare(arena, "gdp", "b")).toBeNull();
+    expect(worstPeriodShare(arena, "gdp", "missing")).toBeNull();
+  });
 });

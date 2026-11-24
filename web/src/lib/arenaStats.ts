@@ -1,6 +1,21 @@
 import type { Arena, ArenaScore, ArenaWindow, Contestant, ForecastInterval, TargetId } from "../data/arena";
 
-export interface LeaderboardRow extends ArenaScore { contestantInfo: Contestant; rank: number | null; relative: number | null }
+export interface LeaderboardRow extends ArenaScore {
+  contestantInfo: Contestant; rank: number | null; relative: number | null;
+  // share of the contestant's total squared error that comes from its single worst period
+  worstShare: number | null;
+}
+
+export function worstPeriodShare(arena: Arena, target: TargetId, contestant: string): number | null {
+  const squares: number[] = [];
+  for (const row of arena.forecasts) {
+    const value = row.values[contestant];
+    if (row.target !== target || row.actual === null || value === null || value === undefined) continue;
+    squares.push((row.actual - value) ** 2);
+  }
+  const total = squares.reduce((sum, square) => sum + square, 0);
+  return squares.length > 0 && total > 0 ? Math.max(...squares) / total : null;
+}
 export type ArenaSort = "rmse" | "mae" | "coverage_90" | "n" | "label";
 
 export function relativeToNaive(rmse: number | null, naiveRmse: number | null): number | null {
@@ -19,7 +34,8 @@ export function leaderboardRows(arena: Arena, target: TargetId, window: ArenaWin
   return ordered.map((score, index) => {
     if (score.rmse !== null && (index === 0 || score.rmse !== ordered[index - 1]?.rmse)) rank = index + 1;
     return { ...score, contestantInfo: arena.contestants.find((entry) => entry.id === score.contestant)!,
-      rank: score.rmse === null ? null : rank, relative: relativeToNaive(score.rmse, naive) };
+      rank: score.rmse === null ? null : rank, relative: relativeToNaive(score.rmse, naive),
+      worstShare: worstPeriodShare(arena, target, score.contestant) };
   });
 }
 
