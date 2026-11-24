@@ -6,6 +6,7 @@ import { afterEach, beforeEach, expect, it, vi } from "vitest";
 import { loadManifest, loadRevisions, loadSummary } from "../data/load";
 import type { Revisions, Summary } from "../data/types";
 import { Overview } from "./Overview";
+import { parseUrlState } from "../lib/url";
 
 vi.mock("../data/load", () => ({ loadSummary: vi.fn(), loadRevisions: vi.fn(), loadManifest: vi.fn() }));
 Object.assign(globalThis, { IS_REACT_ACT_ENVIRONMENT: true });
@@ -13,7 +14,7 @@ let host: HTMLDivElement;
 let root: Root;
 const summary = { schema_version: 1, series: [], points: [{ id: "cpi-fixture", series: "KXCPI", title: "CPI fixture",
   surprise_sd: 2, dgs2_bp: 4, dgs10_bp: null, in_50: false, in_90: false }] } as Summary;
-const revisions = { schema_version: 1, settled_months: 24, series: [{ series: "KXPAYROLLS",
+const revisions = { schema_version: 1, settled_months: 24, series: [{ series: "payrolls",
   latest_vintage: "2026-10-02", n: 1, mean_abs_revision: 10,
   points: [{ period: "2025-01-01", first: 10, latest: 20, settled: true }] }] } as Revisions;
 
@@ -46,6 +47,7 @@ it("shows a source error and leaves a direct path to Events without made-up resu
   expect(host.querySelector('[role="alert"]')?.textContent).toContain("Summary unavailable");
   expect(host.querySelector(".overview-secondary")?.getAttribute("href")).toBe("?page=events");
   expect(host.querySelector(".event-reveal")).toBeNull();
+  expect(host.querySelector(".hero-start")).toBeNull();
   const cards = host.querySelectorAll(".overview-findings article");
   expect(cards[0]?.querySelector(".finding-value")).toBeNull();
   expect(cards[1]?.querySelector(".finding-value")).toBeNull();
@@ -77,4 +79,44 @@ it("shows the release hook while the independent revision source is still pendin
   await act(async () => finish(revisions));
   expect(host.querySelector(".revision-reveal")).not.toBeNull();
   expect(loadManifest).not.toHaveBeenCalled();
+});
+
+it("gives every chapter a concrete question and the existing destination", async () => {
+  await act(async () => root.render(createElement(Overview)));
+  const chapters = [...host.querySelectorAll<HTMLAnchorElement>(".story-card")];
+  expect(chapters.map(c => c.getAttribute("href"))).toEqual([
+    "?page=events", "?page=compare", "?page=scorecard", "?page=revisions",
+  ]);
+  expect(chapters.map(c => c.querySelector("h3")?.textContent)).toEqual([
+    "What was priced in?", "Does surprise matter?", "Can you trust the forecast?", "Which number is the answer?",
+  ]);
+  expect(chapters.every(c => c.querySelector("svg")?.getAttribute("aria-hidden") === "true")).toBe(true);
+  expect(host.querySelectorAll("h1")).toHaveLength(1);
+  expect(host.querySelectorAll(".overview-findings article")).toHaveLength(3);
+});
+
+it("opens the featured release in Events rather than only scrolling to an already visible panel", async () => {
+  await act(async () => root.render(createElement(Overview)));
+  const link = host.querySelector<HTMLAnchorElement>(".hero-start")!;
+  expect(link.tagName).toBe("A");
+  expect(parseUrlState(link.getAttribute("href")!)).toEqual({ page: "events", event: "cpi-fixture", h: 1, reveal: 0 });
+  expect(host.querySelector('.event-phases [aria-current="step"]')?.textContent).toContain("Expectations");
+  expect(host.querySelector(".event-actual")).toBeNull();
+});
+
+it("keeps the archive available when no featured release can be opened", async () => {
+  vi.mocked(loadSummary).mockResolvedValueOnce({ ...summary, points: [] });
+  await act(async () => root.render(createElement(Overview)));
+  expect(host.querySelector(".hero-start")).toBeNull();
+  expect(host.querySelector(".overview-secondary")?.getAttribute("href")).toBe("?page=events");
+});
+
+it("reserves a loading file without presenting placeholder results or an inactive entry action", async () => {
+  vi.mocked(loadSummary).mockReturnValueOnce(new Promise(() => {}));
+  await act(async () => root.render(createElement(Overview)));
+  expect(host.querySelector('.event-preview-loading.is-loading [role="status"]')?.textContent).toBe("Loading a real release");
+  expect(host.querySelector('.preview-skeleton')?.getAttribute("aria-hidden")).toBe("true");
+  expect(host.querySelector(".event-number")).toBeNull();
+  expect(host.querySelector(".hero-start")).toBeNull();
+  expect(host.querySelector(".overview-secondary")?.getAttribute("href")).toBe("?page=events");
 });

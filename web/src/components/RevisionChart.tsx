@@ -1,13 +1,13 @@
 import { useState, type KeyboardEvent } from "react";
 
-import type { RevisionPoint } from "../data/types";
+import type { RevisionPoint, RevisionSeriesId } from "../data/types";
 import { niceTicks } from "../lib/charts";
 import { MINUS } from "../lib/format";
 import { periodLabel, printValue, signedSize } from "../lib/revisionWords";
 import { useWidth } from "../hooks/useWidth";
 
 interface Props {
-  series: string;
+  series: RevisionSeriesId;
   unit: string;
   points: RevisionPoint[];
 }

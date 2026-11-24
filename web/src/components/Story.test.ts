@@ -9,6 +9,9 @@ it("keeps one current step and a useful continuation for every story page", () =
     const path = renderToStaticMarkup(createElement(StoryPath, { current: step.page }));
     expect(path.match(/aria-current="step"/g)).toHaveLength(1);
     expect(path).not.toContain("?page=models");
+    for (const [i, chapter] of STORY.entries()) {
+      expect(path).toContain(`aria-label="Part ${i + 1}: ${chapter.label}. ${chapter.question}"`);
+    }
     const next = renderToStaticMarkup(createElement(StoryNext, { current: step.page }));
     expect(next).toContain(step.lead);
     expect(next).toContain('aria-label="Next in the story"');

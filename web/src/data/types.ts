@@ -158,8 +158,10 @@ export interface RevisionBiggest {
 }
 
 // how one series' first prints changed afterwards (pipeline web_export.revisions_payload)
+export type RevisionSeriesId = "cpi" | "payrolls" | "gdp";
+
 export interface RevisionSeries {
-  series: string;
+  series: RevisionSeriesId;
   label: string;
   unit: string;
   resolution: number;

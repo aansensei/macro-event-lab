@@ -25,6 +25,7 @@ from macro_event_lab.gold import RESOLUTION
 SCHEMA_VERSION = 1
 DIGITS = 6
 SERIES_LABEL = {"KXCPI": "CPI", "KXPAYROLLS": "Jobs", "KXGDP": "GDP", "KXFED": "FOMC"}
+REVISION_SERIES_ID = {"KXCPI": "cpi", "KXPAYROLLS": "payrolls", "KXGDP": "gdp"}
 UNIT = {
     "KXCPI": "% m/m",
     "KXPAYROLLS": "jobs",
@@ -234,7 +235,7 @@ def revisions_payload(rev: pl.DataFrame) -> dict[str, Any]:
     its publication step, and the typical size of the number itself for scale.
     """
     series = []
-    for ticker in [s for s in SERIES_LABEL if s in set(rev["series_ticker"])]:
+    for ticker in [s for s in REVISION_SERIES_ID if s in set(rev["series_ticker"])]:
         rows = rev.filter(pl.col("series_ticker") == ticker).sort("reference_period")
         latest_vintage = rows["latest_vintage"].max()
         half_step = RESOLUTION[ticker] / 2
@@ -263,7 +264,7 @@ def revisions_payload(rev: pl.DataFrame) -> dict[str, Any]:
             -round(abs(r["latest_print"] - r["first_print"]), DIGITS), r["reference_period"]
         ))[:BIGGEST]
         series.append({
-            "series": ticker,
+            "series": REVISION_SERIES_ID[ticker],
             "label": SERIES_LABEL[ticker],
             "unit": UNIT[ticker],
             "resolution": RESOLUTION[ticker],

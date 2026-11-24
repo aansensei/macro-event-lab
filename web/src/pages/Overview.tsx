@@ -6,6 +6,7 @@ import { RevisionReveal } from "../components/RevisionReveal";
 import { SiteGuide } from "../components/SiteGuide";
 import { EventReveal } from "../components/EventReveal";
 import { ResourceError } from "../components/ResourceError";
+import { urlSearch } from "../lib/url";
 
 export function Overview() {
   const market = useResource(loadSummary);
@@ -14,22 +15,28 @@ export function Overview() {
   const revisionData = revisions.state.kind === "ready" ? revisions.state.data : null;
   const findings = overviewFindings(summary, revisionData);
   const example = revisionData ? revisionHook(revisionData) : null;
+  const examples = summary ? releaseExamples(summary) : [];
   return <div className="overview-page page-fade">
     <header className="overview-intro">
       <div className="hero-copy">
-      <p className="section-kicker">Macro Event Lab</p>
-      <h1>What catches<br /><span>markets off guard?</span></h1>
-      <p className="about-lead">Explore market expectations, first prints and daily yield moves for US economic releases.</p>
-      <a className="overview-secondary" href="?page=events">Explore all releases</a>
+      <p className="overview-masthead"><span>Macro Event Lab</span><span className="mono">Point in time research</span></p>
+      <h1>What catches<span>markets off guard?</span></h1>
+      <p className="about-lead">Step inside a US economic release: what markets expected, what was first published, and how Treasury yields moved that day.</p>
+      <div className="hero-actions">
+        {examples[0] && <a className="hero-start" href={urlSearch(examples[0].point.id, 1, 0)}>Open a release file</a>}
+        <a className="overview-secondary" href="?page=events">Explore all releases</a>
       </div>
-      {summary ? <EventReveal examples={releaseExamples(summary)} /> : <div className="event-preview-loading">
+      </div>
+      {summary ? <EventReveal examples={examples} /> : <div className={`event-preview-loading${market.state.kind === "loading" ? " is-loading" : ""}`}>
         {market.state.kind === "error" ? <ResourceError title="The release preview could not be loaded" message={market.state.message} onRetry={market.retry} />
-          : <p role="status">Loading a real release</p>}
+          : <><p role="status">Loading a real release</p><div className="preview-skeleton" aria-hidden="true">
+            <span /><span /><span /><span />
+          </div></>}
       </div>}
     </header>
     <section aria-labelledby="overview-findings">
-      <p className="section-kicker">Beyond one release</p>
-      <h2 className="t-h2" id="overview-findings">What holds up across the data?</h2>
+      <div className="overview-section-heading"><p className="section-kicker">The wider record</p>
+      <h2 className="t-h2" id="overview-findings">One surprise is a story.<br />A history is a test.</h2></div>
       <div className="overview-findings">{findings.map((f, i) => <article key={f.title}>
         <h3 className="t-label muted">{f.title}</h3>
         {(i === 2 ? revisions.state : market.state).kind === "ready" ? <><p className="finding-value num">{f.value}</p><p>{f.detail}</p></>
@@ -39,10 +46,15 @@ export function Overview() {
       <p className="t-micro muted">Market findings use Kalshi data in this local research preview. Publication awaits written permission.</p>
     </section>
     <section className="overview-story" aria-labelledby="overview-story">
-      <h2 className="t-h2" id="overview-story">Keep following the question.</h2>
+      <div className="overview-section-heading"><p className="section-kicker">Four questions. One trail.</p>
+      <h2 className="t-h2" id="overview-story">Follow the evidence.</h2></div>
       <div className="story-cards">{STORY.map((step, i) => <a className="story-card" href={storyHref(step.page)} key={step.page}>
-        <span className="section-kicker">Part {i + 1}</span><h3>{step.label}</h3><p>{step.question}</p>
-        <span className="t-label">Explore {step.label}</span>
+        <span className="story-index mono" aria-hidden="true">0{i + 1}</span>
+        <div className="story-card-copy"><span className="section-kicker">{step.label}</span><h3>{step.question}</h3>
+        <span className="story-card-action">Explore {step.label}</span></div>
+        <svg className="story-arrow" width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <path d="M4 12h15m-6-6 6 6-6 6" stroke="currentColor" strokeWidth="1.5" />
+        </svg>
       </a>)}</div>
     </section>
     {(example || revisions.state.kind !== "ready") && <section className="overview-revisions" aria-labelledby="overview-revisions-title">

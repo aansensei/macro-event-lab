@@ -5,7 +5,7 @@ import { periodLabel, printValue, revisionFinding, revisionSize, signedSize } fr
 
 function series(over: Partial<RevisionSeries>): RevisionSeries {
   return {
-    series: "KXPAYROLLS", label: "jobs", unit: "jobs", resolution: 1000, latest_vintage: "2026-10-02",
+    series: "payrolls", label: "jobs", unit: "jobs", resolution: 1000, latest_vintage: "2026-10-02",
     n: 298, mean_revision: 742, mean_abs_revision: 73930, mean_abs_next: 33198, share_up: 0.513,
     share_down: 0.487, mean_abs_first: 297359, biggest: [], points: [],
     ...over,
@@ -45,8 +45,8 @@ describe("revisionFinding", () => {
 
 describe("labels", () => {
   it("names months and quarters", () => {
-    expect(periodLabel("KXPAYROLLS", "2020-03-01")).toBe("Mar 2020");
-    expect(periodLabel("KXGDP", "2020-04-01")).toBe("Q2 2020");
+    expect(periodLabel("payrolls", "2020-03-01")).toBe("Mar 2020");
+    expect(periodLabel("gdp", "2020-04-01")).toBe("Q2 2020");
   });
   it("prints values and signed revisions", () => {
     expect(printValue("jobs", -701000)).toBe("−701,000 jobs");

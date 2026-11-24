@@ -125,6 +125,9 @@
   font-size: 12px;
   line-height: 18px;
 }
+.footer-legal { flex-basis: 100%; max-width: 100%; }
+.footer-legal p { margin: 4px 0 0; max-width: 100ch; }
+.footer-disclaimer a { text-decoration: underline; text-underline-offset: 3px; }
 @media (prefers-reduced-motion: reduce) {
   .footer-status-dot { animation: none; }
 }

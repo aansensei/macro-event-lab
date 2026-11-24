@@ -110,9 +110,8 @@
 .faq-list details:last-child { border-bottom: 1px solid var(--border); }
 .faq-list summary { cursor: pointer; font-weight: 600; list-style-position: inside; }
 .faq-list p { margin: 10px 0 0 0; color: var(--text-muted); line-height: 26px; max-width: 66ch; }
-/* the disclaimer closes the about page as a quiet panel, collapsed until opened */
-.disclaimer { margin-top: 56px; padding: 14px 16px; background-color: var(--surface); border-radius: 8px; }
-.disclaimer summary { cursor: pointer; font-weight: 600; list-style-position: inside; }
+/* The disclaimer remains expanded so direct links expose the full notice. */
+.disclaimer { margin-top: 56px; padding: 20px; background-color: var(--surface); border-radius: 8px; scroll-margin-top: 144px; }
 .disclaimer-body p { margin: 12px 0 0 0; font-size: 15px; line-height: 24px; color: var(--text-muted); max-width: 70ch; }
 
 .sr-only {

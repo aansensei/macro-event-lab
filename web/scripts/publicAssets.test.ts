@@ -1,0 +1,30 @@
+import { mkdtempSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import { afterEach, expect, it } from "vitest";
+
+import { collectPublicAssets } from "./publicAssets";
+
+const roots: string[] = [];
+afterEach(() => { for (const root of roots.splice(0)) rmSync(root, { recursive: true, force: true }); });
+
+it("copies public assets and economic exports while excluding the research archive", () => {
+  const root = mkdtempSync(join(tmpdir(), "public-assets-"));
+  roots.push(root);
+  mkdirSync(join(root, "data", "events"), { recursive: true });
+  writeFileSync(join(root, "logo.png"), "fixture image");
+  writeFileSync(join(root, "data", "revisions.json"), '{"series": "payrolls"}');
+  writeFileSync(join(root, "data", "manifest.json"), '{"source": "research fixture"}');
+  writeFileSync(join(root, "data", "events", "fixture.json"), "{}");
+  expect(collectPublicAssets(root).map((asset) => asset.fileName).sort())
+    .toEqual(["data/revisions.json", "logo.png"]);
+});
+
+it("rejects restricted identifiers even in an allowed filename", () => {
+  const root = mkdtempSync(join(tmpdir(), "public-assets-"));
+  roots.push(root);
+  mkdirSync(join(root, "data"));
+  writeFileSync(join(root, "data", "revisions.json"), '{"series":"KXPAYROLLS"}');
+  expect(() => collectPublicAssets(root)).toThrow("Rebuild public data first");
+  expect(collectPublicAssets(join(root, "missing"))).toEqual([]);
+});

@@ -1,17 +1,24 @@
-.event-reveal { min-width: 0; padding: 24px; border: 1px solid var(--border); border-radius: 10px; background: var(--surface); }
-.event-reveal-types { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 20px; user-select: none; }
+.event-reveal { min-width: 0; padding: 24px 28px 20px; border: 1px solid var(--border); border-top: 2px solid var(--accent); border-radius: 0 0 6px 6px; background: var(--surface); container-type: inline-size; container-name: release-file; scroll-margin-top: 144px; }
+.event-dossier-heading { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 6px 12px; margin-bottom: 24px; color: var(--text-muted); font-size: 12px; line-height: 18px; }
+.event-dossier-heading .mono { color: var(--accent); font-size: 12px; }
+.event-reveal-types { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 24px; user-select: none; }
 .event-reveal-types button { border: 1px solid transparent; border-radius: 5px; background: transparent; color: var(--text-muted); font-size: 13px; line-height: 20px; min-height: 36px; padding: 6px 12px; cursor: pointer; }
 .event-reveal-types button[aria-pressed="true"] { color: var(--accent); background: var(--accent-tint); border-color: var(--border-control); }
 .event-reveal-types button:hover { background: var(--surface-hover); }
-.event-reveal h2 { font-size: 20px; line-height: 28px; }
+.event-reveal h2 { font-size: clamp(22px, 2.2vw, 28px); line-height: 1.2; letter-spacing: -0.025em; text-wrap: balance; }
 .event-snapshot { font-size: 12px; line-height: 18px; color: var(--text-muted); margin: 4px 0 20px; }
-.event-phase { display: flex; gap: 16px; align-items: center; font-size: 13px; line-height: 20px; color: var(--text-muted); padding-top: 16px; margin: 0 0 16px; border-top: 1px solid var(--border); user-select: none; }
-.event-phase .mono { color: var(--accent); }
-.event-reveal-result { min-height: 146px; margin-bottom: 20px; }
+.event-phases { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); list-style: none; padding: 0; margin: 0 0 24px; gap: 8px; user-select: none; }
+.event-phases li { display: flex; flex-wrap: wrap; gap: 4px 8px; border-top: 2px solid var(--border-control); padding-top: 10px; font-size: 12px; line-height: 18px; color: var(--text-muted); }
+.event-phases .mono { font-size: 12px; }
+.event-phases [aria-current="step"] { color: var(--accent); border-color: var(--accent); }
+.event-phases .is-complete { border-color: var(--accent); }
+.event-reveal-result { min-height: 166px; margin-bottom: 24px; }
+.event-reveal-scene { animation: release-scene 220ms ease both; }
 .event-reveal-result h3 { font-size: 15px; line-height: 22px; font-weight: 500; margin: 0; }
-.event-number { margin: 12px 0 8px; font-size: clamp(32px, 4vw, 46px); line-height: 1.1; letter-spacing: -0.035em; color: var(--actual); }
+.event-number { margin: 16px 0 12px; font-size: clamp(48px, 5vw, 64px); line-height: 1.1; letter-spacing: -0.045em; color: var(--actual); }
 .event-number span { font-size: 15px; letter-spacing: 0; color: var(--text-muted); }
-.event-unrevealed { color: var(--text-muted); }
+.event-unrevealed { color: var(--accent); font-family: "IBM Plex Mono", ui-monospace, monospace; font-weight: 400; }
+.event-number .event-seal { display: inline-block; border: 1px solid currentColor; padding: 10px 14px; color: var(--accent); font-size: clamp(20px, 2.4vw, 28px); line-height: 1.2; letter-spacing: -0.035em; transform: rotate(-3deg); }
 .event-result-note { font-size: 12px; line-height: 18px; color: var(--text-muted); margin: 0; }
 .event-scale { margin: 24px 0 0; }
 .event-scale-line { position: relative; height: 18px; margin: 0 8px; }
@@ -38,12 +45,14 @@
 .event-example-note summary::before { content: "+"; color: var(--accent); font-size: 16px; }
 .event-example-note[open] summary::before { content: "−"; }
 .event-example-note .event-selection { margin-top: 8px; }
+@keyframes release-scene { from { transform: translateY(5px); } to { transform: translateY(0); } }
+@container release-file (max-width: 320px) { .event-phases li { display: grid; gap: 2px; } .event-reveal-actions { gap: 12px; } }
 @media (max-width: 374px) {
-  .event-reveal { padding: 16px; }
+  .event-reveal { padding: 20px 16px; }
   .event-reveal-types button { padding: 6px 10px; }
   .event-reveal-result { min-height: 166px; }
   .event-reveal-next { width: 100%; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .event-actual, .event-yield-result { animation: none; }
+  .event-actual, .event-yield-result, .event-reveal-scene { animation: none; }
 }

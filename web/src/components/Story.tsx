@@ -10,7 +10,7 @@ export function StoryPath({ current }: { current: Page }) {
       <ol>
         {STORY.map((s, i) => (
           <li key={s.page} className={i < at ? "is-done" : i === at ? "is-current" : ""}>
-            <a href={storyHref(s.page)} aria-current={i === at ? "step" : undefined}>
+            <a href={storyHref(s.page)} aria-current={i === at ? "step" : undefined} aria-label={`Part ${i + 1}: ${s.label}. ${s.question}`}>
               <span className="story-num" aria-hidden="true">{i + 1}</span>
               <span className="story-text">
                 <span className="story-label">{s.label}</span>

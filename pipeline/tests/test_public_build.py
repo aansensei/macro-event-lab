@@ -35,4 +35,9 @@ def test_public_build_writes_only_the_public_files(tmp_path, monkeypatch):
     assert nowcast["source"] == "ALFRED"
     assert nowcast["live"] is None
     revisions = json.loads((out / "revisions.json").read_text(encoding="utf-8"))
-    assert [s["series"] for s in revisions["series"]] == ["KXPAYROLLS"]
+    assert [s["series"] for s in revisions["series"]] == ["payrolls"]
+    for path in out.rglob("*"):
+        if path.is_file():
+            content = path.read_text(encoding="utf-8").lower()
+            assert "kx" not in content
+            assert "kalshi" not in content

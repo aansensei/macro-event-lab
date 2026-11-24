@@ -59,3 +59,22 @@ it("explains missing examples without generating a fallback release", async () =
   expect(host.textContent).toContain("not available");
   expect(host.querySelector("button")).toBeNull();
 });
+
+it("marks only the current story phase and keeps keyboard focus on each reveal", async () => {
+  await act(async () => root.render(createElement(EventReveal, { examples })));
+  const button = host.querySelector<HTMLButtonElement>(".event-reveal-next")!;
+  button.focus();
+  for (const expected of ["Expectations", "First print", "Daily yields", "Expectations"]) {
+    const steps = host.querySelectorAll('.event-phases li');
+    const current = host.querySelectorAll('.event-phases [aria-current="step"]');
+    expect(steps).toHaveLength(3);
+    expect(current).toHaveLength(1);
+    expect(current[0]?.textContent).toContain(expected);
+    expect(document.activeElement).toBe(button);
+    expect(host.querySelectorAll('.event-reveal-result[aria-live="polite"]')).toHaveLength(1);
+    await act(async () => button.click());
+  }
+  await act(async () => host.querySelectorAll<HTMLButtonElement>('[aria-pressed]')[1]!.click());
+  expect(host.querySelector('.event-phases [aria-current="step"]')?.textContent).toContain("Expectations");
+  expect(host.querySelector(".event-actual")).toBeNull();
+});

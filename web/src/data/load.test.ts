@@ -227,7 +227,7 @@ describe("parseRevisions", () => {
     schema_version: 1,
     settled_months: 24,
     series: [{
-      series: "KXPAYROLLS", label: "Jobs", unit: "jobs", resolution: 1000, latest_vintage: "2026-10-02",
+      series: "payrolls", label: "Jobs", unit: "jobs", resolution: 1000, latest_vintage: "2026-10-02",
       n: 1, mean_revision: -697000, mean_abs_revision: 697000, mean_abs_next: 0, share_up: 0, share_down: 1,
       mean_abs_first: 701000,
       biggest: [{ period: "2020-03-01", first: -701000, latest: -1398000 }],
@@ -249,5 +249,15 @@ describe("parseRevisions", () => {
     const bad = structuredClone(revisions);
     (bad.series[0]?.points[0] as Record<string, unknown>).settled = "yes";
     expect(() => parseRevisions(bad)).toThrow("revisions.series[0].points[0].settled");
+  });
+
+  it.each(["cpi", "payrolls", "gdp"])("accepts the neutral %s identifier", (series) => {
+    const value = { ...revisions, series: [{ ...revisions.series[0], series }] };
+    expect(parseRevisions(value).series[0]?.series).toBe(series);
+  });
+
+  it("rejects identifiers outside the public revision contract", () => {
+    const value = { ...revisions, series: [{ ...revisions.series[0], series: "unknown-fixture" }] };
+    expect(() => parseRevisions(value)).toThrow("expected cpi, payrolls or gdp");
   });
 });

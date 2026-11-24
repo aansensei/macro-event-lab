@@ -8,7 +8,7 @@ import { STORY, storyHref } from "./story";
 it("derives findings from coverage, skill and absolute revisions without hardcoded results", () => {
   const summary = { series: [{ series: "KXCPI", hit_90: 0.82, n: 50,
     scores: { skill: -0.12, n: 48 } }] } as Summary;
-  const revisions = { settled_months: 24, series: [{ series: "KXPAYROLLS", n: 120,
+  const revisions = { settled_months: 24, series: [{ series: "payrolls", n: 120,
     mean_abs_revision: 45678.9 }] } as Revisions;
   const findings = overviewFindings(summary, revisions);
   expect(findings.map((f) => f.value)).toEqual(["82%", "-12%", "45,679 jobs"]);
@@ -25,7 +25,7 @@ it("does not invent results when source series are missing", () => {
 
 it("derives findings independently when only one source is available", () => {
   const summary = { series: [{ series: "KXCPI", hit_90: 0.8, n: 5, scores: null }] } as Summary;
-  const revisions = { settled_months: 24, series: [{ series: "KXPAYROLLS", n: 4, mean_abs_revision: 50 }] } as Revisions;
+  const revisions = { settled_months: 24, series: [{ series: "payrolls", n: 4, mean_abs_revision: 50 }] } as Revisions;
   expect(overviewFindings(summary, null).map(f => f.value)).toEqual(["80%", "Not available", "Not available"]);
   expect(overviewFindings(null, revisions).map(f => f.value)).toEqual(["Not available", "Not available", "50 jobs"]);
 });
@@ -40,7 +40,7 @@ it("keeps About and Overview outside Learn, with every page reachable once", () 
 });
 
 it("selects the largest upward settled jobs revision without modifying the input", () => {
-  const revisions = { series: [{ series: "KXPAYROLLS", latest_vintage: "2026-10-02", points: [
+  const revisions = { series: [{ series: "payrolls", latest_vintage: "2026-10-02", points: [
     { period: "2025-01-01", first: 100, latest: 500, settled: true },
     { period: "2025-02-01", first: 100, latest: 1000, settled: false },
     { period: "2025-03-01", first: 500, latest: 0, settled: true },

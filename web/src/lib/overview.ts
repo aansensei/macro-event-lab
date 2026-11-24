@@ -12,7 +12,7 @@ export function releaseExamples(summary: Summary) {
 
 
 export function revisionHook(revisions: Revisions) {
-  const jobs = revisions.series.find((s) => s.series === "KXPAYROLLS");
+  const jobs = revisions.series.find((s) => s.series === "payrolls");
   const point = jobs?.points.filter((p) => p.settled && p.latest !== null && p.latest > p.first)
     .sort((a, b) => ((b.latest as number) - b.first) - ((a.latest as number) - a.first)
       || a.period.localeCompare(b.period))[0];
@@ -22,7 +22,7 @@ export function revisionHook(revisions: Revisions) {
 
 export function overviewFindings(summary: Summary | null, revisions: Revisions | null) {
   const cpi = summary?.series.find((s) => s.series === "KXCPI");
-  const jobs = revisions?.series.find((s) => s.series === "KXPAYROLLS");
+  const jobs = revisions?.series.find((s) => s.series === "payrolls");
   return [
     { title: "How often the range held", value: cpi?.hit_90 == null ? "Not available" : `${Math.round(cpi.hit_90 * 100)}%`,
       detail: cpi?.hit_90 == null ? "CPI coverage is not available in this dataset."

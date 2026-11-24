@@ -347,8 +347,12 @@ function parseRevisionPoint(value: unknown, where: string): RevisionPoint {
 
 function parseRevisionSeries(value: unknown, where: string): RevisionSeries {
   const o = obj(value, where);
+  const series = str(o, "series", where);
+  if (series !== "cpi" && series !== "payrolls" && series !== "gdp") {
+    throw new DataError(`${where}.series: expected cpi, payrolls or gdp`);
+  }
   return {
-    series: str(o, "series", where),
+    series,
     label: str(o, "label", where),
     unit: str(o, "unit", where),
     resolution: num(o, "resolution", where),

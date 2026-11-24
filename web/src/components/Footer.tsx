@@ -3,6 +3,8 @@ import type { ReactNode } from "react";
 import { formatEtDate } from "../lib/format";
 import type { Page } from "../lib/url";
 import { PRIMARY, LEARN } from "../lib/navigation";
+import { PUBLIC_EDITION } from "../lib/edition";
+import { dataSourcesFor } from "../lib/sources";
 import { ExternalLink } from "./ExternalLink";
 import { Logo } from "./Logo";
 
@@ -10,13 +12,7 @@ const REPO = "https://github.com/aansensei/macro-event-lab";
 
 const PAGES: [Page, string][] = [...PRIMARY, ...LEARN];
 
-// each source links to its home page, with what this site takes from it
-const SOURCES: [string, string, string][] = [
-  ["Kalshi", "https://kalshi.com", "Market prices"],
-  ["ALFRED", "https://alfred.stlouisfed.org", "First prints, every vintage"],
-  ["FRED", "https://fred.stlouisfed.org", "Treasury yields, release dates"],
-  ["Federal Reserve", "https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm", "FOMC meeting calendar"],
-];
+const SOURCES = dataSourcesFor(PUBLIC_EDITION);
 
 function Icon({ children }: { children: ReactNode }) {
   return (
@@ -47,7 +43,8 @@ export function Footer({ dataThrough, onNavigate }: Props) {
             <Logo />
           </div>
           <p className="footer-tagline">
-            What markets expected before each US macro release, and what happened when the number came out.
+            {PUBLIC_EDITION ? "Forecasts and first-published US macro numbers, checked point in time."
+              : "What markets expected before each US macro release, and what happened when the number came out."}
           </p>
           {dataThrough && (
             <p className="footer-status">
@@ -105,6 +102,10 @@ export function Footer({ dataThrough, onNavigate }: Props) {
           <img src={`${import.meta.env.BASE_URL}ncta.png`} alt="ncta" width="42" height="22" draggable={false} />
           <span>&copy; 2026 Cao Thien An Nguyen</span>
         </span>
+        <div className="footer-legal">
+          <p className="footer-disclaimer">Educational research only. Data and calculations may contain errors. Not investment advice. <a href="?page=about#disclaimer">See disclaimer</a>.</p>
+          <p>This product uses the FRED® API but is not endorsed or certified by the Federal Reserve Bank of St. Louis.</p>
+        </div>
       </div>
     </footer>
   );

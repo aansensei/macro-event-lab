@@ -157,6 +157,90 @@ export const GLOSSARY: GlossaryEntry[] = [
     short: "A later change to a number that was already published.",
     long: "Agencies update a published number when more complete data arrive or when seasonal adjustment is recalculated. A jobs number can move by tens of thousands. This site keeps the first print for every surprise and shows the revisions on their own page.",
   },
+  {
+    id: "foundation-model",
+    term: "Foundation model (for time series)",
+    short: "A model trained on diverse historical data to forecast new series without custom training.",
+    long: "Rather than training on a single economic series from scratch, a time series foundation model studies millions of patterns across many domains. It applies that learned experience directly to forecast an economic number it has never seen before.",
+  },
+  {
+    id: "zero-shot",
+    term: "Zero-shot forecast",
+    short: "A prediction made for a new series without first training or fine-tuning on that series.",
+    long: "The model receives recent history for an economic indicator and produces a forecast immediately, with no adjustment to its internal parameters. It behaves like an experienced analyst who looks at a fresh chart for the first time and gives an estimate on the spot.",
+  },
+  {
+    id: "training-cutoff",
+    term: "Training cutoff",
+    short: "The latest date of data used when building a model.",
+    long: "Any observation published before this date could have shaped how the model learned. To test a model fairly, evaluators score it only on periods after this cutoff date, where it could not have memorized the answers in advance.",
+  },
+  {
+    id: "information-leakage",
+    term: "Information leakage",
+    short: "When a forecast mistakenly uses data that was not yet available at the forecast time.",
+    long: "If a model predicts March inflation using revised data published in April, it sees information that no forecaster had in March. That mistake makes the model look artificially accurate in backtests while failing in real-world use.",
+  },
+  {
+    id: "walk-forward",
+    term: "Walk-forward evaluation",
+    short: "Testing a model by moving step by step through time and forecasting only into the future.",
+    long: "Instead of testing on randomly shuffled data, the evaluator stands at each historical date, trains only on earlier data, and predicts the next period. The timeline moves forward one month at a time, exactly mimicking how forecasters operate in real life.",
+  },
+  {
+    id: "conformal-interval",
+    term: "Conformal prediction interval",
+    short: "A range around a forecast guaranteed to cover the true number at a chosen rate under mild assumptions.",
+    long: "Rather than assuming errors follow a bell curve, conformal prediction looks at past mistakes to calibrate a range. If you request a 90% interval, it widens or narrows the band so that 9 out of 10 future releases land inside it.",
+  },
+  {
+    id: "pinball-loss",
+    term: "Pinball loss",
+    short: "A scoring rule that measures how accurately a forecast predicts a specific percentile.",
+    long: "Named because its error curve resembles the slope inside a pinball machine, this rule penalizes misses asymmetrically. For an 80th percentile forecast, landing above the target is penalized four times more heavily than landing below it.",
+  },
+  {
+    id: "diebold-mariano",
+    term: "Diebold-Mariano test",
+    short: "A statistical test that checks whether one forecasting method is genuinely more accurate than another.",
+    long: "Two forecasters rarely achieve the exact same error. The Diebold-Mariano test checks whether the difference in their forecast errors is statistically meaningful or merely a lucky streak over a small sample of releases.",
+  },
+  {
+    id: "principal-components",
+    term: "Principal components (diffusion index)",
+    short: "A statistical summary that condenses dozens of economic indicators into a few main signals.",
+    long: "Instead of tracking fifty different economic series at once, principal components finds the shared movement across all of them. The first component works like a broad economic climate indicator, capturing whether most parts of the economy are expanding or slowing together.",
+  },
+  {
+    id: "lasso",
+    term: "LASSO",
+    short: "A regression method that selects the most useful predictors and discards unhelpful ones.",
+    long: "When choosing among dozens of possible economic predictors, standard models easily overfit by using every variable. LASSO shrinks less important weights down to exactly zero, keeping only a compact set of variables that actually improve the forecast.",
+  },
+  {
+    id: "ar-model",
+    term: "AR model (autoregression)",
+    short: "A benchmark model that predicts a series using only its own past values.",
+    long: "An autoregressive model assumes the near future resembles the recent past. For example, an AR model might estimate next month's inflation as a weighted combination of inflation over the last three months. It serves as a classic baseline that more complex systems must beat.",
+  },
+  {
+    id: "nowcast",
+    term: "Nowcast",
+    short: "An estimate of current economic conditions before official statistics are released.",
+    long: "Gross domestic product is published weeks after a quarter ends. A nowcast uses daily and monthly signals that arrive early, like retail sales and industrial production, to track what the economy is doing right now.",
+  },
+  {
+    id: "forecast-arena",
+    term: "Forecast arena",
+    short: "A public benchmark where different models and experts compete on the same real-time forecasts.",
+    long: "Like an open tournament, a forecast arena evaluates predictions made before releases occur, scoring every contestant on identical criteria. It lets observers see which classical methods, modern models, or human professionals deliver the most reliable numbers under live conditions.",
+  },
+  {
+    id: "naive-forecast",
+    term: "Naive forecast",
+    short: "A simple baseline prediction that assumes the future will equal the latest observed number.",
+    long: "A naive forecast repeats the most recent data point with no adjustment. If last month's inflation was 0.3%, the naive forecast predicts 0.3% for this month. Any serious forecasting model should perform better than this simple rule.",
+  },
 ];
 
 // the glossary page groups its entries under these headings, in this order
@@ -166,6 +250,26 @@ export const GLOSSARY_GROUPS: { id: string; title: string; ids: string[] }[] = [
   { id: "gl-release-day", title: "Release day and after", ids: ["surprise", "t-1h", "first-print", "revision", "alfred", "point-in-time"] },
   { id: "gl-units", title: "Units and bonds", ids: ["pp", "bp", "yield"] },
   { id: "gl-scoring", title: "Scoring forecasts", ids: ["calibration", "brier", "crps", "pit", "skill"] },
+  {
+    id: "gl-arena",
+    title: "Forecast arena",
+    ids: [
+      "foundation-model",
+      "zero-shot",
+      "training-cutoff",
+      "information-leakage",
+      "walk-forward",
+      "conformal-interval",
+      "pinball-loss",
+      "diebold-mariano",
+      "principal-components",
+      "lasso",
+      "ar-model",
+      "nowcast",
+      "forecast-arena",
+      "naive-forecast",
+    ],
+  },
 ];
 
 export function glossaryEntry(id: string): GlossaryEntry | undefined {

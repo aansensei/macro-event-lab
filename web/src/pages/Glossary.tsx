@@ -1,11 +1,13 @@
 import { useEffect } from "react";
 
-import { GLOSSARY_GROUPS, glossaryEntry } from "../lib/glossary";
+import { PUBLIC_EDITION } from "../lib/edition";
+import { glossaryGroupsFor, glossaryEntryFor } from "../lib/glossaryEdition";
 import { SectionRail, type RailSection } from "../components/SectionRail";
 
+const GROUPS = glossaryGroupsFor(PUBLIC_EDITION);
 const RAIL: RailSection[] = [
   { id: "glossary-top", label: "Top" },
-  ...GLOSSARY_GROUPS.map((g) => ({ id: g.id, label: g.title })),
+  ...GROUPS.map((g) => ({ id: g.id, label: g.title })),
 ];
 
 export function Glossary() {
@@ -23,12 +25,12 @@ export function Glossary() {
         <p className="about-lead">
           The words this site uses, in plain language. No economics background needed.
         </p>
-        {GLOSSARY_GROUPS.map((g) => (
+        {GROUPS.map((g) => (
           <section key={g.id} className="glossary-group rail-target" id={g.id} aria-labelledby={`${g.id}-title`}>
             <h2 className="section-kicker" id={`${g.id}-title`}>{g.title}</h2>
             <dl className="glossary-list">
               {g.ids.map((id) => {
-                const e = glossaryEntry(id);
+                const e = glossaryEntryFor(id, PUBLIC_EDITION);
                 return e ? (
                   <div key={e.id} id={e.id} className="glossary-entry">
                     <dt>{e.term}</dt>

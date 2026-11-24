@@ -11,9 +11,10 @@ import { ExternalLink } from "../components/ExternalLink";
 import { RevisionChart } from "../components/RevisionChart";
 import { Term } from "../components/Term";
 import { StoryNext, StoryPath } from "../components/Story";
+import { PUBLIC_EDITION } from "../lib/edition";
 
 // jobs open first: their revisions are the largest and the easiest to see
-const DEFAULT_SERIES = "KXPAYROLLS";
+const DEFAULT_SERIES = "payrolls";
 
 function SeriesButton({ s, selected, onSelect }: { s: RevisionSeries; selected: boolean; onSelect: () => void }) {
   const share = s.mean_abs_revision !== null && s.mean_abs_first ? s.mean_abs_revision / s.mean_abs_first : null;
@@ -58,7 +59,7 @@ function SeriesDetail({ s, settledMonths }: { s: RevisionSeries; settledMonths: 
           <h3 className="t-h3" id="rev-chart-title">Today's number minus the first print</h3>
         </div>
         <p className="chart-summary">
-          One bar per {s.series === "KXGDP" ? "quarter" : "month"} since {since}. Orange bars were revised up, rose bars
+          One bar per {s.series === "gdp" ? "quarter" : "month"} since {since}. Orange bars were revised up, rose bars
           down. Hover, tap or use the arrow keys to read a period.
         </p>
         <RevisionChart series={s.series} unit={s.unit} points={s.points} />
@@ -135,9 +136,14 @@ export function Revisions() {
       {current && <SeriesDetail key={current.series} s={current} settledMonths={settledMonths} />}
 
       <aside className="rev-note">
-        <strong>Why this matters here.</strong> Macro Event Lab judges every market against the{" "}
-        <Term id="first-print">first print</Term>, because that is the number traders saw on release day. The
-        revisions on this page arrive later and are never used for a surprise. All numbers come from{" "}
+        <strong>Why this matters here.</strong> {PUBLIC_EDITION ? <>
+          Forecasts are compared with the <Term id="first-print">first print</Term>, the number available
+          on release day. Later revisions are shown separately and cannot enter an earlier forecast.
+        </> : <>
+          Macro Event Lab judges every market against the <Term id="first-print">first print</Term>,
+          because that is the number traders saw on release day. The revisions on this page arrive
+          later and are never used for a surprise.
+        </>} All numbers come from{" "}
         <ExternalLink href="https://alfred.stlouisfed.org">ALFRED</ExternalLink>, which keeps every published
         version of each series.
       </aside>

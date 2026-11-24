@@ -1,6 +1,6 @@
 // Plain English reading of how much a series' first prints were revised afterwards.
 
-import type { RevisionSeries } from "../data/types";
+import type { RevisionSeries, RevisionSeriesId } from "../data/types";
 import { MINUS } from "./format";
 
 // below this share of the typical revision, the next report is said to change "very little"
@@ -19,10 +19,10 @@ export function revisionSize(unit: string, v: number): string {
 const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
 // the period a number describes: "Mar 2020" for monthly series, "Q2 2020" for GDP
-export function periodLabel(series: string, period: string): string {
+export function periodLabel(series: RevisionSeriesId, period: string): string {
   const [y, m] = period.split("-").map(Number);
   const month = m ?? 1;
-  if (series === "KXGDP") return `Q${Math.floor((month - 1) / 3) + 1} ${y}`;
+  if (series === "gdp") return `Q${Math.floor((month - 1) / 3) + 1} ${y}`;
   return `${MONTHS[month - 1]} ${y}`;
 }
 

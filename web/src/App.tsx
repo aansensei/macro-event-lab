@@ -1,53 +1,27 @@
-import { useEffect, useRef } from "react";
-
-import { BackToTop } from "./components/BackToTop";
-import { Footer } from "./components/Footer";
-import { Header } from "./components/Header";
-import { useEventExplorer } from "./hooks/useEventExplorer";
+import { AppShell } from "./components/AppShell";
+import { PublicNotice } from "./components/PublicNotice";
 import { useNavigation } from "./hooks/useNavigation";
-import { PUBLIC_EDITION, inEdition } from "./lib/edition";
-import { LEARN, PRIMARY } from "./lib/navigation";
+import { inEdition } from "./lib/edition";
 import { About } from "./pages/About";
-import { Compare } from "./pages/Compare";
-import { Events } from "./pages/Events";
 import { Glossary } from "./pages/Glossary";
+import { MarketPages } from "./pages/marketPages";
 import { Method } from "./pages/Method";
 import { Models } from "./pages/Models";
-import { Overview } from "./pages/Overview";
 import { PublicHome } from "./pages/PublicHome";
-import { PublicNotice } from "./components/PublicNotice";
 import { Revisions } from "./pages/Revisions";
-import { Scorecard } from "./pages/Scorecard";
 
 export function App() {
-  const { route, navigate, navigationKey } = useNavigation();
-  const explorer = useEventExplorer(route);
-  const mainRef = useRef<HTMLElement>(null);
-  const label = !inEdition(route.page) ? "Not published yet"
-    : [...PRIMARY, ...LEARN].find(([page]) => page === route.page)?.[1] ?? "Overview";
-  const title = route.page === "events" ? explorer.entry?.title ?? label : label;
+  const navigation = useNavigation();
+  const { route } = navigation;
+  if (import.meta.env.VITE_EDITION !== "public") return <MarketPages {...navigation} />;
 
-  useEffect(() => { document.title = `${title} | Macro Event Lab`; }, [title]);
-  useEffect(() => {
-    if (navigationKey > 0) mainRef.current?.focus({ preventScroll: true });
-  }, [navigationKey]);
-
-  return <>
-    <a className="skip-link" href="#app-main" onClick={() => mainRef.current?.focus()}>Skip to content</a>
-    <Header page={route.page} onNavigate={navigate} />
-    <main className="main-container" id="app-main" ref={mainRef} tabIndex={-1} aria-label={`${label} content`}>
-      {route.page === "overview" && (PUBLIC_EDITION ? <PublicHome /> : <Overview />)}
-      {!inEdition(route.page) && <PublicNotice />}
-      {inEdition(route.page) && route.page === "events" && <Events {...explorer} navigationKey={navigationKey} />}
-      {inEdition(route.page) && route.page === "compare" && <Compare />}
-      {inEdition(route.page) && route.page === "scorecard" && <Scorecard />}
-      {route.page === "revisions" && <Revisions />}
-      {route.page === "models" && <Models />}
-      {route.page === "method" && <Method />}
-      {route.page === "glossary" && <Glossary />}
-      {route.page === "about" && <About />}
-    </main>
-    <Footer dataThrough={route.page === "events" ? explorer.dataThrough : null} onNavigate={navigate} />
-    <BackToTop />
-  </>;
+  return <AppShell {...navigation}>
+    {!inEdition(route.page) && <PublicNotice />}
+    {route.page === "overview" && <PublicHome />}
+    {route.page === "revisions" && <Revisions />}
+    {route.page === "models" && <Models />}
+    {route.page === "method" && <Method />}
+    {route.page === "glossary" && <Glossary />}
+    {route.page === "about" && <About />}
+  </AppShell>;
 }

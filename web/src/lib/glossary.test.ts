@@ -13,11 +13,14 @@ describe("glossary", () => {
     for (const e of GLOSSARY) {
       expect(e.short.length).toBeGreaterThan(10);
       expect(e.long.length).toBeGreaterThan(e.short.length);
+      const wordCount = e.long.trim().split(/\s+/).length;
+      expect(wordCount).toBeLessThanOrEqual(60);
     }
   });
 
   it("looks entries up by id", () => {
     expect(glossaryEntry("sd")?.term).toBe("SD (standard deviation)");
+    expect(glossaryEntry("forecast-arena")?.term).toBe("Forecast arena");
     expect(glossaryEntry("missing")).toBeUndefined();
   });
 

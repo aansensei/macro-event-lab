@@ -12,7 +12,8 @@ export function EventReveal({ examples }: { examples: ReturnType<typeof releaseE
   const { point } = example;
   const extent = Math.max(1, ...examples.map(({ point: p }) => Math.ceil(Math.abs(p.surprise_sd))));
 
-  return <section className="event-reveal" aria-label="Uncover a real release">
+  return <section id="overview-release-file" className="event-reveal" tabIndex={-1} aria-label="Uncover a real release">
+    <div className="event-dossier-heading"><span className="mono">The release file</span><span>Historical case study</span></div>
     <div className="event-reveal-types" role="group" aria-label="Choose a release type">
       {examples.map(({ label, point: p }, i) => <button type="button" key={p.series}
         aria-pressed={example.point.series === p.series} onClick={() => { setSelected(i); setStage(0); }}>
@@ -21,12 +22,17 @@ export function EventReveal({ examples }: { examples: ReturnType<typeof releaseE
     </div>
     <h2 className="t-h3">{point.title}</h2>
     <p className="event-snapshot">Extreme example. Snapshot: T−1h on the market's hourly close grid.</p>
-    <p className="event-phase"><span className="mono">0{stage + 1} / 03</span>
-      {stage === 0 ? "Expectations" : stage === 1 ? "The first print" : "The day's yields"}</p>
+    <ol className="event-phases" aria-label="Release story progress">
+      {["Expectations", "First print", "Daily yields"].map((label, i) => <li key={label}
+        aria-current={stage === i ? "step" : undefined} className={i < stage ? "is-complete" : ""}>
+        <span className="mono" aria-hidden="true">0{i + 1}</span><span>{label}</span>
+      </li>)}
+    </ol>
     <div className="event-reveal-result" aria-live="polite" aria-atomic="true">
+      <div className="event-reveal-scene" key={`${point.id}-${stage}`}>
       {stage === 0 ? <>
         <h3>How far from expectations did the number land?</h3>
-        <p className="event-number event-unrevealed" aria-hidden="true">?</p>
+        <p className="event-number event-unrevealed" aria-hidden="true"><span className="event-seal">Result sealed</span></p>
         <p className="event-result-note">Surprise is measured against the uncertainty traders priced in.</p>
       </> : stage === 1 ? <>
         <h3>The first print's surprise</h3>
@@ -40,6 +46,7 @@ export function EventReveal({ examples }: { examples: ReturnType<typeof releaseE
             {point.dgs10_bp !== null && <span> bp</span>}</dd></div></dl>
         <p>Daily changes from FRED. Other news can also affect the day's move.</p>
       </div>}
+      </div>
     </div>
     <div className="event-reveal-actions">
       <button type="button" className="event-reveal-next" onClick={() => setStage(stage === 0 ? 1 : stage === 1 ? 2 : 0)}>

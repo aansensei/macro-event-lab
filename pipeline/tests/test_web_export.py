@@ -201,7 +201,7 @@ def test_revisions_summarise_settled_periods_and_list_every_period():
 
     assert out["settled_months"] == 24
     (cpi,) = out["series"]
-    assert (cpi["series"], cpi["label"], cpi["n"]) == ("KXCPI", "CPI", 3)
+    assert (cpi["series"], cpi["label"], cpi["n"]) == ("cpi", "CPI", 3)
     assert cpi["latest_vintage"] == "2026-10-14"
     assert cpi["mean_revision"] == pytest.approx(0.0)
     assert cpi["mean_abs_revision"] == pytest.approx(0.066667)
@@ -213,3 +213,28 @@ def test_revisions_summarise_settled_periods_and_list_every_period():
     assert cpi["points"][3] == {
         "period": "2026-08-01", "first": 0.3, "next": None, "latest": 0.9, "settled": False,
     }
+
+
+@pytest.mark.parametrize(
+    ("internal_series", "public_series", "label", "unit", "resolution"),
+    [
+        ("KXCPI", "cpi", "CPI", "% m/m", 0.1),
+        ("KXPAYROLLS", "payrolls", "Jobs", "jobs", 1000),
+        ("KXGDP", "gdp", "GDP", "% annualized", 0.1),
+    ],
+)
+def test_revisions_export_neutral_ids_without_altering_gold(
+    internal_series: str, public_series: str, label: str, unit: str, resolution: float,
+) -> None:
+    fixture = pl.DataFrame(
+        [(internal_series, date(2020, 1, 1), date(2020, 2, 1), 1.0,
+          None, None, 2.0, date(2026, 1, 1))],
+        schema=REVISION_SCHEMA, orient="row",
+    )
+    payload = revisions_payload(fixture)
+    assert "KX" not in json.dumps(payload)
+    (series,) = payload["series"]
+    assert (series["series"], series["label"], series["unit"], series["resolution"]) == (
+        public_series, label, unit, resolution,
+    )
+    assert fixture["series_ticker"].to_list() == [internal_series]

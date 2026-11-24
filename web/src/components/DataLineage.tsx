@@ -1,5 +1,6 @@
 import { Fragment } from "react";
 
+import { PUBLIC_EDITION } from "../lib/edition";
 import { MINUS } from "../lib/format";
 
 type Layer = "silver" | "gold" | "web";
@@ -16,7 +17,15 @@ interface Stage {
   method?: string;
 }
 
-const STAGES: Stage[] = [
+const STAGES: Stage[] = PUBLIC_EDITION ? [
+  { tables: [{ name: "alfred_observations", layer: "silver", holds: "Official vintages with publication timestamps" }],
+    method: "First prints by period and point-in-time observations" },
+  { tables: [
+    { name: "revisions", layer: "gold", holds: "First prints and later published values" },
+    { name: "gdp_nowcast", layer: "gold", holds: "Forecasts trained on earlier releases" },
+  ], method: "Checked economic tables exported to JSON" },
+  { tables: [{ name: "revisions, nowcast", layer: "web", holds: "The files this public website reads" }] },
+] : [
   {
     tables: [
       { name: "kalshi_markets", layer: "silver", holds: "Each contract, its strike and how it settled" },
