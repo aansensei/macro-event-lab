@@ -1,5 +1,5 @@
 export function StatusIntro({ generatedAt, informationDate }: { generatedAt: string; informationDate: string }) {
-  return <header className="status-intro">
+  return <header className="status-intro" id="status-top">
     <p className="section-kicker">Data status</p>
     <h1 className="t-h1">Data freshness and quality checks</h1>
     <p className="about-lead">Source update dates and the checks available in this build.</p>

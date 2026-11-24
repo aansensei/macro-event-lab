@@ -7,7 +7,7 @@ interface Props {
 
 export function ArenaIntro({ informationDate, contestantIds }: Props) {
   const isPreliminary = contestantIds.length < PLANNED_CONTESTANTS;
-  return <header className="arena-intro">
+  return <header className="arena-intro" id="arena-top">
     <p className="section-kicker">Forecast arena</p>
     <h1 className="t-h1">How do forecasts compare with first-published numbers?</h1>
     <p className="about-lead">Forecasts are evaluated against each economic number as first published. The tables report forecast errors, available uncertainty intervals and the number of periods evaluated.</p>

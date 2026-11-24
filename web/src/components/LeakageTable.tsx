@@ -2,7 +2,7 @@ import type { Contestant, LeakageRow } from "../data/arena";
 
 export function LeakageTable({ contestants, leakage }: { contestants: Contestant[]; leakage: LeakageRow[] }) {
   const labels = { published: "Published training cutoff", weights_release_date: "First public weights date", none: "No cutoff" };
-  return <details className="arena-leakage">
+  return <details className="arena-leakage" id="arena-leakage">
     <summary>Could a model have seen the answer?</summary>
     <p>A model's training data can include historical economic series. A cutoff separates earlier and later forecast origins; it does not prove that an evaluation is free of overlap.</p>
     <p className="muted">Error figures are withheld because the audit record does not specify their target and measurement units. The counts below are supplied audit totals, not counts for the currently selected target.</p>

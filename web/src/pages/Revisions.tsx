@@ -11,8 +11,16 @@ import { ExternalLink } from "../components/ExternalLink";
 import { RevisionChart } from "../components/RevisionChart";
 import { Term } from "../components/Term";
 import { PageGuide } from "../components/PageGuide";
+import { RailPage, type RailSection } from "../components/SectionRail";
 import { StoryNext, StoryPath } from "../components/Story";
 import { PUBLIC_EDITION } from "../lib/edition";
+
+const RAIL: RailSection[] = [
+  { id: "rev-top", label: "Top" },
+  { id: "rev-detail-title", label: "How it changed" },
+  { id: "rev-biggest", label: "Biggest revisions" },
+  { id: "rev-why", label: "Why it matters" },
+];
 
 // jobs open first: their revisions are the largest and the easiest to see
 const DEFAULT_SERIES = "payrolls";
@@ -82,7 +90,7 @@ function SeriesDetail({ s, settledMonths }: { s: RevisionSeries; settledMonths: 
 
       {s.biggest.length > 0 && (
         <>
-          <h3 className="t-h3">Biggest revisions</h3>
+          <h3 className="t-h3" id="rev-biggest">Biggest revisions</h3>
           <div className="data-table-wrap">
             <table className="data-table rev-table">
               <thead>
@@ -121,9 +129,9 @@ export function Revisions() {
   const { series, settled_months: settledMonths } = load.data;
   const current = series.find((s) => s.series === selected) ?? series[0];
   return (
-    <div className="compare-page page-fade">
+    <RailPage sections={RAIL}><div className="compare-page page-fade">
       <StoryPath current="revisions" />
-      <h1 className="t-h1">Revisions</h1>
+      <h1 className="t-h1" id="rev-top">Revisions</h1>
       <p className="about-lead">
         Which number is the answer? Compare the first CPI, jobs and GDP prints with later vintages to see what was known then and what changed.
       </p>
@@ -140,7 +148,7 @@ export function Revisions() {
 
       {current && <SeriesDetail key={current.series} s={current} settledMonths={settledMonths} />}
 
-      <aside className="rev-note">
+      <aside className="rev-note" id="rev-why">
         <strong>Why this matters here.</strong> {PUBLIC_EDITION ? <>
           Forecasts are compared with the <Term id="first-print">first print</Term>, the number available
           on release day. Later revisions are shown separately and cannot enter an earlier forecast.
@@ -153,6 +161,6 @@ export function Revisions() {
         version of each series.
       </aside>
       <StoryNext current="revisions" />
-    </div>
+    </div></RailPage>
   );
 }

@@ -21,3 +21,10 @@
   .release-reveal, .text-btn, .play-btn, details.how-to-read summary { min-height: 44px; }
   details.how-to-read summary { display: flex; align-items: center; }
 }
+/* menu rows and header tabs reach 44 pixels on touch screens, and an open menu never outgrows a short landscape screen */
+@media (pointer: coarse) {
+  .nav-btn, .select-option { min-height: 44px; }
+}
+@media (max-height: 480px) {
+  .select-list { max-height: min(200px, 50vh); overflow-y: auto; }
+}

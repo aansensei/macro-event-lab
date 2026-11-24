@@ -2,6 +2,7 @@ import { useState } from "react";
 
 import { CheckFilter } from "../components/CheckFilter";
 import { PageGuide } from "../components/PageGuide";
+import { RailPage, type RailSection } from "../components/SectionRail";
 import { QualityCheckList } from "../components/QualityCheckList";
 import { ResourceError } from "../components/ResourceError";
 import { SourceFreshnessTable } from "../components/SourceFreshnessTable";
@@ -10,6 +11,13 @@ import { StatusSummary } from "../components/StatusSummary";
 import { loadStatus } from "../data/status";
 import { useResource } from "../hooks/useResource";
 import { checkCounts, type CheckSelection } from "../lib/statusStats";
+
+const RAIL: RailSection[] = [
+  { id: "status-top", label: "Top" },
+  { id: "status-sources", label: "Data sources" },
+  { id: "status-checks", label: "Quality checks" },
+  { id: "status-guide", label: "What this means" },
+];
 
 export function Status() {
   const { state, retry } = useResource(loadStatus);
@@ -20,7 +28,7 @@ export function Status() {
       : <ResourceError title={state.message.startsWith("Unsupported") ? "Unsupported data format" : "Data status could not be loaded"} message={state.message} onRetry={retry} />}
   </div>;
   const data = state.data;
-  return <div className="status-page page-fade">
+  return <RailPage sections={RAIL}><div className="status-page page-fade">
     <StatusIntro generatedAt={data.generated_at} informationDate={data.information_date} />
     <PageGuide
       purpose="Check that the data behind every other page is fresh and passes the checks listed here."
@@ -39,5 +47,5 @@ export function Status() {
       <p>A fresh source is within its stated calendar-day threshold. A warning needs inspection; a failed check identifies a rule violation. Passing the listed checks does not guarantee complete data or accurate forecasts.</p>
       {data.sources.some((source) => source.id === "spf") && <p className="muted">Survey source: Federal Reserve Bank of Philadelphia, Survey of Professional Forecasters (SPF). Used for non-commercial research. The Bank does not endorse this project or its conclusions.</p>}
     </section>
-  </div>;
+  </div></RailPage>;
 }

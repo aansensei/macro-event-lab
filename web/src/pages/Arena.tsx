@@ -6,6 +6,7 @@ import { ArenaLeaderboard } from "../components/ArenaLeaderboard";
 import { ArenaPending } from "../components/ArenaPending";
 import { LeakageTable } from "../components/LeakageTable";
 import { PageGuide } from "../components/PageGuide";
+import { RailPage, type RailSection } from "../components/SectionRail";
 import { StoryNext, StoryPath } from "../components/Story";
 import { LiveForecast } from "../components/LiveForecast";
 import { ResourceError } from "../components/ResourceError";
@@ -16,6 +17,15 @@ import { ARENA_NOT_BUILT, loadArena, type ArenaWindow, type TargetId } from "../
 import { useResource } from "../hooks/useResource";
 import { leaderboardRows } from "../lib/arenaStats";
 import { ARENA_GUIDE } from "../lib/arenaWords";
+
+const RAIL: RailSection[] = [
+  { id: "arena-top", label: "Top" },
+  { id: "arena-leaderboard", label: "Leaderboard" },
+  { id: "arena-history", label: "History" },
+  { id: "arena-leakage", label: "Leakage" },
+  { id: "arena-live", label: "Next release" },
+  { id: "arena-guide", label: "How to read" },
+];
 
 export function Arena() {
   const { state, retry } = useResource(loadArena);
@@ -32,7 +42,7 @@ export function Arena() {
   const target = data.targets.find((target) => target.id === targetId) ?? data.targets[0];
   const contestant = data.contestants.find((entry) => entry.id === contestantId)
     ?? data.contestants.find((entry) => entry.kind === "classical" || entry.kind === "foundation") ?? data.contestants[0];
-  return <div className="arena-page page-fade">
+  return <RailPage sections={RAIL}><div className="arena-page page-fade">
     <StoryPath current="arena" />
     <ArenaIntro informationDate={data.information_date} contestantIds={data.contestants.map((c) => c.id)} />
     <PageGuide
@@ -59,5 +69,5 @@ export function Arena() {
       </section>
       <StoryNext current="arena" />
     </>}
-  </div>;
+  </div></RailPage>;
 }

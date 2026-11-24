@@ -51,6 +51,7 @@
 .glossary-group { margin-top: 40px; }
 /* sections the contents rail jumps to stop below the sticky header */
 .rail-target, .about-page h1, .about-section > .t-h2 { scroll-margin-top: 88px; }
+h1[id], h2[id], h3[id], header[id], aside[id], details[id] { scroll-margin-top: 88px; }
 
 /* contents rail: a column of dots beside long pages from 1180px; narrower screens read straight down */
 .section-rail { display: none; }

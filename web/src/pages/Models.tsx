@@ -4,6 +4,7 @@ import { ResourceError } from "../components/ResourceError";
 import { ExternalLink } from "../components/ExternalLink";
 import { NowcastChart } from "../components/NowcastChart";
 import { PageGuide } from "../components/PageGuide";
+import { RailPage, type RailSection } from "../components/SectionRail";
 import { StoryNext, StoryPath } from "../components/Story";
 import { PUBLIC_EDITION } from "../lib/edition";
 import { liveSentence } from "../lib/nowcastWords";
@@ -12,13 +13,21 @@ const LABELS: Record<string, string> = { INDPRO: "Industrial production", PCEC96
   RRSFS: "Real retail sales", HOUST: "Housing starts", PAYEMS: "Payroll employment",
   UNRATE: "Unemployment rate", GDP_PREV: "Previous GDP growth" };
 
+const RAIL: RailSection[] = [
+  { id: "models-top", label: "Top" },
+  { id: "model-live", label: "Live quarter" },
+  { id: "model-performance", label: "Track record" },
+  { id: "model-coefficients", label: "What it listens to" },
+  { id: "model-how", label: "How it works" },
+];
+
 export function Models() {
   const { state, retry } = useResource(loadNowcast);
   const data = state.kind === "ready" ? state.data : null;
   const errors = data && nowcastErrors(data.points);
-  return <div className="models-page page-fade">
+  return <RailPage sections={RAIL}><div className="models-page page-fade">
     <StoryPath current="models" />
-    <p className="section-kicker">Supplementary research</p><h1 className="t-h1">Reading GDP before release day</h1>
+    <p className="section-kicker">Supplementary research</p><h1 className="t-h1" id="models-top">Reading GDP before release day</h1>
     {!PUBLIC_EDITION && <p className="t-label muted">A separate ALFRED study. The main market-expectations story starts on <a href="?page=events">Events</a>.</p>}
     <p className="about-lead">A simple model uses the economic numbers already published to estimate the first GDP release.</p>
     <PageGuide
@@ -56,11 +65,11 @@ export function Models() {
         <p className="t-micro muted">Coefficients exclude 2020 Q2 and Q3. Block bootstrap intervals condition on the chosen penalty and exclusions. They describe associations, not causal effects.</p>
       </section>
     </>}
-    <section className="about-section"><h2 className="t-h3">How it works, in plain words</h2>
+    <section className="about-section"><h2 className="t-h3" id="model-how">How it works, in plain words</h2>
       <p>Monthly figures describe jobs, production, spending, retail sales, housing and unemployment. The model combines their quarterly changes with the previous quarter's GDP. If a month was not yet published, it uses only the months available at that time.</p>
       <p>Ridge regression keeps individual indicators from receiving extreme weights. For each forecast, the model learns from earlier releases only. It chooses how much to shrink the weights by testing on earlier quarters inside that training period.</p>
       <p>The track record above is a historical evaluation, and the live forecast uses exactly the same steps on today's data. Neither is a causal explanation. A missing month can change what the quarterly average represents. Pandemic observations also make error measures much larger.</p>
     </section>
     <StoryNext current="models" />
-  </div>;
+  </div></RailPage>;
 }

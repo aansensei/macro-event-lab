@@ -3,7 +3,7 @@
 .theme-btn { display: inline-grid; place-items: center; width: 36px; height: 36px; min-width: 36px; min-height: 36px; padding: 0; border-radius: 8px; }
 .theme-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
 .theme-btn[aria-pressed="true"] { background-color: var(--accent-tint); color: var(--accent); }
-@media (pointer: coarse) { .theme-btn { width: 40px; height: 40px; min-width: 40px; min-height: 40px; padding: 0; } }
+@media (pointer: coarse) { .theme-btn { width: 44px; height: 44px; min-width: 44px; min-height: 44px; padding: 0; } }
 @media (max-width: 479px) { .theme-btn { min-width: 36px; padding: 0; } }
 
 /* disclosure rows share one chevron that turns when the row opens, in place of the browser triangle and the plus and minus signs */

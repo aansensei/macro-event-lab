@@ -1,4 +1,4 @@
-import { useEffect, useState, type MouseEvent } from "react";
+import { useEffect, useState, type MouseEvent, type ReactNode } from "react";
 
 import { activeSection } from "../lib/rail";
 
@@ -15,10 +15,17 @@ function prefersReducedMotion(): boolean {
 // the others show theirs when the rail is hovered or focused, and a click glides to that section
 export function SectionRail({ sections }: { sections: RailSection[] }) {
   const [active, setActive] = useState(0);
+  const [present, setPresent] = useState(sections);
+
+  // a page may list sections that only exist once its data has loaded, so the rail keeps the ones on screen
+  useEffect(() => {
+    const found = sections.filter((s) => document.getElementById(s.id));
+    setPresent((current) => (current.map((s) => s.id).join() === found.map((s) => s.id).join() ? current : found));
+  });
 
   useEffect(() => {
     function update() {
-      const tops = sections.map((s) => document.getElementById(s.id)?.getBoundingClientRect().top ?? Infinity);
+      const tops = present.map((s) => document.getElementById(s.id)?.getBoundingClientRect().top ?? Infinity);
       const atBottom = window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 4;
       setActive(activeSection(tops, window.innerHeight, atBottom));
     }
@@ -29,7 +36,7 @@ export function SectionRail({ sections }: { sections: RailSection[] }) {
       window.removeEventListener("scroll", update);
       window.removeEventListener("resize", update);
     };
-  }, [sections]);
+  }, [present]);
 
   function go(e: MouseEvent<HTMLAnchorElement>, id: string) {
     e.preventDefault();
@@ -39,7 +46,7 @@ export function SectionRail({ sections }: { sections: RailSection[] }) {
   return (
     <nav className="section-rail" aria-label="On this page">
       <ol>
-        {sections.map((s, i) => (
+        {present.map((s, i) => (
           <li key={s.id}>
             <a href={`#${s.id}`} aria-current={i === active ? "location" : undefined} onClick={(e) => go(e, s.id)}>
               <span className="rail-dot" aria-hidden="true" />
@@ -50,4 +57,9 @@ export function SectionRail({ sections }: { sections: RailSection[] }) {
       </ol>
     </nav>
   );
+}
+
+// the page with its contents rail beside it from 1180 pixels wide
+export function RailPage({ sections, children }: { sections: RailSection[]; children: ReactNode }) {
+  return <div className="with-rail"><SectionRail sections={sections} />{children}</div>;
 }

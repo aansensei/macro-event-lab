@@ -1,6 +1,7 @@
 import { ExternalLink } from "../components/ExternalLink";
 import { Icon } from "../components/Icon";
 import { ReleaseFile } from "../components/ReleaseFile";
+import { RailPage, type RailSection } from "../components/SectionRail";
 import { loadArena } from "../data/arena";
 import { loadRevisions } from "../data/load";
 import { loadNowcast, nowcastErrors } from "../data/nowcast";
@@ -8,6 +9,13 @@ import { useResource } from "../hooks/useResource";
 import { liveSentence } from "../lib/nowcastWords";
 import { publicFindings } from "../lib/publicFindings";
 import { pageSearch, type Page } from "../lib/url";
+
+const RAIL: RailSection[] = [
+  { id: "home-top", label: "Top" },
+  { id: "release-file-title", label: "The release file" },
+  { id: "start-here", label: "Start here" },
+  { id: "public-findings-title", label: "The wider record" },
+];
 
 // the three steps of the public story, each with the reason to open it
 const STEPS: [Page, string, string, string][] = [
@@ -23,9 +31,9 @@ export function PublicHome() {
   const revisions = useResource(loadRevisions).state;
   const data = state.kind === "ready" ? state.data : null;
   const errors = data && nowcastErrors(data.points);
-  return <div className="public-home page-fade">
+  return <RailPage sections={RAIL}><div className="public-home page-fade">
     <p className="section-kicker">Macro Event Lab</p>
-    <h1 className="t-h1">Every economic number is published once, then revised. Who predicted the first version best?</h1>
+    <h1 className="t-h1" id="home-top">Every economic number is published once, then revised. Who predicted the first version best?</h1>
     <p className="about-lead">
       This site replays real releases using only what was known at the time, shows how much each number changed
       afterwards, and scores forecasters and models against the first version. It is rebuilt every day from public data.
@@ -90,5 +98,5 @@ export function PublicHome() {
       <ExternalLink href="https://fred.stlouisfed.org/">FRED</ExternalLink>, Federal Reserve Bank of St. Louis.
       This product uses the FRED&reg; API but is not endorsed or certified by the Federal Reserve Bank of St. Louis.
     </p>
-  </div>;
+  </div></RailPage>;
 }
