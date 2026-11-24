@@ -3,12 +3,14 @@
 from __future__ import annotations
 
 import argparse
+import json
 import sys
 from datetime import UTC, date, datetime
 
 import polars as pl
 
 from macro_event_lab import calibration, config, nowcast, pit, public_build, quality
+from macro_event_lab.arena import export as arena_export
 from macro_event_lab.build import build_silver
 from macro_event_lab.gold import build_gold
 from macro_event_lab.http import RateLimitedClient
@@ -190,6 +192,16 @@ def cmd_model(args: argparse.Namespace) -> None:
               else "Fixed-prior MAP with temporal evaluation. No posterior intervals.")
 
 
+def cmd_arena(args: argparse.Namespace) -> None:
+    paths = config.get_paths()
+    today = date.fromisoformat(args.today) if args.today else date.today()
+    path = arena_export.write_arena(paths, today)
+    payload = json.loads(path.read_text(encoding="utf-8"))
+    print(f"contestants run: {[c['id'] for c in payload['contestants']]}")
+    print(f"periods with forecasts: {len(payload['forecasts'])}, live rows: {len(payload['live'])}")
+    print(f"written to {path}")
+
+
 def cmd_build_public(args: argparse.Namespace) -> None:
     paths = config.get_paths()
     today = date.fromisoformat(args.today) if args.today else None
@@ -257,6 +269,10 @@ def main(argv: list[str] | None = None) -> None:
     )
     p_public.add_argument("--today", help="information date of the live nowcast (YYYY-MM-DD)")
     p_public.set_defaults(func=cmd_build_public)
+
+    p_arena = sub.add_parser("arena", help="run the forecast arena and write arena.json")
+    p_arena.add_argument("--today", help="information date (YYYY-MM-DD)")
+    p_arena.set_defaults(func=cmd_arena)
 
     p_nowcast = sub.add_parser("nowcast", help="evaluate the GDP nowcast walk-forward")
     p_nowcast.set_defaults(func=cmd_nowcast)
