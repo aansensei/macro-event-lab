@@ -1,16 +1,19 @@
 # Macro Event Lab
 
-What did markets expect before each CPI, jobs report and Fed decision, and how did bonds and stocks react when the number came out?
+Live site: <https://aansensei.dev/macro-event-lab/>
 
-Macro Event Lab is an automated, point-in-time data pipeline that:
+Who forecasts first published US economic numbers best, and how do we know no forecast saw the future? Macro Event Lab rebuilds US macroeconomic data as it was known at the time (ALFRED vintages), scores forecasts against the number as first published, and checks every forecast for information leakage.
 
-1. Collects prediction-market prices (Kalshi) for U.S. macro releases.
-2. Recovers the market-implied probability distribution of each release.
-3. Compares it with the number actually published at the time (ALFRED vintages, not today's revised data).
-4. Measures how Treasury yields and sector stocks reacted to the surprise.
-5. Serves everything on a fully interactive website.
+What the public site shows:
 
-**Status:** the pipeline and nine website pages (Overview, Events, Compare, Scorecard, Revisions, Models, Method, Glossary, About) run locally. Overview introduces the main story through a historical release reveal; Models holds the supplementary ALFRED-only GDP nowcast. Calibration research includes MAP evaluation and Bayesian models with documented limits in the [model card](pipeline/MODEL_CARD.md). Publishing market-derived results waits on written permission from Kalshi. [JOURNEY.md](JOURNEY.md) records discussions, decisions, findings, bugs, checks and open work.
+- **Revisions:** how the first published CPI, payrolls and GDP numbers changed later.
+- **GDP nowcast:** a live nowcast built only from data that was public before each release.
+- **Data status:** the age of each source and the quality checks that ran.
+- **Forecast arena:** professional forecasters, classical models and time series foundation models, scored point in time. Results appear after review. The rules are fixed in advance in [`pipeline/EVAL_PROTOCOL.md`](pipeline/EVAL_PROTOCOL.md).
+
+A second, local research edition replays hour by hour prediction market odds around each release. It uses market data from Kalshi and is not published, because Kalshi's terms require written permission before anything derived from its data is made public.
+
+How it is built: a Python pipeline (Polars, DuckDB, Parquet; raw, silver and gold layers) tested with pytest and Hypothesis, a React and TypeScript website tested with Vitest, and a daily rebuild on GitHub Actions that deploys the public edition to GitHub Pages.
 
 ## Repo layout
 
