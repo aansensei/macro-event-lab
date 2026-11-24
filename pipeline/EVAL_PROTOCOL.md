@@ -87,3 +87,15 @@ All contestants, all windows, losses as prominently as wins, the number of score
 <!-- roster-changes-below -->
 
 ## Roster changes
+
+### 2026-11-24, implementation choices made explicit
+
+These sentences state values the code already used when the first results were produced. They change no forecast and no rule above the marker line.
+
+- Standardization divides by the population standard deviation (divisor n, not n minus 1).
+- A multivariate contestant needs at least 20 training rows whose actual was public at the origin before it publishes a forecast.
+- Ridge chooses its penalty from 0.01, 0.1, 1, 3, 10, 30, 100, 300 and 1000 by an inner walk forward evaluation over the last 8 training rows.
+- Factor ridge chooses the pair of factor count (1, 2, 3 or 4) and penalty (0.1, 1, 10 or 100) with the smallest inner walk forward error.
+- LASSO uses 30 penalties spaced geometrically from the smallest penalty that sets every coefficient to zero down to one thousandth of it, with coordinate descent that stops when the largest coefficient change is below 1e-8 or after 5000 sweeps.
+- A missing feature takes the mean of the kept training rows, and a column with no observed value takes zero.
+- The Diebold and Mariano variance divides by n (not n minus 1), and the Harvey, Leybourne and Newbold factor is applied as stated in section 8.
