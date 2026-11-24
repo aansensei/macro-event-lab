@@ -40,7 +40,7 @@ jobs:
       - name: Copy only the public files into the site
         run: |
           mkdir -p web/public/data
-          cp "$MEL_DATA_DIR/web_public/revisions.json" "$MEL_DATA_DIR/web_public/nowcast.json" web/public/data/
+          cp "$MEL_DATA_DIR/web_public/revisions.json" "$MEL_DATA_DIR/web_public/nowcast.json" "$MEL_DATA_DIR/web_public/status.json" web/public/data/
       - uses: actions/setup-node@v7
         with:
           node-version: "24"

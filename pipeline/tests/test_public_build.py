@@ -34,6 +34,13 @@ def test_public_build_writes_only_the_public_files(tmp_path, monkeypatch):
     nowcast = json.loads((out / "nowcast.json").read_text(encoding="utf-8"))
     assert nowcast["source"] == "ALFRED"
     assert nowcast["live"] is None
+    status = json.loads((out / "status.json").read_text(encoding="utf-8"))
+    assert status["information_date"] == "2025-03-10"
+    assert status["sources"][0]["rows"] == 2
+    assert status["sources"][0]["is_fresh"] is True
+    assert {check["name"] for check in status["checks"]} == {
+        "duplicates_alfred_observations", "missing_observations",
+    }
     revisions = json.loads((out / "revisions.json").read_text(encoding="utf-8"))
     assert [s["series"] for s in revisions["series"]] == ["payrolls"]
     for path in out.rglob("*"):

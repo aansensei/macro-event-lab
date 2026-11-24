@@ -17,10 +17,11 @@ from macro_event_lab.config import Paths
 from macro_event_lab.gold import revisions
 from macro_event_lab.nowcast import coefficient_table, live_nowcast, nowcast_rows, walk_forward
 from macro_event_lab.nowcast_export import export_nowcast
+from macro_event_lab.status_export import build_status
 from macro_event_lab.web_export import _write_json, revisions_payload
 
 # the only files the public website reads; anything else in the folder is a mistake
-PUBLIC_FILES = ("revisions.json", "nowcast.json")
+PUBLIC_FILES = ("revisions.json", "nowcast.json", "status.json")
 
 
 def public_dir(paths: Paths) -> Path:
@@ -48,4 +49,5 @@ def build_public(paths: Paths, today: date | None = None) -> dict[str, int]:
     _write_json(out / "revisions.json", revisions_payload(rev))
     live = live_nowcast(observations, today or date.today())
     export_nowcast(paths, out_dir=out, live=live)
+    _write_json(out / "status.json", build_status(paths, today or date.today()))
     return {name: df.height for name, df in tables.items()} | {"live": int(live is not None)}
