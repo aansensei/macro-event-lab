@@ -3,13 +3,14 @@ import { useState } from "react";
 import { ArenaChart } from "../components/ArenaChart";
 import { ArenaIntro } from "../components/ArenaIntro";
 import { ArenaLeaderboard } from "../components/ArenaLeaderboard";
+import { ArenaPending } from "../components/ArenaPending";
 import { LeakageTable } from "../components/LeakageTable";
 import { LiveForecast } from "../components/LiveForecast";
 import { ResourceError } from "../components/ResourceError";
 import { Select } from "../components/Select";
 import { TargetSwitch } from "../components/TargetSwitch";
 import { WindowToggle } from "../components/WindowToggle";
-import { loadArena, type ArenaWindow, type TargetId } from "../data/arena";
+import { ARENA_NOT_BUILT, loadArena, type ArenaWindow, type TargetId } from "../data/arena";
 import { useResource } from "../hooks/useResource";
 import { leaderboardRows } from "../lib/arenaStats";
 import { ARENA_GUIDE } from "../lib/arenaWords";
@@ -22,6 +23,7 @@ export function Arena() {
   if (state.kind !== "ready") return <div className="arena-page page-fade">
     <p className="section-kicker">Forecast arena</p><h1 className="t-h1">How do forecasts compare with first-published numbers?</h1>
     {state.kind === "loading" ? <p className="state-banner" role="status">Loading forecast arena data.</p>
+      : state.message === ARENA_NOT_BUILT ? <ArenaPending onRetry={retry} />
       : <ResourceError title={state.message.startsWith("Unsupported") ? "Unsupported data format" : "Forecast arena data could not be loaded"} message={state.message} onRetry={retry} />}
   </div>;
   const data = state.data;

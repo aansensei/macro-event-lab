@@ -7,7 +7,9 @@ import { loadArena } from "../data/arena";
 import { arenaFixture } from "../data/arenaFixture";
 import { Arena } from "./Arena";
 
-vi.mock("../data/arena", () => ({ loadArena: vi.fn() }));
+vi.mock("../data/arena", async (importOriginal) => ({
+  ...await importOriginal<typeof import("../data/arena")>(), loadArena: vi.fn(),
+}));
 Object.assign(globalThis, { IS_REACT_ACT_ENVIRONMENT: true });
 let host: HTMLDivElement;
 let root: Root;
@@ -96,7 +98,23 @@ it("renders a live section only for matching supplied entries and keeps nulls ab
   expect(host.querySelector("#arena-live")).toBeNull();
 });
 
-it.each(["The arena has not been built yet", "Unsupported arena data version. This page reads version 1.", "The data file could not be reached."])("recovers from %s", async (message) => {
+it("treats unpublished results as a pending state and can check again", async () => {
+  vi.mocked(loadArena).mockRejectedValueOnce(new Error("The arena has not been built yet"));
+  await act(async () => root.render(createElement("main", { tabIndex: -1 }, createElement(Arena))));
+  expect(host.querySelector('[role="alert"]')).toBeNull();
+  expect(host.querySelector('[role="status"]')?.textContent).toContain("Forecast results are not available yet");
+  expect(host.querySelector('a[href="?page=revisions"]')).not.toBeNull();
+  expect(host.querySelector('a[href="?page=models"]')).not.toBeNull();
+  expect(host.querySelector("table")).toBeNull();
+  const button = host.querySelector<HTMLButtonElement>('[role="status"] button')!;
+  button.focus();
+  await act(async () => button.click());
+  expect(host.querySelector(".arena-section table")).not.toBeNull();
+  expect(document.activeElement).toBe(host.querySelector("main"));
+  expect(loadArena).toHaveBeenCalledTimes(2);
+});
+
+it.each(["Unsupported arena data version. This page reads version 1.", "The data file could not be reached."])("recovers from %s", async (message) => {
   vi.mocked(loadArena).mockRejectedValueOnce(new Error(message));
   await act(async () => root.render(createElement("main", { tabIndex: -1 }, createElement(Arena))));
   expect(host.querySelector('[role="alert"]')?.textContent).toContain(message);

@@ -2,6 +2,7 @@ import { arrayValue, countValue, dateValue, fetchPublicJson, objectValue, textVa
 
 export type TargetId = "gdp" | "cpi" | "payrolls";
 export type ArenaWindow = "all" | "clean";
+export const ARENA_NOT_BUILT = "The arena has not been built yet";
 export interface ArenaTarget { id: TargetId; label: string; unit: string; frequency: "quarterly" | "monthly" }
 export interface Contestant { id: string; label: string; kind: "baseline" | "classical" | "foundation" | "human"; note: string }
 export interface ForecastInterval { level: 0.9; lo: number | null; hi: number | null }
@@ -123,5 +124,5 @@ export function parseArena(value: unknown): Arena {
 }
 
 export async function loadArena(fetchImpl: typeof fetch = fetch): Promise<Arena> {
-  return parseArena(await fetchPublicJson("arena", "The arena has not been built yet", fetchImpl));
+  return parseArena(await fetchPublicJson("arena", ARENA_NOT_BUILT, fetchImpl));
 }
