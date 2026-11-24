@@ -33,7 +33,10 @@ NEEDS_WORKBOOK_READER = pytest.mark.skipif(
 )
 
 
-def workbook_fixture(sheet: str = "CPI", first_value: float = 1.0) -> bytes:
+def workbook_fixture(
+    sheet: str = "CPI", first_value: float = 1.0, prefix: str | None = None,
+) -> bytes:
+    prefix = prefix or sheet
     buffer = io.BytesIO()
     with zipfile.ZipFile(buffer, "w") as archive:
         archive.writestr("[Content_Types].xml", '''
@@ -66,10 +69,10 @@ def workbook_fixture(sheet: str = "CPI", first_value: float = 1.0) -> bytes:
             <row r="1">
               <c r="A1" t="inlineStr"><is><t>YEAR</t></is></c>
               <c r="B1" t="inlineStr"><is><t>QUARTER</t></is></c>
-              <c r="C1" t="inlineStr"><is><t>{sheet}1</t></is></c>
-              <c r="D1" t="inlineStr"><is><t>{sheet}2</t></is></c>
-              <c r="E1" t="inlineStr"><is><t>{sheet}3</t></is></c>
-              <c r="F1" t="inlineStr"><is><t>{sheet}A</t></is></c>
+              <c r="C1" t="inlineStr"><is><t>{prefix}1</t></is></c>
+              <c r="D1" t="inlineStr"><is><t>{prefix}2</t></is></c>
+              <c r="E1" t="inlineStr"><is><t>{prefix}3</t></is></c>
+              <c r="F1" t="inlineStr"><is><t>{prefix}A</t></is></c>
             </row>
             <row r="2">
               <c r="A2"><v>2003</v></c><c r="B2"><v>1</v></c><c r="C2"><v>99</v></c>
@@ -182,7 +185,8 @@ def test_two_survey_workbook_excludes_history_annual_horizons_and_missing_codes(
 @pytest.mark.parametrize("variable", spf.VARIABLES)
 def test_workbook_preserves_each_variables_published_unit(variable: spf.Variable) -> None:
     rows = spf.parse_workbook(
-        workbook_fixture(variable.sheet), variable.workbook, spf.parse_release_dates(CALENDAR),
+        workbook_fixture(variable.sheet, prefix=(variable.column_prefix or variable.sheet).lower()),
+        variable.workbook, spf.parse_release_dates(CALENDAR),
     )
     assert {row["variable"] for row in rows} == {variable.variable}
     assert {row["unit"] for row in rows} == {variable.unit}

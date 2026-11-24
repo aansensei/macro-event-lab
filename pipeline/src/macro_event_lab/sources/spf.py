@@ -43,10 +43,12 @@ class Variable:
     sheet: str
     variable: str
     unit: str
+    # growth columns carry a prefix that differs from the sheet name (sheet RGDP, columns DRGDP2)
+    column_prefix: str = ""
 
 
 VARIABLES = (
-    Variable("growth", "DRGDP", "gdp", "% annualized q/q"),
+    Variable("growth", "RGDP", "gdp", "% annualized q/q", "DRGDP"),
     Variable("levels", "CPI", "cpi", "% annualized q/q"),
     Variable("levels", "CORECPI", "core_cpi", "% annualized q/q"),
     Variable("levels", "UNEMP", "unemployment", "%"),
@@ -164,7 +166,8 @@ def parse_workbook(
                 if len(labels) >= 2 and labels[0] == "YEAR" and labels[1] in {"QUARTER", "QTR"}:
                     headers = {}
                     for index, label in enumerate(labels[2:], 2):
-                        match = re.fullmatch(re.escape(variable.sheet) + r"([2-6])", label)
+                        prefix = re.escape(variable.column_prefix or variable.sheet)
+                        match = re.fullmatch(prefix + r"([2-6])", label)
                         if match:
                             headers[index] = int(match[1]) - 2
                     if not headers:
