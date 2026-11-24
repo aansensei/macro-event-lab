@@ -47,3 +47,8 @@ describe("url state", () => {
     expect(parseUrlState("")).toEqual({ page: "overview", event: null, h: null });
   });
 });
+
+it("opens on the home page when the address names no page", () => {
+  expect(parseUrlState("").page).toBe("overview");
+  expect(parseUrlState("?").page).toBe("overview");
+});
