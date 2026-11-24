@@ -9,6 +9,7 @@ it("describes the live preliminary arena and keeps the foundation models marked 
   expect(JSON.stringify(copy)).not.toMatch(/kalshi|KX(CPI|GDP|PAYROLLS|FED)/i);
   expect(copy.lead).toContain("Preliminary results");
   expect(copy.stack[1]?.[1]).toContain("have not run");
+  expect(copy.lead).not.toContain("only the two simplest");
   expect(JSON.stringify(copy)).not.toMatch(/\u2014|\u2013/);
 });
 

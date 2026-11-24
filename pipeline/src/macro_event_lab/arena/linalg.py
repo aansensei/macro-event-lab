@@ -74,7 +74,8 @@ def lasso_fit(
                 continue
             old = coef[j]
             rho = float(z[:, j] @ residual) / n + column_norm[j] * old
-            new = float(soft_threshold(rho, lam)) / column_norm[j]
+            raw_new = float(soft_threshold(rho, lam)) / column_norm[j]
+            new = 0.0 if abs(raw_new) <= 1e-15 else raw_new
             if new != old:
                 residual -= z[:, j] * (new - old)
                 coef[j] = new

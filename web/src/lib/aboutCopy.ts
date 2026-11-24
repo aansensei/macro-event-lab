@@ -44,7 +44,7 @@ const FAQ: [string, string][] = [
 ];
 
 const PUBLIC_COPY = {
-  lead: "An auditable, point-in-time forecast arena for US macro releases, built on ALFRED, FRED and professional forecaster surveys. Preliminary results are live for GDP growth, inflation and payrolls. Inflation and payrolls have only the two simplest contestants so far, and the foundation models have not run.",
+  lead: "An auditable, point-in-time forecast arena for US macro releases, built on ALFRED, FRED and professional forecaster surveys. Preliminary results are live for GDP growth, inflation and payrolls. Five contestants have run for each target, the survey median joins for GDP growth, and the foundation models have not run.",
   glance: [
     [
       "The problem",
@@ -109,7 +109,7 @@ const PUBLIC_COPY = {
     ],
     [
       "Contestants",
-      "A naive baseline and an autoregression for every target. GDP growth also has ridge regression, ridge on principal components, LASSO and the survey median. All are written for this project and refit at every forecast date. Ridge style models for inflation and payrolls and two time series foundation models are planned and have not run.",
+      "A naive baseline, an autoregression, ridge regression, ridge on principal components and LASSO for every target, plus the survey median for GDP growth. All are written for this project and refit at every forecast date. Two time series foundation models are planned and have not run.",
     ],
     [
       "Pipeline",
@@ -135,7 +135,7 @@ const PUBLIC_COPY = {
     ],
     [
       "Which forecasts are in the arena today?",
-      "A naive baseline and an autoregression for GDP growth, inflation and payrolls. GDP growth also has ridge regression, ridge on principal components, LASSO and the survey median. The monthly ridge models and the two foundation models are planned and have not run, so the results are labelled preliminary.",
+      "A naive baseline, an autoregression, ridge regression, ridge on principal components and LASSO for GDP growth, inflation and payrolls, plus the survey median for GDP growth only. The two foundation models are planned and have not run, so the results are labelled preliminary.",
     ],
     [
       "Why compare professional surveys with forecasting methods?",

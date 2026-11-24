@@ -99,3 +99,7 @@ These sentences state values the code already used when the first results were p
 - LASSO uses 30 penalties spaced geometrically from the smallest penalty that sets every coefficient to zero down to one thousandth of it, with coordinate descent that stops when the largest coefficient change is below 1e-8 or after 5000 sweeps.
 - A missing feature takes the mean of the kept training rows, and a column with no observed value takes zero.
 - The Diebold and Mariano variance divides by n (not n minus 1), and the Harvey, Leybourne and Newbold factor is applied as stated in section 8.
+
+### 2026-11-24, monthly indicators exclude the target's own series
+
+For the `payrolls` target the indicator `PAYEMS` is not used, because the same series enters the model through the lagged first prints and the two columns are almost identical, which makes the penalized fits ill conditioned and very slow. The `cpi` target keeps all six indicators. No payrolls forecast from `ridge`, `factor_ridge` or `lasso` had been published before this rule.

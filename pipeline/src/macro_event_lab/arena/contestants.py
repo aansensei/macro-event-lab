@@ -15,6 +15,7 @@ from macro_event_lab.nowcast import (
     FEATURES,
     INDICATORS,
     MIN_TRAIN,
+    add_months,
     choose_lambda,
     gdp_previous,
     quarter_value,
@@ -85,6 +86,66 @@ def gdp_features(observations: pl.DataFrame, origins: pl.DataFrame) -> dict[date
         previous = gdp_previous(vintage(by_series["GDPC1"], as_of), quarter)
         values.append(math.nan if previous is None else previous)
         features[quarter] = np.asarray(values, dtype=float)
+    return features
+
+
+def _monthly_indicators(target: str) -> dict[str, str]:
+    """The monthly indicators for a target, without the target's own series.
+
+    The employment level behind the payrolls target is already in the model through the lagged
+    first prints, and as an indicator it is almost the same column, which makes the penalized
+    fits ill conditioned and very slow.
+    """
+    own = {"payrolls": "PAYEMS"}.get(target)
+    return {series: kind for series, kind in INDICATORS.items() if series != own}
+
+
+def monthly_feature_names(target: str) -> tuple[str, ...]:
+    """Names of the entries of a monthly feature vector, in order."""
+    return ("LAG_1", "LAG_2", "LAG_3", *_monthly_indicators(target))
+
+
+def monthly_features(
+    observations: pl.DataFrame, targets: pl.DataFrame, origins: pl.DataFrame, target: str,
+) -> dict[date, np.ndarray]:
+    """Monthly feature panel for cpi or payrolls: lagged first prints plus monthly indicators."""
+    indicators = _monthly_indicators(target)
+    by_series = {s: observations.filter(pl.col("series_id") == s) for s in indicators}
+    t_frame = targets.filter(pl.col("target") == target)
+    t_orig = origins.filter(pl.col("target") == target)
+    first_prints_by_period = {
+        r["period"]: (r["first_print"], r["release_date"])
+        for r in t_frame.iter_rows(named=True)
+    }
+
+    features: dict[date, np.ndarray] = {}
+    for row in t_orig.iter_rows(named=True):
+        p, made_on = row["period"], row["made_on"]
+        vals = []
+        for lag in (1, 2, 3):
+            prev_p = add_months(p, -lag)
+            if prev_p in first_prints_by_period:
+                val, rel_date = first_prints_by_period[prev_p]
+                vals.append(val if rel_date <= made_on else math.nan)
+            else:
+                vals.append(math.nan)
+        for s, kind in indicators.items():
+            v = vintage(by_series[s], made_on)
+            ind_val = math.nan
+            for check_m in (add_months(p, -1), add_months(p, -2)):
+                prev_m = add_months(check_m, -1)
+                if check_m not in v or prev_m not in v:
+                    continue
+                # a growth rate needs a positive base, a change only needs a value
+                if v[prev_m] == 0 or (kind == "growth" and v[prev_m] < 0):
+                    continue
+                if kind == "change":
+                    ind_val = v[check_m] - v[prev_m]
+                else:
+                    ind_val = (v[check_m] / v[prev_m] - 1.0) * 100.0
+                break
+            vals.append(ind_val)
+        features[p] = np.asarray(vals, dtype=float)
     return features
 
 
@@ -196,6 +257,7 @@ def spf_forecast(survey: pl.DataFrame, period: date, made_on: date) -> float | N
 
 
 __all__ = [
-    "FEATURES", "KINDS", "LABELS", "NOTES", "ar_forecast", "gdp_features", "naive_forecast",
-    "ridge_forecast", "spf_forecast", "factor_ridge_forecast", "lasso_forecast",
+    "FEATURES", "KINDS", "LABELS", "NOTES", "ar_forecast", "gdp_features", "monthly_feature_names",
+    "monthly_features",
+    "naive_forecast", "ridge_forecast", "spf_forecast", "factor_ridge_forecast", "lasso_forecast",
 ]

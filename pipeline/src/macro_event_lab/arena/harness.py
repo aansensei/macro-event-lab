@@ -23,22 +23,25 @@ def run_walk_forward(
 ) -> pl.DataFrame:
     """One row per (target, period, contestant) that produced a forecast, with intervals."""
     rows: list[dict[str, object]] = []
-    gdp_origins = origins.filter(pl.col("target") == "gdp")
-    features = contestants.gdp_features(observations, gdp_origins)
-    gdp_frame = targets.filter(pl.col("target") == "gdp")
-    gdp_truth = {r["period"]: r for r in gdp_frame.iter_rows(named=True)}
-    gdp_rows = [
-        (r["period"], r["made_on"]) for r in gdp_origins.iter_rows(named=True)
-        if r["period"] in gdp_truth and r["period"] in features
-    ]
-    train_x = [features[period] for period, _ in gdp_rows]
-    train_y = [gdp_truth[period]["first_print"] for period, _ in gdp_rows]
-    train_release = [gdp_truth[period]["release_date"] for period, _ in gdp_rows]
-    train_made_on = [made_on for _, made_on in gdp_rows]
     for target in ("gdp", "cpi", "payrolls"):
         frame = targets.filter(pl.col("target") == target)
         truth = {r["period"]: r for r in frame.iter_rows(named=True)}
-        for origin in origins.filter(pl.col("target") == target).iter_rows(named=True):
+        target_origins = origins.filter(pl.col("target") == target).sort("period")
+        if target == "gdp":
+            features = contestants.gdp_features(observations, target_origins)
+        else:
+            features = contestants.monthly_features(observations, targets, target_origins, target)
+
+        target_rows = [
+            (r["period"], r["made_on"]) for r in target_origins.iter_rows(named=True)
+            if r["period"] in truth and r["period"] in features
+        ]
+        train_x = [features[period] for period, _ in target_rows]
+        train_y = [truth[period]["first_print"] for period, _ in target_rows]
+        train_release = [truth[period]["release_date"] for period, _ in target_rows]
+        train_made_on = [made_on for _, made_on in target_rows]
+
+        for origin in target_origins.iter_rows(named=True):
             period, made_on = origin["period"], origin["made_on"]
             if period not in truth:
                 continue
@@ -47,19 +50,18 @@ def run_walk_forward(
                 "naive": contestants.naive_forecast(known),
                 "ar": contestants.ar_forecast(known),
             }
-            if target == "gdp":
-                if survey is not None:
-                    forecasts["spf"] = contestants.spf_forecast(survey, period, made_on)
-                if period in features and train_x:
-                    for name, forecast in (
-                        ("ridge", contestants.ridge_forecast),
-                        ("factor_ridge", contestants.factor_ridge_forecast),
-                        ("lasso", contestants.lasso_forecast),
-                    ):
-                        forecasts[name] = forecast(
-                            np.vstack(train_x), train_y, train_release, train_made_on,
-                            features[period], made_on,
-                        )
+            if target == "gdp" and survey is not None:
+                forecasts["spf"] = contestants.spf_forecast(survey, period, made_on)
+            if period in features and train_x:
+                for name, forecast in (
+                    ("ridge", contestants.ridge_forecast),
+                    ("factor_ridge", contestants.factor_ridge_forecast),
+                    ("lasso", contestants.lasso_forecast),
+                ):
+                    forecasts[name] = forecast(
+                        np.vstack(train_x), train_y, train_release, train_made_on,
+                        features[period], made_on,
+                    )
             for name, value in forecasts.items():
                 if value is None:
                     continue

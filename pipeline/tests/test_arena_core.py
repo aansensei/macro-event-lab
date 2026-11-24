@@ -177,7 +177,9 @@ def test_arena_file_follows_the_contract_and_stays_point_in_time() -> None:
     payload = export.build_arena(observations, None, date(2010, 6, 1))
     assert payload["schema_version"] == 1
     assert {t["id"] for t in payload["targets"]} == {"gdp", "cpi", "payrolls"}
-    assert [c["id"] for c in payload["contestants"]] == ["naive", "ar"]
+    assert [c["id"] for c in payload["contestants"]] == [
+        "naive", "ar", "ridge", "factor_ridge", "lasso",
+    ]
     assert payload["leakage"] == []
     release = {
         (r["target"], r["period"].isoformat()): r["release_date"]
