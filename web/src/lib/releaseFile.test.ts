@@ -63,4 +63,15 @@ describe("wording", () => {
     expect(sentence).toContain("below that");
     expect(sentence).toContain("−8.0% annualized");
   });
+  it("keeps the first published number out of the sealed sentence and adds today's figure only at the last stage", () => {
+    const release = pickReleaseCase(arena, revisions, "gdp")!;
+    const sealed = releaseSentence(release, 0);
+    expect(sealed).toContain("centered on 1.5% annualized");
+    expect(sealed).toContain("sealed");
+    expect(sealed).not.toContain("−10.0");
+    const shown = releaseSentence(release, 1);
+    expect(shown).toContain("−10.0% annualized");
+    expect(shown).not.toContain("−8.0");
+    expect(releaseSentence(release, 2)).toContain("−8.0% annualized");
+  });
 });

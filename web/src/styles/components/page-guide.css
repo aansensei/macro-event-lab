@@ -1,0 +1,8 @@
+/* three short answers at the top of a page, stacked on phones and side by side from tablet width */
+.page-guide { display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px; margin: 20px 0 8px; padding: 0; }
+.page-guide > div { min-width: 0; padding: 14px 16px; border: 1px solid var(--border); border-left: 3px solid var(--accent); border-radius: 10px; background: var(--surface); }
+.page-guide dt { margin: 0 0 4px; font-size: 12px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; color: var(--text-muted); }
+.page-guide dd { margin: 0; font-size: 14px; line-height: 21px; color: var(--text); overflow-wrap: anywhere; }
+@media (min-width: 720px) {
+  .page-guide { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}

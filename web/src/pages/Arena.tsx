@@ -5,6 +5,8 @@ import { ArenaIntro } from "../components/ArenaIntro";
 import { ArenaLeaderboard } from "../components/ArenaLeaderboard";
 import { ArenaPending } from "../components/ArenaPending";
 import { LeakageTable } from "../components/LeakageTable";
+import { PageGuide } from "../components/PageGuide";
+import { StoryNext, StoryPath } from "../components/Story";
 import { LiveForecast } from "../components/LiveForecast";
 import { ResourceError } from "../components/ResourceError";
 import { Select } from "../components/Select";
@@ -31,7 +33,12 @@ export function Arena() {
   const contestant = data.contestants.find((entry) => entry.id === contestantId)
     ?? data.contestants.find((entry) => entry.kind === "classical" || entry.kind === "foundation") ?? data.contestants[0];
   return <div className="arena-page page-fade">
+    <StoryPath current="arena" />
     <ArenaIntro informationDate={data.information_date} contestantIds={data.contestants.map((c) => c.id)} />
+    <PageGuide
+      purpose="See how close each forecaster and model came to the number first published, release after release."
+      lookAt="The leaderboard first (a lower RMSE means closer), then the history chart for one contestant, then the worst period share."
+      limit="Which method is best. The results are preliminary, the periods are few, and one extreme period can drive an average." />
     {!target ? <p className="state-banner">No economic targets are available yet.</p> : <>
       <TargetSwitch targets={data.targets} selected={target.id} onChange={setTarget} />
       <section className="arena-section" aria-labelledby="arena-leaderboard">
@@ -50,6 +57,7 @@ export function Arena() {
       <section className="arena-section" aria-labelledby="arena-guide"><h2 id="arena-guide" className="t-h3">How to read this page</h2>
         <p>{ARENA_GUIDE}</p><p className="muted">Rankings and relative errors describe the supplied records. A short evaluation window and dependence between economic releases limit inference. The table does not establish a winning method.</p>
       </section>
+      <StoryNext current="arena" />
     </>}
   </div>;
 }

@@ -1,6 +1,7 @@
 import { useState } from "react";
 
 import { CheckFilter } from "../components/CheckFilter";
+import { PageGuide } from "../components/PageGuide";
 import { QualityCheckList } from "../components/QualityCheckList";
 import { ResourceError } from "../components/ResourceError";
 import { SourceFreshnessTable } from "../components/SourceFreshnessTable";
@@ -21,6 +22,10 @@ export function Status() {
   const data = state.data;
   return <div className="status-page page-fade">
     <StatusIntro generatedAt={data.generated_at} informationDate={data.information_date} />
+    <PageGuide
+      purpose="Check that the data behind every other page is fresh and passes the checks listed here."
+      lookAt="The summary first, then the age of each source against its limit, then any check marked as a warning or a failure."
+      limit="Whether every number is correct. It reports freshness and the listed rules only." />
     <StatusSummary sources={data.sources} checks={data.checks} />
     <SourceFreshnessTable sources={data.sources} informationDate={data.information_date} />
     <section className="status-section" aria-labelledby="status-checks">

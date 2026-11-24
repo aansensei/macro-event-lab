@@ -32,15 +32,17 @@ const revisions: Revisions = {
 };
 
 describe("ReleaseFile", () => {
-  it("shows the three steps with values built from the data and only targets that have a usable release", () => {
+  it("opens sealed: forecasts are shown, the first published number and today's figure are not", () => {
     const html = renderToStaticMarkup(createElement(ReleaseFile, { arena, revisions }));
     expect(html).toContain("The release file");
     expect(html).toContain("Fixture A");
-    expect(html).toContain("−10.0% annualized");
-    expect(html).toContain("−8.0% annualized");
+    expect(html).toContain("Reveal the first published number");
     expect(html).toContain("GDP growth");
     expect(html).not.toContain("Inflation");
     expect(html).toContain("aria-live=\"polite\"");
+    expect(html).not.toContain("−10.0");
+    expect(html).not.toContain("−8.0");
+    expect(html).toContain("Sealed");
   });
 
   it("renders nothing when no target has a usable release", () => {

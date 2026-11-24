@@ -40,6 +40,12 @@
   .story-path ol { gap: 8px; }
 }
 
+/* a three step path is short enough to name every step on a phone */
+@media (max-width: 639px) {
+  .story-path[data-steps="3"] li:not(.is-current) .story-text { display: flex; }
+  .story-path[data-steps="3"] li:not(.is-current) a { min-width: 0; }
+}
+
 /* The next question closes each chapter and leads into the following one. */
 .story-next { margin-top: 64px; padding-top: 28px; border-top: 1px solid var(--border); }
 .story-next p { margin: 0 0 12px 0; color: var(--text-muted); line-height: 25px; max-width: 70ch; }

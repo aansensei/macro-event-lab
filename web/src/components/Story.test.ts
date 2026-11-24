@@ -18,3 +18,8 @@ it("keeps one current step and a useful continuation for every story page", () =
   }
   expect(renderToStaticMarkup(createElement(StoryNext, { current: "about" }))).toBe("");
 });
+
+it("tells the stylesheet how many steps the path has", () => {
+  const path = renderToStaticMarkup(createElement(StoryPath, { current: STORY[0]!.page }));
+  expect(path).toContain(`data-steps="${STORY.length}"`);
+});

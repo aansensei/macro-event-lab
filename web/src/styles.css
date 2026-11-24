@@ -22,3 +22,6 @@
 @import "./styles/pages/about.css";
 @import "./styles/motion.css";
 @import "./styles/story.css";
+@import "./styles/components/page-guide.css";
+@import "./styles/devices.css";
+@import "./styles/icons.css";

@@ -10,6 +10,7 @@ import { CountUp } from "../components/CountUp";
 import { ExternalLink } from "../components/ExternalLink";
 import { RevisionChart } from "../components/RevisionChart";
 import { Term } from "../components/Term";
+import { PageGuide } from "../components/PageGuide";
 import { StoryNext, StoryPath } from "../components/Story";
 import { PUBLIC_EDITION } from "../lib/edition";
 
@@ -126,6 +127,10 @@ export function Revisions() {
       <p className="about-lead">
         Which number is the answer? Compare the first CPI, jobs and GDP prints with later vintages to see what was known then and what changed.
       </p>
+      <PageGuide
+        purpose="See how much the first published CPI, jobs and GDP numbers changed after release day."
+        lookAt="The typical revision for each series, then the bars for one series, then the table of the biggest revisions."
+        limit="How any future release will be revised. Recent periods can still change, so they are faded and left out of the averages." />
 
       <div className="rev-picks" role="group" aria-label="Choose a release type">
         {series.map((s) => (

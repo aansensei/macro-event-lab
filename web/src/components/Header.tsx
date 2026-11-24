@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 
 import type { Page } from "../lib/url";
 import { PRIMARY } from "../lib/navigation";
+import { Icon } from "./Icon";
 import { LearnMenu } from "./LearnMenu";
 import { Logo } from "./Logo";
 
@@ -46,6 +47,8 @@ function ThemeSwitch() {
           key={p}
           type="button"
           className="theme-btn"
+          aria-label={p === "system" ? "Match the device" : p === "light" ? "Light" : "Dark"}
+          title={p === "system" ? "Match the device" : p === "light" ? "Light" : "Dark"}
           aria-pressed={pref === p}
           onClick={() => {
             // colors cross-fade for a moment after a click, not on the first paint
@@ -55,7 +58,7 @@ function ThemeSwitch() {
             setPref(p);
           }}
         >
-          {p[0]?.toUpperCase() + p.slice(1)}
+          <Icon name={p === "system" ? "monitor" : p === "light" ? "sun" : "moon"} size={18} />
         </button>
       ))}
     </div>

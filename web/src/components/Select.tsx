@@ -1,6 +1,7 @@
 import { useEffect, useId, useRef, useState, type KeyboardEvent, type ReactNode } from "react";
 
 import { moveIndex, typeaheadIndex } from "../lib/listbox";
+import { Icon } from "./Icon";
 
 export interface SelectOption {
   value: string;
@@ -109,9 +110,7 @@ export function Select({ label, value, options, onChange, align = "start", trigg
         onKeyDown={onTriggerKey}
       >
         <span className="select-value">{triggerLabel ?? selected?.label}</span>
-        <svg className="select-chevron" width="12" height="12" viewBox="0 0 12 12" aria-hidden="true">
-          <path d="M2.5 4.5 6 8l3.5-3.5" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
-        </svg>
+        <Icon name="chevron-down" size={14} className="select-chevron" />
       </button>
       {open && (
         <ul
@@ -134,7 +133,7 @@ export function Select({ label, value, options, onChange, align = "start", trigg
               onPointerEnter={() => setActive(i)}
               onClick={() => choose(i)}
             >
-              <span className="select-check" aria-hidden="true">{i === selectedIndex ? "✓" : ""}</span>
+              <span className="select-check" aria-hidden="true">{i === selectedIndex ? <Icon name="check" size={14} /> : null}</span>
               <span className="select-option-label">{o.label}</span>
               {o.meta && <span className="select-option-meta">{o.meta}</span>}
             </li>

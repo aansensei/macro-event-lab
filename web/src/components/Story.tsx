@@ -6,7 +6,7 @@ export function StoryPath({ current }: { current: Page }) {
   const at = storyIndex(current);
   if (at < 0) return null;
   return (
-    <nav className="story-path" aria-label={`The site's story, step ${at + 1} of ${STORY.length}`}>
+    <nav className="story-path" data-steps={STORY.length} aria-label={`The site's story, step ${at + 1} of ${STORY.length}`}>
       <ol>
         {STORY.map((s, i) => (
           <li key={s.page} className={i < at ? "is-done" : i === at ? "is-current" : ""}>

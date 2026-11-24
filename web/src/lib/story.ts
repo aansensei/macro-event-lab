@@ -1,4 +1,4 @@
-// The four pages that tell the site's story, from one release to the yardstick itself.
+// The pages that tell the site's story: four in the research build, three in the public edition.
 
 import { PUBLIC_EDITION } from "./edition";
 import { pageSearch, type Page } from "./url";
@@ -39,11 +39,36 @@ const FULL_STORY: StoryStep[] = [
   },
 ];
 
-// the public edition has no market pages, so it shows no story path at all
-export const STORY: StoryStep[] = PUBLIC_EDITION ? [] : FULL_STORY;
+const PUBLIC_STORY: StoryStep[] = [
+  {
+    page: "revisions",
+    label: "Revisions",
+    question: "Which number is the answer?",
+    lead: "A number is published once and then revised. Forecasts are judged against the first version, so how well do forecasters and models predict it?",
+  },
+  {
+    page: "arena",
+    label: "Arena",
+    question: "Who forecasts it best?",
+    lead: "The arena compares many forecasts. The GDP nowcast looks closely at one of them, a model built only from data published before the release.",
+  },
+  {
+    page: "models",
+    label: "GDP nowcast",
+    question: "Can public data predict GDP?",
+    lead: "Method shows how each number is collected, matched in time and checked.",
+  },
+];
 
-export function storyIndex(page: Page): number {
-  return STORY.findIndex((s) => s.page === page);
+// the public edition tells its own three step story, since it has no market pages
+export function storyFor(isPublic: boolean): StoryStep[] {
+  return isPublic ? PUBLIC_STORY : FULL_STORY;
+}
+
+export const STORY: StoryStep[] = storyFor(PUBLIC_EDITION);
+
+export function storyIndex(page: Page, story: StoryStep[] = STORY): number {
+  return story.findIndex((s) => s.page === page);
 }
 
 export function storyHref(page: Page): string {
@@ -51,10 +76,10 @@ export function storyHref(page: Page): string {
 }
 
 // where the "next" block of a story page leads: the following step, or Method after the last one
-export function nextStop(page: Page): { href: string; label: string; question: string } | null {
-  const i = storyIndex(page);
+export function nextStop(page: Page, story: StoryStep[] = STORY): { href: string; label: string; question: string } | null {
+  const i = storyIndex(page, story);
   if (i < 0) return null;
-  const next = STORY[i + 1];
+  const next = story[i + 1];
   if (next) return { href: storyHref(next.page), label: next.label, question: next.question };
   return { href: pageSearch("method"), label: "Method", question: "How every number is made" };
 }

@@ -57,13 +57,18 @@ export function formatReleaseValue(target: TargetId, value: number): string {
   return `${sign}${size.toFixed(1)}${target === "gdp" ? "% annualized" : "% m/m"}`;
 }
 
-export function releaseSentence(c: ReleaseCase): string {
+export type ReleaseStage = 0 | 1 | 2;
+
+// stage 0 keeps the first published number sealed, stage 1 shows it, stage 2 adds today's figure
+export function releaseSentence(c: ReleaseCase, stage: ReleaseStage = 2): string {
+  const centered = `Forecasts made on ${c.madeOn} centered on ${formatReleaseValue(c.target, c.median)}.`;
+  if (stage === 0) return `${centered} The first published number is sealed. Where do you think it landed?`;
   const gap = Math.abs(c.actual - c.median);
   const direction = c.actual > c.median ? "above" : "below";
   const distance = c.target === "payrolls"
     ? formatReleaseValue(c.target, gap)
     : `${gap.toFixed(1)} percentage points`;
-  const base = `Forecasts made on ${c.madeOn} centered on ${formatReleaseValue(c.target, c.median)}. The first published number was ${formatReleaseValue(c.target, c.actual)}, ${distance} ${direction} that.`;
-  if (c.latest === null) return base;
+  const base = `${centered} The first published number was ${formatReleaseValue(c.target, c.actual)}, ${distance} ${direction} that.`;
+  if (stage === 1 || c.latest === null) return base;
   return `${base} Today the figure for ${periodLabel(c.target, c.period)} stands at ${formatReleaseValue(c.target, c.latest)}.`;
 }

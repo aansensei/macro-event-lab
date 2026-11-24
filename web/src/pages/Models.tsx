@@ -3,6 +3,8 @@ import { useResource } from "../hooks/useResource";
 import { ResourceError } from "../components/ResourceError";
 import { ExternalLink } from "../components/ExternalLink";
 import { NowcastChart } from "../components/NowcastChart";
+import { PageGuide } from "../components/PageGuide";
+import { StoryNext, StoryPath } from "../components/Story";
 import { PUBLIC_EDITION } from "../lib/edition";
 import { liveSentence } from "../lib/nowcastWords";
 
@@ -15,9 +17,14 @@ export function Models() {
   const data = state.kind === "ready" ? state.data : null;
   const errors = data && nowcastErrors(data.points);
   return <div className="models-page page-fade">
+    <StoryPath current="models" />
     <p className="section-kicker">Supplementary research</p><h1 className="t-h1">Reading GDP before release day</h1>
     {!PUBLIC_EDITION && <p className="t-label muted">A separate ALFRED study. The main market-expectations story starts on <a href="?page=events">Events</a>.</p>}
     <p className="about-lead">A simple model uses the economic numbers already published to estimate the first GDP release.</p>
+    <PageGuide
+      purpose="Test whether the economic numbers already published are enough to predict the first GDP release."
+      lookAt="The estimate for the quarter not yet released, then the chart of forecasts against first prints, then the error compared with repeating the previous quarter."
+      limit="A guarantee about the next release. It is one simple model, and a quarter that has not been released can still surprise it." />
     <p className="muted">Data source: <ExternalLink href="https://alfred.stlouisfed.org/">ALFRED, Federal Reserve Bank of St. Louis</ExternalLink>. This page uses official economic data only.</p>
     {state.kind === "error" && <ResourceError title="The nowcast could not be loaded" message={state.message} onRetry={retry} />}
     {state.kind === "loading" && <p role="status">Loading the GDP model</p>}
@@ -54,5 +61,6 @@ export function Models() {
       <p>Ridge regression keeps individual indicators from receiving extreme weights. For each forecast, the model learns from earlier releases only. It chooses how much to shrink the weights by testing on earlier quarters inside that training period.</p>
       <p>The track record above is a historical evaluation, and the live forecast uses exactly the same steps on today's data. Neither is a causal explanation. A missing month can change what the quarterly average represents. Pandemic observations also make error measures much larger.</p>
     </section>
+    <StoryNext current="models" />
   </div>;
 }

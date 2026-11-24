@@ -1,0 +1,31 @@
+/* the theme switch shows a sun, a moon and a monitor; each button is a square tap target */
+.theme-group { padding: 2px; border: 1px solid var(--border); border-radius: 10px; gap: 2px; }
+.theme-btn { display: inline-grid; place-items: center; width: 36px; height: 36px; min-width: 36px; min-height: 36px; padding: 0; border-radius: 8px; }
+.theme-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+.theme-btn[aria-pressed="true"] { background-color: var(--accent-tint); color: var(--accent); }
+@media (pointer: coarse) { .theme-btn { width: 40px; height: 40px; min-width: 40px; min-height: 40px; padding: 0; } }
+@media (max-width: 479px) { .theme-btn { min-width: 36px; padding: 0; } }
+
+/* disclosure rows share one chevron that turns when the row opens, in place of the browser triangle and the plus and minus signs */
+details.how-to-read > summary, .faq-list > details > summary, .arena-leakage > summary,
+.model-data > summary, .guide-tools > summary, .event-example-note > summary {
+  list-style: none; display: flex; align-items: center; gap: 8px;
+}
+details.how-to-read > summary::-webkit-details-marker, .faq-list > details > summary::-webkit-details-marker,
+.arena-leakage > summary::-webkit-details-marker { display: none; }
+details.how-to-read > summary::before, .faq-list > details > summary::before, .arena-leakage > summary::before,
+.model-data > summary::before, .model-data[open] > summary::before,
+.guide-tools > summary::before, .guide-tools[open] > summary::before,
+.event-example-note > summary::before, .event-example-note[open] > summary::before {
+  content: ""; flex: none; width: 16px; height: 16px; font-size: 0; background-color: var(--accent);
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m9 6 6 6-6 6'/%3E%3C/svg%3E") center / 16px 16px no-repeat;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m9 6 6 6-6 6'/%3E%3C/svg%3E") center / 16px 16px no-repeat;
+}
+details[open] > summary::before { transform: rotate(90deg); }
+@media (prefers-reduced-motion: no-preference) {
+  details > summary::before { transition: transform 0.18s ease; }
+}
+
+/* cards and links on the public home end in a small arrow */
+.public-card-arrow { position: absolute; top: 14px; right: 16px; color: var(--accent); }
+.finding-link { display: inline-flex; align-items: center; gap: 4px; }

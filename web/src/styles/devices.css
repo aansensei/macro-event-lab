@@ -1,0 +1,23 @@
+/* iPhone landscape and other short screens: the header scrolls away so the content keeps the whole height */
+@media (max-height: 520px), (max-width: 639px) {
+  .site-header { position: static; }
+}
+/* the notch, the Dynamic Island and the home bar never cover content when the page runs edge to edge */
+.header-inner, .main-container, .site-footer { padding-left: max(16px, env(safe-area-inset-left)); padding-right: max(16px, env(safe-area-inset-right)); }
+@media (min-width: 640px) {
+  .header-inner, .main-container, .site-footer { padding-left: max(24px, env(safe-area-inset-left)); padding-right: max(24px, env(safe-area-inset-right)); }
+}
+@media (min-width: 1024px) {
+  .header-inner, .main-container, .site-footer { padding-left: max(32px, env(safe-area-inset-left)); padding-right: max(32px, env(safe-area-inset-right)); }
+}
+.site-footer { padding-bottom: max(24px, env(safe-area-inset-bottom)); }
+/* iPad portrait and landscape: two column steps and a comfortable reading width */
+@media (min-width: 740px) and (max-width: 1100px) {
+  .release-steps, .public-cards, .page-guide { gap: 16px; }
+  .about-lead { max-width: 60ch; }
+}
+/* tap targets are at least 44 pixels on touch screens */
+@media (pointer: coarse) {
+  .release-reveal, .text-btn, .play-btn, details.how-to-read summary { min-height: 44px; }
+  details.how-to-read summary { display: flex; align-items: center; }
+}
