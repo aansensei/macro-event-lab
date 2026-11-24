@@ -120,6 +120,17 @@ pip install -e ".\pipeline[dev]"
 python -m macro_event_lab verify
 ```
 
+## Verify in a container
+
+Run the public claim verification inside a container. The image holds only the pipeline and the claims file, so it needs no data download:
+
+```bash
+git clone https://github.com/aansensei/macro-event-lab.git
+cd macro-event-lab
+docker build -t mel-verify .
+docker run --rm mel-verify
+```
+
 ## Quickstart (Windows PowerShell)
 
 Run everything from the repo root:

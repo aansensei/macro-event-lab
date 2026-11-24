@@ -36,3 +36,13 @@ jobs:
       - run: npm run typecheck
       - run: npm test
       - run: npm run build
+
+  container:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7
+      - name: Build verification container image
+        run: docker build -t mel-verify .
+      - name: Run verification in container
+        run: docker run --rm mel-verify
