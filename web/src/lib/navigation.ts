@@ -9,7 +9,7 @@ export function navigationFor(isPublic: boolean): { primary: Entry[]; learn: Ent
   if (isPublic) {
     return {
       primary: [["overview", "Home"], ["revisions", "Revisions"], ["arena", "Arena"], ["models", "GDP nowcast"], ["about", "About"]],
-      learn: [["method", "Method"], ["status", "Data status"], ["glossary", "Glossary"]],
+      learn: [["method", "Method"], ["status", "Data status"], ["data", "Open data"], ["glossary", "Glossary"]],
     };
   }
   return {

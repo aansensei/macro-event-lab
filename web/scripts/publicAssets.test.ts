@@ -16,10 +16,21 @@ it("copies public assets and economic exports while excluding the research archi
   writeFileSync(join(root, "data", "revisions.json"), '{"series": "payrolls"}');
   writeFileSync(join(root, "data", "status.json"), '{"schema_version":1,"sources":[]}');
   writeFileSync(join(root, "data", "arena.json"), '{"schema_version":1,"contestants":[]}');
+  writeFileSync(join(root, "data", "arena_forecasts.csv"), "target,period\n");
+  writeFileSync(join(root, "data", "arena_scores.csv"), "target,contestant_id\n");
+  writeFileSync(join(root, "data", "revisions.csv"), "series,label\n");
   writeFileSync(join(root, "data", "manifest.json"), '{"source": "research fixture"}');
   writeFileSync(join(root, "data", "events", "fixture.json"), "{}");
   expect(collectPublicAssets(root).map((asset) => asset.fileName).sort())
-    .toEqual(["data/arena.json", "data/revisions.json", "data/status.json", "logo.png"]);
+    .toEqual([
+      "data/arena.json",
+      "data/arena_forecasts.csv",
+      "data/arena_scores.csv",
+      "data/revisions.csv",
+      "data/revisions.json",
+      "data/status.json",
+      "logo.png",
+    ]);
 });
 
 it("rejects restricted identifiers even in an allowed filename", () => {

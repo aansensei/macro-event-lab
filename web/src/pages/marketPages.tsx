@@ -10,6 +10,7 @@ import { Overview } from "./Overview";
 import { Revisions } from "./Revisions";
 import { Status } from "./Status";
 import { Arena } from "./Arena";
+import { Data } from "./Data";
 
 const Events = /* @__PURE__ */ lazy(() => import("./Events").then((page) => ({ default: page.Events })));
 const Compare = /* @__PURE__ */ lazy(() => import("./Compare").then((page) => ({ default: page.Compare })));
@@ -27,6 +28,7 @@ export function MarketPages(navigation: AppNavigation) {
       {route.page === "scorecard" && <Scorecard />}
       {route.page === "revisions" && <Revisions />}
       {route.page === "status" && <Status />}
+      {route.page === "data" && <Data />}
       {route.page === "arena" && <Arena />}
       {route.page === "models" && <Models />}
       {route.page === "method" && <Method />}

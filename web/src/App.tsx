@@ -11,6 +11,7 @@ import { PublicHome } from "./pages/PublicHome";
 import { Revisions } from "./pages/Revisions";
 import { Status } from "./pages/Status";
 import { Arena } from "./pages/Arena";
+import { Data } from "./pages/Data";
 
 export function App() {
   const navigation = useNavigation();
@@ -22,6 +23,7 @@ export function App() {
     {route.page === "overview" && <PublicHome />}
     {route.page === "revisions" && <Revisions />}
     {route.page === "status" && <Status />}
+    {route.page === "data" && <Data />}
     {route.page === "arena" && <Arena />}
     {route.page === "models" && <Models />}
     {route.page === "method" && <Method />}

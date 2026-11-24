@@ -18,11 +18,20 @@ from macro_event_lab.config import Paths
 from macro_event_lab.gold import revisions
 from macro_event_lab.nowcast import coefficient_table, live_nowcast, nowcast_rows, walk_forward
 from macro_event_lab.nowcast_export import export_nowcast
+from macro_event_lab.open_data import write_open_data
 from macro_event_lab.status_export import build_status
 from macro_event_lab.web_export import _write_json, revisions_payload
 
 # the only files the public website reads; anything else in the folder is a mistake
-PUBLIC_FILES = ("revisions.json", "nowcast.json", "status.json", "arena.json")
+PUBLIC_FILES = (
+    "revisions.json",
+    "nowcast.json",
+    "status.json",
+    "arena.json",
+    "arena_forecasts.csv",
+    "arena_scores.csv",
+    "revisions.csv",
+)
 
 
 def public_dir(paths: Paths) -> Path:
@@ -52,5 +61,6 @@ def build_public(paths: Paths, today: date | None = None) -> dict[str, int]:
     export_nowcast(paths, out_dir=out, live=live)
     information_date = today or date.today()
     write_arena(paths, information_date, out_dir=out)
+    write_open_data(out)
     _write_json(out / "status.json", build_status(paths, information_date))
     return {name: df.height for name, df in tables.items()} | {"live": int(live is not None)}
