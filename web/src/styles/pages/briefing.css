@@ -1,0 +1,96 @@
+.briefing-page { width: 100%; min-width: 0; max-width: 1000px; }
+.briefing-intro p, .briefing-section > p, .briefing-credit { max-width: 70ch; }
+.briefing-section { margin-block: 32px; }
+.briefing-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 16px;
+  margin-top: 16px;
+}
+@media (min-width: 720px) {
+  .briefing-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+.briefing-card {
+  display: grid;
+  gap: 10px;
+  min-width: 0;
+  padding: 18px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--surface);
+  overflow-wrap: anywhere;
+}
+.briefing-card-head {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 8px 12px;
+}
+.briefing-countdown {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 8px;
+  border: 1px solid var(--border-control);
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--accent);
+  background: var(--accent-tint);
+}
+.briefing-date { margin: 0; font-weight: 600; }
+.briefing-forecasts h4 { margin: 4px 0 6px; color: var(--text-muted); }
+.briefing-forecast-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 6px;
+  font-size: 14px;
+}
+.briefing-forecast-list li {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 4px 12px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--border);
+}
+.briefing-forecast-list li:last-child { border-bottom: 0; padding-bottom: 0; }
+.briefing-prior { margin: 0; font-size: 14px; }
+.briefing-arena-link { margin: 0; }
+.briefing-arena-link a {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 44px;
+  font-weight: 500;
+}
+.briefing-feed-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 14px;
+}
+.briefing-feed-link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 8px 16px;
+  border: 1px solid var(--border-control);
+  border-radius: 7px;
+  background: var(--surface);
+  color: var(--accent);
+  font-weight: 500;
+  text-decoration: none;
+}
+.briefing-feed-link:hover {
+  background: var(--surface-hover);
+  border-color: var(--accent);
+  text-decoration: none;
+}
+.briefing-credit { margin-top: 24px; line-height: 22px; }
+@media (horizontal-viewport-segments: 2) {
+  .briefing-page { max-width: env(viewport-segment-width 0 0); margin-inline: 0; }
+  .briefing-grid { grid-template-columns: minmax(0, 1fr); }
+}

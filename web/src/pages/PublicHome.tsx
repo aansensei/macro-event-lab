@@ -3,9 +3,11 @@ import { Icon } from "../components/Icon";
 import { ReleaseFile } from "../components/ReleaseFile";
 import { RailPage, type RailSection } from "../components/SectionRail";
 import { loadArena } from "../data/arena";
+import { loadBriefing } from "../data/briefing";
 import { loadRevisions } from "../data/load";
 import { loadNowcast, nowcastErrors } from "../data/nowcast";
 import { useResource } from "../hooks/useResource";
+import { formatReleaseDate, periodTitle } from "../lib/briefingWords";
 import { liveSentence } from "../lib/nowcastWords";
 import { publicFindings } from "../lib/publicFindings";
 import { pageSearch, type Page } from "../lib/url";
@@ -14,6 +16,7 @@ const RAIL: RailSection[] = [
   { id: "home-top", label: "Top" },
   { id: "release-file-title", label: "The release file" },
   { id: "start-here", label: "Start here" },
+  { id: "home-next-releases", label: "Next releases" },
   { id: "public-findings-title", label: "The wider record" },
 ];
 
@@ -28,8 +31,10 @@ const STEPS: [Page, string, string, string][] = [
 export function PublicHome() {
   const { state } = useResource(loadNowcast);
   const arena = useResource(loadArena).state;
+  const briefing = useResource(loadBriefing).state;
   const revisions = useResource(loadRevisions).state;
   const data = state.kind === "ready" ? state.data : null;
+  const upcoming = briefing.kind === "ready" ? briefing.data.releases.slice(0, 2) : [];
   const errors = data && nowcastErrors(data.points);
   return <RailPage sections={RAIL}><div className="public-home page-fade">
     <p className="section-kicker">Macro Event Lab</p>
@@ -60,6 +65,22 @@ export function PublicHome() {
         <a href={pageSearch("glossary")}>Glossary</a> explains the terms.
       </p>
     </section>
+
+    {upcoming.length > 0 && <section className="public-next-releases" aria-labelledby="home-next-releases">
+      <h2 className="t-h2" id="home-next-releases">Next releases</h2>
+      <div className="public-release-cards">
+        {upcoming.map((release) => <a className="public-card" key={`${release.target}:${release.period}`} href={pageSearch("briefing")}>
+          <span className="public-card-title">{release.label}</span>
+          <span className="public-card-question">
+            {periodTitle(release.target, release.period)}: {release.release_date ? formatReleaseDate(release.release_date) : "Schedule pending"}
+          </span>
+          <Icon name="arrow-right" size={18} className="public-card-arrow" />
+        </a>)}
+      </div>
+      <p className="t-micro muted public-start-more">
+        <a href={pageSearch("briefing")}>Open the full release briefing and calendar feeds</a>.
+      </p>
+    </section>}
 
     {(arena.kind === "ready" || revisions.kind === "ready") && <section className="public-findings" aria-labelledby="public-findings-title">
       <p className="section-kicker">The wider record</p>

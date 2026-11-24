@@ -23,7 +23,7 @@ export function Data() {
     <PageGuide
       purpose="Download the public forecast, score, and revision tables in plain CSV format with column definitions."
       lookAt="Each file's column dictionary before loading it into a spreadsheet or analysis script."
-      limit="Live model weights or private market series. Only public government data and recorded forecasts are included." />
+      limit="Live model weights or private market series. Only public government data and the forecasts of the arena are included." />
     {OPEN_DATA_FILES.map((entry) => {
       const id = sectionId(entry.file);
       return <section className="data-section" key={entry.file} aria-labelledby={id}>

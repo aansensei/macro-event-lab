@@ -83,3 +83,9 @@
 @media (prefers-reduced-motion: reduce) { .release-seal { transform: none; } }
 /* the three evidence cards reuse the overview card styles */
 .public-findings { margin-top: 40px; }
+.public-next-releases { margin-top: 40px; }
+.public-release-cards { list-style: none; margin: 18px 0 0 0; padding: 0; display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px; }
+@media (min-width: 720px) {
+  .public-release-cards { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+.public-release-cards .public-card { padding-top: 16px; }

@@ -20,6 +20,6 @@ it("places Arena in public primary navigation and research Learn", () => {
 
 it("opens with Home and lists the public story pages in reading order, then About", () => {
   expect(navigationFor(true).primary.map(([page]) => page)).toEqual(["overview", "revisions", "arena", "models", "about"]);
-  expect(navigationFor(true).learn.map(([page]) => page)).toEqual(["method", "status", "data", "glossary"]);
+  expect(navigationFor(true).learn.map(([page]) => page)).toEqual(["method", "status", "data", "briefing", "glossary"]);
   for (const edition of [true, false]) expect(navigationFor(edition).primary[0]).toEqual(["overview", edition ? "Home" : "Overview"]);
 });

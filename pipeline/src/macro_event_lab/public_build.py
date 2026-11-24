@@ -13,6 +13,7 @@ from pathlib import Path
 import polars as pl
 
 from macro_event_lab.arena.export import write_arena
+from macro_event_lab.briefing import write_briefing
 from macro_event_lab.build import build_silver
 from macro_event_lab.config import Paths
 from macro_event_lab.gold import revisions
@@ -28,6 +29,9 @@ PUBLIC_FILES = (
     "nowcast.json",
     "status.json",
     "arena.json",
+    "briefing.json",
+    "calendar.ics",
+    "feed.xml",
     "arena_forecasts.csv",
     "arena_scores.csv",
     "revisions.csv",
@@ -61,6 +65,7 @@ def build_public(paths: Paths, today: date | None = None) -> dict[str, int]:
     export_nowcast(paths, out_dir=out, live=live)
     information_date = today or date.today()
     write_arena(paths, information_date, out_dir=out)
+    write_briefing(paths, information_date, out_dir=out)
     write_open_data(out)
     _write_json(out / "status.json", build_status(paths, information_date))
     return {name: df.height for name, df in tables.items()} | {"live": int(live is not None)}
