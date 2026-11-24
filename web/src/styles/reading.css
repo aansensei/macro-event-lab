@@ -77,7 +77,7 @@ h1[id], h2[id], h3[id], header[id], aside[id], details[id] { scroll-margin-top: 
   margin: 0 3px;
   border-radius: 50%;
   background-color: var(--border-control);
-  opacity: 0.55;
+  opacity: 0.85;
   transition: width 0.25s ease, height 0.25s ease, margin 0.25s ease, background-color 0.25s ease, opacity 0.25s ease, box-shadow 0.25s ease;
 }
 .rail-label {

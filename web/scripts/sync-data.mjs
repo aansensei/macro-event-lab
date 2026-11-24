@@ -13,6 +13,22 @@ export function defaultSource(env = process.env) {
   return join(dataDir, "web");
 }
 
+// the public edition's files, written by "python -m macro_event_lab build-public"
+export function publicSource(env = process.env) {
+  const dataDir = env.MEL_DATA_DIR ?? resolve(here, "..", "..", "data");
+  return join(dataDir, "web_public");
+}
+
+export function syncPublicData(source, target) {
+  if (!existsSync(join(source, "arena.json"))) {
+    throw new Error(
+      `${join(source, "arena.json")} not found; run "python -m macro_event_lab build-public" first`,
+    );
+  }
+  rmSync(target, { recursive: true, force: true });
+  cpSync(source, target, { recursive: true });
+}
+
 export function syncData(source, target) {
   if (!existsSync(join(source, "manifest.json"))) {
     throw new Error(
@@ -26,6 +42,11 @@ export function syncData(source, target) {
 
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   const target = resolve(here, "..", "public", "data");
-  syncData(defaultSource(), target);
-  console.log(`copied ${defaultSource()} to ${target}`);
+  if (process.argv.includes("--public")) {
+    syncPublicData(publicSource(), target);
+    console.log(`copied ${publicSource()} to ${target}`);
+  } else {
+    syncData(defaultSource(), target);
+    console.log(`copied ${defaultSource()} to ${target}`);
+  }
 }

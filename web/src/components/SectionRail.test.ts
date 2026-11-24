@@ -68,3 +68,20 @@ it("shows no pill when the page has a single section", async () => {
   await act(async () => root.render(rail(page("a"))));
   expect(host.querySelector(".contents-pill")).toBeNull();
 });
+
+it("keeps the back to top offset for the pill only while a pill is shown", async () => {
+  await act(async () => root.render(rail(page("a"))));
+  expect(document.body.classList.contains("has-contents-pill")).toBe(false);
+  await act(async () => root.render(rail(page("a", "c"))));
+  expect(document.body.classList.contains("has-contents-pill")).toBe(true);
+});
+
+it("closes the sheet and frees the page scroll when the window grows to the wide layout", async () => {
+  await act(async () => root.render(rail(page("a", "c"))));
+  await act(async () => host.querySelector<HTMLButtonElement>(".contents-pill")!.click());
+  expect(document.documentElement.classList.contains("contents-open")).toBe(true);
+  Object.defineProperty(window, "innerWidth", { value: 1400, configurable: true });
+  await act(async () => { window.dispatchEvent(new Event("resize")); });
+  expect(host.querySelector(".contents-sheet")).toBeNull();
+  expect(document.documentElement.classList.contains("contents-open")).toBe(false);
+});

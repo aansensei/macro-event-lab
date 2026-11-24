@@ -4,7 +4,7 @@ import { join } from "node:path";
 
 import { describe, expect, it } from "vitest";
 
-import { defaultSource, syncData } from "./sync-data.mjs";
+import { defaultSource, publicSource, syncData, syncPublicData } from "./sync-data.mjs";
 
 function tempDir() {
   return mkdtempSync(join(tmpdir(), "mel-sync-"));
@@ -32,5 +32,25 @@ describe("syncData", () => {
 
   it("follows MEL_DATA_DIR like the pipeline does", () => {
     expect(defaultSource({ MEL_DATA_DIR: join("x", "y") })).toBe(join("x", "y", "web"));
+  });
+});
+
+describe("syncPublicData", () => {
+  it("copies the public edition files without needing the research manifest", () => {
+    const source = tempDir();
+    const target = join(tempDir(), "data");
+    writeFileSync(join(source, "arena.json"), "{}");
+    writeFileSync(join(source, "status.json"), "{}");
+    syncPublicData(source, target);
+    expect(existsSync(join(target, "arena.json"))).toBe(true);
+    expect(existsSync(join(target, "status.json"))).toBe(true);
+  });
+
+  it("names the command to run when the public files are missing", () => {
+    expect(() => syncPublicData(tempDir(), tempDir())).toThrow(/build-public/);
+  });
+
+  it("reads from web_public under the data directory", () => {
+    expect(publicSource({ MEL_DATA_DIR: join("x", "y") })).toBe(join("x", "y", "web_public"));
   });
 });

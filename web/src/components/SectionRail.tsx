@@ -8,6 +8,9 @@ export interface RailSection {
   label: string;
 }
 
+// the width at which the side rail replaces the pill and the sheet
+const WIDE = 1180;
+
 function prefersReducedMotion(): boolean {
   return window.matchMedia?.("(prefers-reduced-motion: reduce)").matches ?? false;
 }
@@ -48,10 +51,11 @@ export function SectionRail({ sections }: { sections: RailSection[] }) {
   }, [present]);
 
   // the floating back to top button moves down to the pill's line while a pill is on the page
+  const hasPill = present.length > 1;
   useEffect(() => {
-    document.body.classList.add("has-contents-pill");
+    document.body.classList.toggle("has-contents-pill", hasPill);
     return () => document.body.classList.remove("has-contents-pill");
-  }, []);
+  }, [hasPill]);
 
   function closeSheet(restoreFocus: boolean) {
     document.documentElement.classList.remove("contents-open");
@@ -68,9 +72,15 @@ export function SectionRail({ sections }: { sections: RailSection[] }) {
       event.preventDefault();
       closeSheet(true);
     }
+    // the sheet is hidden from 1180 pixels up, so a window that grows past that closes it and frees the page scroll
+    function onResize() {
+      if (window.innerWidth >= WIDE) closeSheet(false);
+    }
     document.addEventListener("keydown", onKey);
+    window.addEventListener("resize", onResize);
     return () => {
       document.removeEventListener("keydown", onKey);
+      window.removeEventListener("resize", onResize);
       document.documentElement.classList.remove("contents-open");
     };
   }, [open]);

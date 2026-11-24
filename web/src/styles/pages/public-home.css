@@ -50,7 +50,7 @@
 .release-sentence { max-width: 70ch; margin: 8px 0 12px; }
 .release-line { width: 100%; max-width: 720px; height: auto; display: block; }
 .release-axis { stroke: var(--border-control); stroke-width: 1.5; }
-.release-forecast { fill: var(--ghost); }
+.release-forecast { fill: var(--ghost); stroke: var(--text-muted); stroke-width: 1; }
 .release-first { fill: var(--accent); }
 .release-today { fill: none; stroke: var(--text); stroke-width: 1.5; }
 .release-tick { fill: var(--text-muted); font-size: 12px; font-family: "IBM Plex Mono", ui-monospace, monospace; }

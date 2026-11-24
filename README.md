@@ -147,6 +147,18 @@ npm run sync-data
 npm run dev
 ```
 
+The public edition needs only public data. Build it and view it:
+
+```powershell
+python -m macro_event_lab ingest alfred
+python -m macro_event_lab ingest spf
+python -m macro_event_lab build-public
+cd web
+npm ci
+npm run sync-data -- --public
+$env:VITE_EDITION = "public"; npm run dev
+```
+
 ## Commands
 
 | Command | Does |
