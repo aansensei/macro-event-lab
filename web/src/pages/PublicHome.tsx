@@ -1,4 +1,7 @@
 import { ExternalLink } from "../components/ExternalLink";
+import { ReleaseFile } from "../components/ReleaseFile";
+import { loadArena } from "../data/arena";
+import { loadRevisions } from "../data/load";
 import { loadNowcast, nowcastErrors } from "../data/nowcast";
 import { useResource } from "../hooks/useResource";
 import { liveSentence } from "../lib/nowcastWords";
@@ -13,6 +16,8 @@ const CARDS: [Page, string, string][] = [
 // home of the public edition: the live GDP nowcast, the pages built on public data, and why the market pages wait
 export function PublicHome() {
   const { state } = useResource(loadNowcast);
+  const arena = useResource(loadArena).state;
+  const revisions = useResource(loadRevisions).state;
   const data = state.kind === "ready" ? state.data : null;
   const errors = data && nowcastErrors(data.points);
   return <div className="public-home page-fade">
@@ -22,6 +27,8 @@ export function PublicHome() {
       How the first published US economic numbers change after release day, and a GDP nowcast built only
       from data that was public before each release. Rebuilt automatically from ALFRED vintages.
     </p>
+
+    {arena.kind === "ready" && revisions.kind === "ready" && <ReleaseFile arena={arena.data} revisions={revisions.data} />}
 
     {data?.live && <a className="live-card" href={pageSearch("models")}>
       <span className="live-kicker">Live GDP nowcast</span>

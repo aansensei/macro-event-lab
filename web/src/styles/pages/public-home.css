@@ -43,3 +43,28 @@
 .public-note p { margin: 8px 0 0 0; color: var(--text-muted); line-height: 25px; max-width: 70ch; }
 .public-credit { margin-top: 32px; max-width: 70ch; line-height: 19px; }
 .public-notice p:not(.about-lead) { margin-top: 20px; line-height: 26px; }
+
+/* the release file: one real release on a number line, then three steps */
+.release-file { margin-block: 40px; }
+.release-lead { max-width: 62ch; }
+.release-sentence { max-width: 70ch; margin: 8px 0 12px; }
+.release-line { width: 100%; max-width: 720px; height: auto; display: block; }
+.release-axis { stroke: var(--border-control); stroke-width: 1.5; }
+.release-forecast { fill: var(--ghost); }
+.release-first { fill: var(--accent); }
+.release-today { fill: none; stroke: var(--text); stroke-width: 1.5; }
+.release-tick { fill: var(--text-muted); font-size: 12px; font-family: "IBM Plex Mono", ui-monospace, monospace; }
+.release-legend { list-style: none; display: flex; flex-wrap: wrap; gap: 4px 18px; margin: 4px 0 20px; padding: 0; }
+.release-key { display: inline-block; width: 10px; height: 10px; margin-right: 6px; vertical-align: -1px; }
+.release-key-forecast { border-radius: 50%; background-color: var(--ghost); }
+.release-key-first { background-color: var(--accent); transform: rotate(45deg); }
+.release-key-today { border-radius: 50%; border: 1.5px solid var(--text); width: 12px; height: 12px; }
+.release-steps { list-style: none; margin: 0 0 16px; padding: 0; display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px; }
+@media (min-width: 720px) { .release-steps { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+.release-step { border: 1px solid var(--border); border-radius: 10px; background-color: var(--surface); padding: 16px; min-width: 0; }
+.release-step-number { color: var(--accent); font-size: 13px; }
+.release-step h3 { margin: 4px 0 8px; }
+.release-big { font-size: 24px; line-height: 30px; font-weight: 600; margin: 0 0 4px; overflow-wrap: anywhere; }
+.release-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; font-size: 14px; line-height: 20px; }
+.release-list li { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 2px 12px; }
+.release-list li > span:first-child { color: var(--text-muted); }
