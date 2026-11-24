@@ -1,0 +1,118 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 280" width="720" height="280" fill="none">
+  <title>Daily update pipeline</title>
+  <desc>Five step flow showing how official public sources are downloaded, rebuilt into datasets and forecasts, verified by quality checks, and published to the live site.</desc>
+  <style>
+    :root {
+      --bg: #0b0f14;
+      --surface: #111822;
+      --surface-hover: #172130;
+      --border: #1e293b;
+      --border-control: #64748b;
+      --text: #f8fafc;
+      --text-muted: #94a3b8;
+      --accent: #00d2ee;
+      --accent-tint: rgba(0, 210, 238, 0.12);
+      --ghost: #64748b;
+      --surprise-up: #fb923c;
+      --surprise-down: #f472b6;
+      --band-90: rgba(0, 210, 238, 0.12);
+      --band-50: rgba(0, 210, 238, 0.26);
+    }
+    @media (prefers-color-scheme: light) {
+      :root {
+        --bg: #ffffff;
+        --surface: #f3f8fb;
+        --surface-hover: #e8f1f7;
+        --border: #dbe7ef;
+        --border-control: #6f8799;
+        --text: #062033;
+        --text-muted: #3f5b6e;
+        --accent: #0369a1;
+        --accent-tint: rgba(3, 105, 161, 0.08);
+        --ghost: #6f8799;
+        --surprise-up: #c2410c;
+        --surprise-down: #be185d;
+        --band-90: rgba(3, 105, 161, 0.09);
+        --band-50: rgba(3, 105, 161, 0.22);
+      }
+    }
+    text { font-family: Inter, system-ui, sans-serif; }
+    .mono { font-family: "IBM Plex Mono", ui-monospace, monospace; }
+    .title { font-size: 16px; font-weight: 600; fill: var(--text); }
+    .subtitle { font-size: 12px; font-weight: 400; fill: var(--text-muted); }
+    .label { font-size: 13px; font-weight: 600; fill: var(--text); }
+    .label-accent { font-size: 13px; font-weight: 600; fill: var(--accent); }
+    .label-up { font-size: 13px; font-weight: 600; fill: var(--surprise-up); }
+    .label-down { font-size: 13px; font-weight: 600; fill: var(--surprise-down); }
+    .small { font-size: 12px; font-weight: 400; fill: var(--text-muted); }
+    .small-strong { font-size: 12px; font-weight: 600; fill: var(--text); }
+    .small-accent { font-size: 12px; font-weight: 600; fill: var(--accent); }
+  </style>
+  <rect x="0" y="0" width="720" height="280" fill="var(--bg)"/>
+  <text x="28" y="34" class="title">Daily update flow</text>
+  <text x="28" y="54" class="subtitle">How public economic releases move from official archives to the live site.</text>
+
+  <g>
+    <rect x="28" y="82" width="116" height="136" rx="8" fill="var(--surface)" stroke="var(--border)" stroke-width="1.5"/>
+    <circle cx="86" cy="116" r="14" stroke="var(--border-control)" stroke-width="1.5"/>
+    <line x1="78" y1="116" x2="94" y2="116" stroke="var(--accent)" stroke-width="1.5"/>
+    <circle cx="86" cy="116" r="2.5" fill="var(--accent)"/>
+    <text x="86" y="156" text-anchor="middle" class="label">Sources</text>
+    <text x="86" y="178" text-anchor="middle" class="small">ALFRED</text>
+    <text x="86" y="196" text-anchor="middle" class="small">SPF archives</text>
+  </g>
+
+  <line x1="146" y1="150" x2="161" y2="150" stroke="var(--border-control)" stroke-width="1.5"/>
+  <path d="M157 146 L163 150 L157 154" stroke="var(--border-control)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+
+  <g>
+    <rect x="165" y="82" width="116" height="136" rx="8" fill="var(--surface)" stroke="var(--border)" stroke-width="1.5"/>
+    <circle cx="223" cy="116" r="14" stroke="var(--border-control)" stroke-width="1.5"/>
+    <line x1="223" y1="108" x2="223" y2="122" stroke="var(--accent)" stroke-width="1.5" stroke-linecap="round"/>
+    <path d="M218 118 L223 123 L228 118" stroke="var(--accent)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+    <text x="223" y="156" text-anchor="middle" class="label">Download</text>
+    <text x="223" y="178" text-anchor="middle" class="small">Fetch vintages</text>
+    <text x="223" y="196" text-anchor="middle" class="small">Keep dates</text>
+  </g>
+
+  <line x1="283" y1="150" x2="298" y2="150" stroke="var(--border-control)" stroke-width="1.5"/>
+  <path d="M294 146 L300 150 L294 154" stroke="var(--border-control)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+
+  <g>
+    <rect x="302" y="82" width="116" height="136" rx="8" fill="var(--surface)" stroke="var(--border)" stroke-width="1.5"/>
+    <circle cx="360" cy="116" r="14" stroke="var(--border-control)" stroke-width="1.5"/>
+    <path d="M350 122 C355 121 356 108 360 108 C364 108 365 121 370 122" stroke="var(--accent)" stroke-width="1.5" stroke-linecap="round"/>
+    <circle cx="360" cy="108" r="2.2" fill="var(--accent)"/>
+    <text x="360" y="156" text-anchor="middle" class="label">Rebuild</text>
+    <text x="360" y="178" text-anchor="middle" class="small">Update series</text>
+    <text x="360" y="196" text-anchor="middle" class="small">Score models</text>
+  </g>
+
+  <line x1="420" y1="150" x2="435" y2="150" stroke="var(--border-control)" stroke-width="1.5"/>
+  <path d="M431 146 L437 150 L431 154" stroke="var(--border-control)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+
+  <g>
+    <rect x="439" y="82" width="116" height="136" rx="8" fill="var(--surface)" stroke="var(--border)" stroke-width="1.5"/>
+    <circle cx="497" cy="116" r="14" stroke="var(--border-control)" stroke-width="1.5"/>
+    <path d="M491 116 L495 120 L504 111" stroke="var(--accent)" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/>
+    <text x="497" y="156" text-anchor="middle" class="label">Checks</text>
+    <text x="497" y="178" text-anchor="middle" class="small">Freshness</text>
+    <text x="497" y="196" text-anchor="middle" class="small">Quality rules</text>
+  </g>
+
+  <line x1="557" y1="150" x2="572" y2="150" stroke="var(--accent)" stroke-width="1.5"/>
+  <path d="M568 146 L574 150 L568 154" stroke="var(--accent)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+
+  <g>
+    <rect x="576" y="82" width="116" height="136" rx="8" fill="var(--accent-tint)" stroke="var(--accent)" stroke-width="1.5"/>
+    <circle cx="634" cy="116" r="14" stroke="var(--accent)" stroke-width="1.75"/>
+    <line x1="620" y1="118" x2="648" y2="118" stroke="var(--accent)" stroke-width="1.5"/>
+    <path d="M623 124 C628 123 630 108 634 108 C638 108 640 123 645 124" stroke="var(--accent)" stroke-width="1.5" stroke-linecap="round"/>
+    <circle cx="634" cy="108" r="2.4" fill="var(--accent)"/>
+    <text x="634" y="156" text-anchor="middle" class="label-accent">Publish</text>
+    <text x="634" y="178" text-anchor="middle" class="small-strong">Update pages</text>
+    <text x="634" y="196" text-anchor="middle" class="small">Live site</text>
+  </g>
+
+  <text x="28" y="256" class="small">When a check needs attention, the status page flags it and preserves the prior verified build.</text>
+</svg>

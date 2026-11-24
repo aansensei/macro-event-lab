@@ -1,0 +1,90 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 310" width="720" height="310" fill="none">
+  <title>Training cutoff and clean test window</title>
+  <desc>Timeline split by a model training cutoff into earlier forecast origins that may overlap training history and later origins that form a clean test window.</desc>
+  <style>
+    :root {
+      --bg: #0b0f14;
+      --surface: #111822;
+      --surface-hover: #172130;
+      --border: #1e293b;
+      --border-control: #64748b;
+      --text: #f8fafc;
+      --text-muted: #94a3b8;
+      --accent: #00d2ee;
+      --accent-tint: rgba(0, 210, 238, 0.12);
+      --ghost: #64748b;
+      --surprise-up: #fb923c;
+      --surprise-down: #f472b6;
+      --band-90: rgba(0, 210, 238, 0.12);
+      --band-50: rgba(0, 210, 238, 0.26);
+    }
+    @media (prefers-color-scheme: light) {
+      :root {
+        --bg: #ffffff;
+        --surface: #f3f8fb;
+        --surface-hover: #e8f1f7;
+        --border: #dbe7ef;
+        --border-control: #6f8799;
+        --text: #062033;
+        --text-muted: #3f5b6e;
+        --accent: #0369a1;
+        --accent-tint: rgba(3, 105, 161, 0.08);
+        --ghost: #6f8799;
+        --surprise-up: #c2410c;
+        --surprise-down: #be185d;
+        --band-90: rgba(3, 105, 161, 0.09);
+        --band-50: rgba(3, 105, 161, 0.22);
+      }
+    }
+    text { font-family: Inter, system-ui, sans-serif; }
+    .mono { font-family: "IBM Plex Mono", ui-monospace, monospace; }
+    .title { font-size: 16px; font-weight: 600; fill: var(--text); }
+    .subtitle { font-size: 12px; font-weight: 400; fill: var(--text-muted); }
+    .label { font-size: 13px; font-weight: 600; fill: var(--text); }
+    .label-accent { font-size: 13px; font-weight: 600; fill: var(--accent); }
+    .label-up { font-size: 13px; font-weight: 600; fill: var(--surprise-up); }
+    .label-down { font-size: 13px; font-weight: 600; fill: var(--surprise-down); }
+    .small { font-size: 12px; font-weight: 400; fill: var(--text-muted); }
+    .small-strong { font-size: 12px; font-weight: 600; fill: var(--text); }
+    .small-accent { font-size: 12px; font-weight: 600; fill: var(--accent); }
+  </style>
+  <rect x="0" y="0" width="720" height="310" fill="var(--bg)"/>
+  <text x="28" y="34" class="title">Training cutoff and clean test window</text>
+  <text x="28" y="54" class="subtitle">Only forecast origins made after a model's training cutoff form a clean test.</text>
+
+  <rect x="28" y="82" width="328" height="162" rx="8" fill="var(--surface)" stroke="var(--surprise-up)" stroke-width="1.5" stroke-dasharray="5 4"/>
+  <rect x="384" y="82" width="308" height="162" rx="8" fill="var(--accent-tint)" stroke="var(--accent)" stroke-width="1.5"/>
+
+  <text x="44" y="106" class="label-up">Before or on cutoff</text>
+  <text x="44" y="124" class="small">Training data may overlap history</text>
+
+  <text x="400" y="106" class="label-accent">After cutoff: clean test</text>
+  <text x="400" y="124" class="small">Unseen during model training</text>
+
+  <line x1="48" y1="178" x2="672" y2="178" stroke="var(--border-control)" stroke-width="1.5"/>
+  <path d="M666 173 L674 178 L666 183" stroke="var(--border-control)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+
+  <line x1="370" y1="74" x2="370" y2="254" stroke="var(--text)" stroke-width="2"/>
+  <circle cx="370" cy="178" r="7" fill="var(--bg)" stroke="var(--text)" stroke-width="2"/>
+  <circle cx="370" cy="178" r="2.5" fill="var(--text)"/>
+  <text x="370" y="272" text-anchor="middle" class="small-strong">Cutoff</text>
+
+  <circle cx="80" cy="178" r="6" fill="var(--surface)" stroke="var(--surprise-up)" stroke-width="1.75"/>
+  <circle cx="144" cy="178" r="6" fill="var(--surface)" stroke="var(--surprise-up)" stroke-width="1.75"/>
+  <circle cx="208" cy="178" r="6" fill="var(--surface)" stroke="var(--surprise-up)" stroke-width="1.75"/>
+  <circle cx="272" cy="178" r="6" fill="var(--surface)" stroke="var(--surprise-up)" stroke-width="1.75"/>
+  <circle cx="328" cy="178" r="6" fill="var(--surface)" stroke="var(--surprise-up)" stroke-width="1.75"/>
+  <text x="192" y="218" text-anchor="middle" class="small">Past origins (possible overlap)</text>
+
+  <circle cx="430" cy="178" r="6" fill="var(--bg)" stroke="var(--accent)" stroke-width="1.75"/>
+  <circle cx="430" cy="178" r="2.5" fill="var(--accent)"/>
+  <circle cx="494" cy="178" r="6" fill="var(--bg)" stroke="var(--accent)" stroke-width="1.75"/>
+  <circle cx="494" cy="178" r="2.5" fill="var(--accent)"/>
+  <circle cx="558" cy="178" r="6" fill="var(--bg)" stroke="var(--accent)" stroke-width="1.75"/>
+  <circle cx="558" cy="178" r="2.5" fill="var(--accent)"/>
+  <circle cx="622" cy="178" r="6" fill="var(--bg)" stroke="var(--accent)" stroke-width="1.75"/>
+  <circle cx="622" cy="178" r="2.5" fill="var(--accent)"/>
+  <text x="538" y="218" text-anchor="middle" class="small-strong">Clean test origins</text>
+
+  <text x="28" y="296" class="small">Classical models refit at each origin with no cutoff. Foundation results show all and clean windows.</text>
+</svg>

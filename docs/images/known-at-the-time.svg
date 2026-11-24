@@ -1,0 +1,116 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 316" width="720" height="316" fill="none">
+  <title>Information available on the forecast date</title>
+  <desc>Horizontal timeline showing that a forecast made on the forecast date may only use publications released on or before that date, while later first prints and revisions are greyed out and excluded.</desc>
+  <style>
+    :root {
+      --bg: #0b0f14;
+      --surface: #111822;
+      --surface-hover: #172130;
+      --border: #1e293b;
+      --border-control: #64748b;
+      --text: #f8fafc;
+      --text-muted: #94a3b8;
+      --accent: #00d2ee;
+      --accent-tint: rgba(0, 210, 238, 0.12);
+      --ghost: #64748b;
+      --surprise-up: #fb923c;
+      --surprise-down: #f472b6;
+      --band-90: rgba(0, 210, 238, 0.12);
+      --band-50: rgba(0, 210, 238, 0.26);
+    }
+    @media (prefers-color-scheme: light) {
+      :root {
+        --bg: #ffffff;
+        --surface: #f3f8fb;
+        --surface-hover: #e8f1f7;
+        --border: #dbe7ef;
+        --border-control: #6f8799;
+        --text: #062033;
+        --text-muted: #3f5b6e;
+        --accent: #0369a1;
+        --accent-tint: rgba(3, 105, 161, 0.08);
+        --ghost: #6f8799;
+        --surprise-up: #c2410c;
+        --surprise-down: #be185d;
+        --band-90: rgba(3, 105, 161, 0.09);
+        --band-50: rgba(3, 105, 161, 0.22);
+      }
+    }
+    text { font-family: Inter, system-ui, sans-serif; }
+    .mono { font-family: "IBM Plex Mono", ui-monospace, monospace; }
+    .title { font-size: 16px; font-weight: 600; fill: var(--text); }
+    .subtitle { font-size: 12px; font-weight: 400; fill: var(--text-muted); }
+    .label { font-size: 13px; font-weight: 600; fill: var(--text); }
+    .label-accent { font-size: 13px; font-weight: 600; fill: var(--accent); }
+    .label-up { font-size: 13px; font-weight: 600; fill: var(--surprise-up); }
+    .label-down { font-size: 13px; font-weight: 600; fill: var(--surprise-down); }
+    .small { font-size: 12px; font-weight: 400; fill: var(--text-muted); }
+    .small-strong { font-size: 12px; font-weight: 600; fill: var(--text); }
+    .small-accent { font-size: 12px; font-weight: 600; fill: var(--accent); }
+  </style>
+  <rect x="0" y="0" width="720" height="316" fill="var(--bg)"/>
+  <text x="28" y="34" class="title">Information available on the forecast date</text>
+  <text x="28" y="54" class="subtitle">Every contestant uses only data published on or before the forecast date.</text>
+
+  <rect x="28" y="76" width="386" height="172" rx="8" fill="var(--accent-tint)" stroke="var(--border)" stroke-width="1.5"/>
+  <rect x="424" y="76" width="268" height="172" rx="8" fill="var(--surface)" stroke="var(--border)" stroke-width="1.5" stroke-dasharray="5 4"/>
+
+  <text x="44" y="100" class="small-accent">Available on forecast date</text>
+  <text x="440" y="100" class="small">Published later, excluded</text>
+
+  <line x1="44" y1="168" x2="674" y2="168" stroke="var(--border-control)" stroke-width="1.5"/>
+  <path d="M668 163 L676 168 L668 173" stroke="var(--border-control)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+
+  <line x1="419" y1="68" x2="419" y2="254" stroke="var(--accent)" stroke-width="2"/>
+  <circle cx="419" cy="168" r="8" fill="var(--bg)" stroke="var(--accent)" stroke-width="2"/>
+  <circle cx="419" cy="168" r="3" fill="var(--accent)"/>
+  <text x="419" y="272" text-anchor="middle" class="small-accent">Forecast date</text>
+
+  <g>
+    <line x1="90" y1="140" x2="90" y2="160" stroke="var(--accent)" stroke-width="1.5"/>
+    <circle cx="90" cy="168" r="6" fill="var(--bg)" stroke="var(--accent)" stroke-width="1.75"/>
+    <circle cx="90" cy="168" r="2.2" fill="var(--accent)"/>
+    <text x="90" y="132" text-anchor="middle" class="small-strong">Prior vintage</text>
+    <text x="90" y="196" text-anchor="middle" class="small">Published</text>
+  </g>
+
+  <g>
+    <line x1="194" y1="140" x2="194" y2="160" stroke="var(--accent)" stroke-width="1.5"/>
+    <circle cx="194" cy="168" r="6" fill="var(--bg)" stroke="var(--accent)" stroke-width="1.75"/>
+    <circle cx="194" cy="168" r="2.2" fill="var(--accent)"/>
+    <text x="194" y="132" text-anchor="middle" class="small-strong">Monthly series</text>
+    <text x="194" y="196" text-anchor="middle" class="small">Published</text>
+  </g>
+
+  <g>
+    <line x1="298" y1="140" x2="298" y2="160" stroke="var(--accent)" stroke-width="1.5"/>
+    <circle cx="298" cy="168" r="6" fill="var(--bg)" stroke="var(--accent)" stroke-width="1.75"/>
+    <circle cx="298" cy="168" r="2.2" fill="var(--accent)"/>
+    <text x="298" y="132" text-anchor="middle" class="small-strong">Survey release</text>
+    <text x="298" y="196" text-anchor="middle" class="small">Published</text>
+  </g>
+
+  <g>
+    <line x1="378" y1="140" x2="378" y2="160" stroke="var(--accent)" stroke-width="1.5"/>
+    <circle cx="378" cy="168" r="6" fill="var(--bg)" stroke="var(--accent)" stroke-width="1.75"/>
+    <circle cx="378" cy="168" r="2.2" fill="var(--accent)"/>
+    <text x="378" y="132" text-anchor="middle" class="small-strong">Today</text>
+    <text x="378" y="196" text-anchor="middle" class="small">Published</text>
+  </g>
+
+  <g>
+    <line x1="504" y1="140" x2="504" y2="160" stroke="var(--ghost)" stroke-width="1.5" stroke-dasharray="3 3"/>
+    <circle cx="504" cy="168" r="6" fill="var(--surface)" stroke="var(--ghost)" stroke-width="1.75"/>
+    <text x="504" y="132" text-anchor="middle" class="small">First print</text>
+    <text x="504" y="196" text-anchor="middle" class="small">Later</text>
+  </g>
+
+  <g>
+    <line x1="612" y1="140" x2="612" y2="160" stroke="var(--ghost)" stroke-width="1.5" stroke-dasharray="3 3"/>
+    <circle cx="612" cy="168" r="6" fill="var(--surface)" stroke="var(--ghost)" stroke-width="1.75"/>
+    <text x="612" y="132" text-anchor="middle" class="small">Revision</text>
+    <text x="612" y="196" text-anchor="middle" class="small">Later</text>
+  </g>
+
+  <text x="28" y="302" class="small">Rule: every vintage and survey date must be on or before the forecast date.</text>
+</svg>

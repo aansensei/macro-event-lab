@@ -1,5 +1,7 @@
 # Macro Event Lab
 
+![Macro Event Lab](docs/images/readme-banner.svg)
+
 Live site: <https://aansensei.dev/macro-event-lab/>
 
 Who forecasts first published US economic numbers best, and how do we know no forecast saw the future? Macro Event Lab rebuilds US macroeconomic data as it was known at the time (ALFRED vintages), scores forecasts against the number as first published, and checks every forecast for information leakage.
@@ -14,6 +16,20 @@ What the public site shows:
 A second, local research edition replays hour by hour prediction market odds around each release. It uses market data from Kalshi and is not published, because Kalshi's terms require written permission before anything derived from its data is made public.
 
 How it is built: a Python pipeline (Polars, DuckDB, Parquet; raw, silver and gold layers) tested with pytest and Hypothesis, a React and TypeScript website tested with Vitest, and a daily rebuild on GitHub Actions that deploys the public edition to GitHub Pages.
+
+## How it works
+
+Five ideas carry the whole project.
+
+![A forecast may only use data published on or before the forecast date.](docs/images/known-at-the-time.svg)
+
+![A value is published first, then revised. The arena scores the first print.](docs/images/first-print-and-revisions.svg)
+
+![A 90 percent interval is built from the last 40 forecast errors.](docs/images/interval-from-past-errors.svg)
+
+![Only forecasts made after a model's training cutoff form a clean test.](docs/images/leakage-before-after-cutoff.svg)
+
+![The daily update from public sources to the live site.](docs/images/daily-update.svg)
 
 ## Repo layout
 
