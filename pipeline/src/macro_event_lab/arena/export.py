@@ -22,7 +22,7 @@ from macro_event_lab.config import Paths
 SCHEMA_VERSION = 1
 LEVEL = 0.9
 DIGITS = 4
-ORDER = ("naive", "ar", "ridge", "spf")
+ORDER = ("naive", "ar", "ridge", "factor_ridge", "lasso", "spf")
 
 
 def _round(value: float | None) -> float | None:

@@ -10,6 +10,7 @@ from datetime import date
 import numpy as np
 import polars as pl
 
+from macro_event_lab.arena import linalg, selection
 from macro_event_lab.nowcast import (
     FEATURES,
     INDICATORS,
@@ -25,15 +26,19 @@ MAX_AR_LAG = 4
 MIN_AR_OBSERVATIONS = 20
 
 KINDS = {
-    "naive": "baseline", "ar": "classical", "ridge": "classical", "spf": "human",
+    "naive": "baseline", "ar": "classical", "ridge": "classical",
+    "factor_ridge": "classical", "lasso": "classical", "spf": "human",
 }
 LABELS = {
-    "naive": "Naive", "ar": "Autoregression", "ridge": "Ridge", "spf": "Professional forecasters",
+    "naive": "Naive", "ar": "Autoregression", "ridge": "Ridge",
+    "factor_ridge": "Factors and ridge", "lasso": "LASSO", "spf": "Professional forecasters",
 }
 NOTES = {
     "naive": "Repeats the previous first published number.",
     "ar": "Autoregression on first published numbers, lag chosen by BIC from 1 to 4.",
     "ridge": "Ridge regression on monthly indicators known on the forecast date.",
+    "factor_ridge": "Principal components of the indicators, then ridge on one to four factors.",
+    "lasso": "LASSO regression on the indicators known on the forecast date.",
     "spf": "Median of the Survey of Professional Forecasters for the current quarter.",
 }
 
@@ -87,11 +92,15 @@ def _fill_missing(x: np.ndarray, means: np.ndarray) -> np.ndarray:
     return np.where(np.isnan(x), means, x)
 
 
-def ridge_forecast(
+def _training_matrix(
     train_x: np.ndarray, train_y: Sequence[float], train_release: Sequence[date],
-    train_made_on: Sequence[date], x_now: np.ndarray, made_on: date,
-) -> float | None:
-    """Ridge on rows whose answer was public on made_on; missing features take the training mean."""
+    train_made_on: Sequence[date], made_on: date,
+):
+    """Rows whose answer was public on made_on, missing features set to the training mean.
+
+    Returns the filled matrix, the targets, the release and forecast dates of the kept rows
+    and the column means, or None when fewer than MIN_TRAIN rows qualify.
+    """
     keep = [i for i, release in enumerate(train_release) if release <= made_on]
     if len(keep) < MIN_TRAIN:
         return None
@@ -100,14 +109,78 @@ def ridge_forecast(
         warnings.simplefilter("ignore", RuntimeWarning)
         means = np.nanmean(x, axis=0)
     means = np.where(np.isnan(means), 0.0, means)
-    x = _fill_missing(x, means)
     y = np.asarray([train_y[i] for i in keep], dtype=float)
-    lam = choose_lambda(
-        x, y, release_dates=[train_release[i] for i in keep],
-        as_of_dates=[train_made_on[i] for i in keep],
+    return (
+        _fill_missing(x, means), y, [train_release[i] for i in keep],
+        [train_made_on[i] for i in keep], means,
     )
+
+
+def ridge_forecast(
+    train_x: np.ndarray, train_y: Sequence[float], train_release: Sequence[date],
+    train_made_on: Sequence[date], x_now: np.ndarray, made_on: date,
+) -> float | None:
+    """Ridge on rows whose answer was public on made_on; missing features take the training mean."""
+    prepared = _training_matrix(train_x, train_y, train_release, train_made_on, made_on)
+    if prepared is None:
+        return None
+    x, y, release, forecast_dates, means = prepared
+    lam = choose_lambda(x, y, release_dates=release, as_of_dates=forecast_dates)
     model = ridge_fit(x, y, lam)
     return float(model.predict(_fill_missing(x_now, means).reshape(1, -1))[0])
+
+
+FACTOR_COUNTS = (1, 2, 3, 4)
+FACTOR_PENALTIES = (0.1, 1.0, 10.0, 100.0)
+
+
+def _factor_fit_predict(
+    candidate: tuple[int, float], x_train: np.ndarray, y_train: np.ndarray, x_test: np.ndarray,
+) -> float:
+    factors, lam = candidate
+    factors = max(1, min(factors, x_train.shape[1], x_train.shape[0] - 1))
+    z_train, z_test, _mean, _scale = linalg.standardize(x_train, x_test)
+    components = linalg.pca_components(z_train, factors)
+    model = ridge_fit(linalg.pca_scores(z_train, components), y_train, lam)
+    return float(model.predict(linalg.pca_scores(z_test, components))[0])
+
+
+def factor_ridge_forecast(
+    train_x: np.ndarray, train_y: Sequence[float], train_release: Sequence[date],
+    train_made_on: Sequence[date], x_now: np.ndarray, made_on: date,
+) -> float | None:
+    """Principal components of the standardized indicators, then ridge on 1 to 4 factors."""
+    prepared = _training_matrix(train_x, train_y, train_release, train_made_on, made_on)
+    if prepared is None:
+        return None
+    x, y, release, forecast_dates, means = prepared
+    candidates = [(r, lam) for r in FACTOR_COUNTS for lam in FACTOR_PENALTIES]
+    best = selection.select_candidate(
+        candidates, x, y, release, forecast_dates, _factor_fit_predict,
+    )
+    return _factor_fit_predict(best, x, y, _fill_missing(x_now, means).reshape(1, -1))
+
+
+def _lasso_fit_predict(
+    lam: float, x_train: np.ndarray, y_train: np.ndarray, x_test: np.ndarray,
+) -> float:
+    z_train, z_test, _mean, _scale = linalg.standardize(x_train, x_test)
+    intercept, coefficients = linalg.lasso_fit(z_train, y_train, lam)
+    return float(intercept + z_test[0] @ coefficients)
+
+
+def lasso_forecast(
+    train_x: np.ndarray, train_y: Sequence[float], train_release: Sequence[date],
+    train_made_on: Sequence[date], x_now: np.ndarray, made_on: date,
+) -> float | None:
+    """LASSO on the standardized indicators with the penalty chosen by the inner walk forward."""
+    prepared = _training_matrix(train_x, train_y, train_release, train_made_on, made_on)
+    if prepared is None:
+        return None
+    x, y, release, forecast_dates, means = prepared
+    grid = linalg.lasso_grid(linalg.standardize(x)[0], y)
+    best = selection.select_candidate(grid, x, y, release, forecast_dates, _lasso_fit_predict)
+    return _lasso_fit_predict(best, x, y, _fill_missing(x_now, means).reshape(1, -1))
 
 
 def spf_forecast(survey: pl.DataFrame, period: date, made_on: date) -> float | None:
@@ -124,5 +197,5 @@ def spf_forecast(survey: pl.DataFrame, period: date, made_on: date) -> float | N
 
 __all__ = [
     "FEATURES", "KINDS", "LABELS", "NOTES", "ar_forecast", "gdp_features", "naive_forecast",
-    "ridge_forecast", "spf_forecast",
+    "ridge_forecast", "spf_forecast", "factor_ridge_forecast", "lasso_forecast",
 ]

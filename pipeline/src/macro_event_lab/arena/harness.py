@@ -51,10 +51,15 @@ def run_walk_forward(
                 if survey is not None:
                     forecasts["spf"] = contestants.spf_forecast(survey, period, made_on)
                 if period in features and train_x:
-                    forecasts["ridge"] = contestants.ridge_forecast(
-                        np.vstack(train_x), train_y, train_release, train_made_on,
-                        features[period], made_on,
-                    )
+                    for name, forecast in (
+                        ("ridge", contestants.ridge_forecast),
+                        ("factor_ridge", contestants.factor_ridge_forecast),
+                        ("lasso", contestants.lasso_forecast),
+                    ):
+                        forecasts[name] = forecast(
+                            np.vstack(train_x), train_y, train_release, train_made_on,
+                            features[period], made_on,
+                        )
             for name, value in forecasts.items():
                 if value is None:
                     continue
