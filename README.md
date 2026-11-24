@@ -6,6 +6,8 @@
 
 Live site: <https://aansensei.dev/macro-event-lab/>. Open the release file on the home page: the forecasts are shown first, and the real number stays sealed until you click.
 
+![The release file opens with the forecasts, then reveals the first published number, then what it became.](docs/images/release-file.gif)
+
 | | |
 | --- | --- |
 | **The problem** | A US economic number such as jobs, inflation or GDP is published once and revised later. Judging a forecast against the revised number quietly uses facts nobody had at the time. |
