@@ -1,5 +1,7 @@
 # Macro Event Lab
 
+[![Public site](https://github.com/aansensei/macro-event-lab/actions/workflows/pages.yml/badge.svg)](https://github.com/aansensei/macro-event-lab/actions/workflows/pages.yml)
+
 ![Macro Event Lab](docs/images/readme-banner.svg)
 
 **Every economic number is published once, then revised. Who predicted the first version best?**

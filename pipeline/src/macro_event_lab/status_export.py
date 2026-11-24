@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
+import os
 import re
+from collections.abc import Mapping
 from datetime import UTC, date, datetime
 
 import duckdb
@@ -23,6 +25,16 @@ SOURCE_SPECS = (
     ("spf", "Federal Reserve Bank of Philadelphia, Survey of Professional Forecasters (SPF)",
      "spf_forecasts", "known_from", "variable", 120),
 )
+
+
+def run_url_from_env(env: Mapping[str, str]) -> str | None:
+    """Build a GitHub Actions run URL when server, repository and run id are present."""
+    server = env.get("GITHUB_SERVER_URL", "")
+    repository = env.get("GITHUB_REPOSITORY", "")
+    run_id = env.get("GITHUB_RUN_ID", "")
+    if not server or not repository or not run_id:
+        return None
+    return f"{server}/{repository}/actions/runs/{run_id}"
 
 
 def build_status(paths: Paths, information_date: date) -> dict[str, object]:
@@ -77,6 +89,7 @@ def build_status(paths: Paths, information_date: date) -> dict[str, object]:
         "schema_version": 1,
         "generated_at": datetime.now(UTC).strftime("%Y-%m-%dT%H:%M:%SZ"),
         "information_date": information_date.isoformat(),
+        "run_url": run_url_from_env(os.environ),
         "sources": sources,
         "checks": published_checks,
     }

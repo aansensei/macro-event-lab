@@ -24,6 +24,7 @@
 @import "./styles/motion.css";
 @import "./styles/story.css";
 @import "./styles/components/page-guide.css";
+@import "./styles/components/refresh-line.css";
 @import "./styles/devices.css";
 @import "./styles/icons.css";
 @import "./styles/contents.css";

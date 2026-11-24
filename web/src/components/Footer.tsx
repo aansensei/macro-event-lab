@@ -7,6 +7,7 @@ import { PUBLIC_EDITION } from "../lib/edition";
 import { dataSourcesFor } from "../lib/sources";
 import { ExternalLink } from "./ExternalLink";
 import { Logo } from "./Logo";
+import { RefreshLine } from "./RefreshLine";
 
 const REPO = "https://github.com/aansensei/macro-event-lab";
 
@@ -98,6 +99,7 @@ export function Footer({ dataThrough, onNavigate }: Props) {
       </div>
 
       <div className="footer-bottom">
+        <RefreshLine />
         <span className="footer-author">
           <img src={`${import.meta.env.BASE_URL}ncta.png`} alt="ncta" width="42" height="22" draggable={false} />
           <span>&copy; 2026 Cao Thien An Nguyen</span>

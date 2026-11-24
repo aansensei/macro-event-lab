@@ -6,6 +6,8 @@ import { statusFixture } from "./statusFixture";
 describe("status parsing", () => {
   it("preserves real zeros, source dates and executed outcomes", () => {
     expect(parseStatus(statusFixture)).toEqual(statusFixture);
+    expect(parseStatus({ ...statusFixture, run_url: null }).run_url).toBeNull();
+    expect(parseStatus({ ...statusFixture, run_url: "https://github.com/a/b/actions/runs/1" }).run_url).toBe("https://github.com/a/b/actions/runs/1");
     expect(parseStatus({ ...statusFixture, sources: [], checks: [] }).sources).toEqual([]);
   });
 
@@ -15,6 +17,8 @@ describe("status parsing", () => {
     { ...statusFixture, generated_at: "2026-02-30T14:30:00Z" },
     { ...statusFixture, generated_at: "2026-11-20T25:30:00Z" },
     { ...statusFixture, generated_at: "2026-11-20T14:30:00+00:00" },
+    { ...statusFixture, run_url: 42 },
+    { ...statusFixture, run_url: "" },
     { ...statusFixture, checks: null },
   ])("rejects unsupported or malformed root input %#", (value) => {
     expect(() => parseStatus(value)).toThrow();

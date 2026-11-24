@@ -1,0 +1,33 @@
+/* single line data refresh summary shown in the footer and at the top of the status page */
+.refresh-line {
+  flex-basis: 100%;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 10px;
+  margin: 0 0 8px;
+  font-size: 13px;
+  line-height: 20px;
+  color: var(--text-muted);
+  overflow-wrap: anywhere;
+}
+.status-page > .refresh-line {
+  margin: 0 0 18px;
+}
+.refresh-state {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 2px 8px;
+  border: 1px solid currentColor;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+}
+.refresh-state svg { flex-shrink: 0; }
+.refresh-state-current { color: var(--accent); background: var(--accent-tint); }
+.refresh-state-late { color: var(--surprise-up); background: var(--bg); }
+.refresh-line-link {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}

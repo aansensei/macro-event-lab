@@ -4,6 +4,7 @@ import { CheckFilter } from "../components/CheckFilter";
 import { PageGuide } from "../components/PageGuide";
 import { RailPage, type RailSection } from "../components/SectionRail";
 import { QualityCheckList } from "../components/QualityCheckList";
+import { RefreshLine } from "../components/RefreshLine";
 import { ResourceError } from "../components/ResourceError";
 import { SourceFreshnessTable } from "../components/SourceFreshnessTable";
 import { StatusIntro } from "../components/StatusIntro";
@@ -29,6 +30,7 @@ export function Status() {
   </div>;
   const data = state.data;
   return <RailPage sections={RAIL}><div className="status-page page-fade">
+    <RefreshLine status={data} />
     <StatusIntro generatedAt={data.generated_at} informationDate={data.information_date} />
     <PageGuide
       purpose="Check that the data behind every other page is fresh and passes the checks listed here."

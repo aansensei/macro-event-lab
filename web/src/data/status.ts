@@ -20,6 +20,7 @@ export interface StatusData {
   schema_version: 1;
   generated_at: string;
   information_date: string;
+  run_url?: string | null;
   sources: StatusSource[];
   checks: StatusCheck[];
 }
@@ -37,6 +38,9 @@ export function parseStatus(value: unknown): StatusData {
     || new Date(generatedAt).toISOString() !== generatedAt.replace("Z", ".000Z")) {
     throw new Error("Build time: expected a real UTC timestamp.");
   }
+  const runUrl = root.run_url === undefined ? undefined
+    : root.run_url === null ? null
+    : textValue(root.run_url, "Build run URL");
   const sources = arrayValue(root.sources, "Sources").map((value): StatusSource => {
     const source = objectValue(value, "Source");
     if (source.id !== "alfred" && source.id !== "spf") throw new Error("Unknown data source.");
@@ -64,7 +68,9 @@ export function parseStatus(value: unknown): StatusData {
   });
   uniqueValues(sources.map((source) => source.id), "Sources");
   uniqueValues(checks.map((check) => check.name), "Quality checks");
-  return { schema_version: 1, generated_at: generatedAt, information_date: informationDate, sources, checks };
+  const status: StatusData = { schema_version: 1, generated_at: generatedAt, information_date: informationDate, sources, checks };
+  if (runUrl !== undefined) status.run_url = runUrl;
+  return status;
 }
 
 export async function loadStatus(fetchImpl: typeof fetch = fetch): Promise<StatusData> {
