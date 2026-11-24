@@ -1,0 +1,54 @@
+import { useState } from "react";
+
+import type { ArenaTarget } from "../data/arena";
+import { sortLeaderboard, type ArenaSort, type LeaderboardRow } from "../lib/arenaStats";
+import { arenaValue, contestantKind } from "../lib/arenaWords";
+import { Select } from "./Select";
+
+const SORT_OPTIONS: { value: ArenaSort; label: string }[] = [
+  { value: "rmse", label: "RMSE" }, { value: "mae", label: "MAE" },
+  { value: "label", label: "Contestant" }, { value: "coverage_90", label: "Interval coverage" }, { value: "n", label: "Period count" },
+];
+
+export function ArenaLeaderboard({ rows, target }: { rows: LeaderboardRow[]; target: ArenaTarget }) {
+  const [sort, setSort] = useState<ArenaSort>("rmse");
+  const [direction, setDirection] = useState<"asc" | "desc">("asc");
+  const ordered = sortLeaderboard(rows, sort, direction);
+  function changeSort(value: ArenaSort) {
+    if (sort === value) setDirection(direction === "asc" ? "desc" : "asc");
+    else { setSort(value); setDirection(value === "n" || value === "coverage_90" ? "desc" : "asc"); }
+  }
+  return <>
+    <div className="arena-sort-controls">
+      <Select label="Sort leaderboard" value={sort} options={SORT_OPTIONS} onChange={(value) => changeSort(value as ArenaSort)} />
+      <button type="button" className="play-btn" onClick={() => setDirection(direction === "asc" ? "desc" : "asc")} aria-label="Reverse leaderboard sort direction">
+        {direction === "asc" ? "Ascending" : "Descending"}
+      </button>
+    </div>
+    <p className="t-micro muted" role="status">Sorted by {SORT_OPTIONS.find((option) => option.value === sort)?.label}, {direction === "asc" ? "ascending" : "descending"}. Ranks always use RMSE.</p>
+    {!rows.length ? <p className="state-banner">No scores are available for this target and window.</p>
+      : <table className="arena-table" role="table"><caption>{target.label}. Error units: {target.unit}.</caption>
+        <thead role="rowgroup"><tr role="row"><th scope="col" role="columnheader">RMSE rank</th>
+          {(["label", "rmse", "mae"] as const).map((column) => <th scope="col" role="columnheader" key={column}
+            aria-sort={sort === column ? direction === "asc" ? "ascending" : "descending" : "none"}>
+            <button type="button" className="text-btn" onClick={() => changeSort(column)}>{SORT_OPTIONS.find((option) => option.value === column)?.label}</button>
+          </th>)}
+          <th scope="col" role="columnheader">RMSE difference from naive</th>
+          {(["coverage_90", "n"] as const).map((column) => <th scope="col" role="columnheader" key={column}
+            aria-sort={sort === column ? direction === "asc" ? "ascending" : "descending" : "none"}>
+            <button type="button" className="text-btn" onClick={() => changeSort(column)}>{column === "n" ? "Periods" : "90% coverage"}</button>
+          </th>)}<th scope="col" role="columnheader">DM p value</th></tr></thead>
+        <tbody role="rowgroup">{ordered.map((row) => <tr key={row.contestant} role="row">
+          <td data-label="RMSE rank" role="cell">{row.rank ?? "Not ranked"}</td>
+          <th scope="row" role="rowheader"><strong>{row.contestantInfo.label}</strong><span className="arena-kind">{contestantKind(row.contestantInfo.kind)}</span><small>{row.contestantInfo.note}</small></th>
+          <td data-label="RMSE" role="cell">{arenaValue(row.rmse)}</td>
+          <td data-label="MAE" role="cell">{arenaValue(row.mae)}</td>
+          <td data-label="RMSE difference from naive" role="cell">{row.relative === null ? "Not available" : `${row.relative > 0 ? "+" : ""}${row.relative.toFixed(1)}%`}</td>
+          <td data-label="90% coverage" role="cell">{row.coverage_90 === null ? "Not available" : `${(100 * row.coverage_90).toFixed(1)}%`}</td>
+          <td data-label="Periods" role="cell">{row.n.toLocaleString("en-US")}</td>
+          <td data-label="DM p value" role="cell">{row.dm_vs_naive_p === null ? "Not available" : row.dm_vs_naive_p.toPrecision(3)}</td>
+        </tr>)}</tbody>
+      </table>}
+    <p className="t-micro muted">The RMSE difference is 100 times (contestant RMSE divided by naive RMSE, minus one). It is unavailable when the baseline is missing or zero. P values are two-sided comparisons against naive, not measures of effect direction or evidence of equality. Counts may differ between contestants. No multiple-comparison adjustment is applied.</p>
+  </>;
+}

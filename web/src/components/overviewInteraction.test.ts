@@ -44,7 +44,7 @@ it("Learn supports keyboard choice, Escape and focus return without putting Abou
   list = host.querySelector('[role="listbox"]') as HTMLUListElement;
   await act(async () => list.dispatchEvent(new KeyboardEvent("keydown", { key: "End", bubbles: true })));
   await act(async () => list.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", bubbles: true })));
-  expect(navigate).toHaveBeenCalledWith("glossary");
+  expect(navigate).toHaveBeenCalledWith("status");
   expect(document.activeElement).toBe(trigger);
 });
 

@@ -1,0 +1,42 @@
+.status-page { width: 100%; min-width: 0; }
+.status-intro p, .status-section > p { max-width: 70ch; }
+.status-summary { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin: 28px 0; }
+.status-summary > div { min-width: 0; padding: 18px; border: 1px solid var(--border); border-radius: 10px; background: var(--surface); }
+.status-summary dt { color: var(--text-muted); font-size: 12px; }
+.status-summary dd { margin: 8px 0 0; font-family: "IBM Plex Mono", ui-monospace, monospace; font-size: clamp(20px, 3vw, 28px); color: var(--text); }
+.status-section { margin-block: 32px; }
+.status-table { width: 100%; table-layout: fixed; border-collapse: collapse; font-size: 13px; overflow-wrap: anywhere; }
+.status-table th, .status-table td { text-align: left; vertical-align: top; padding: 14px 10px; border-bottom: 1px solid var(--border); font-variant-numeric: tabular-nums; }
+.status-table thead th { color: var(--text-muted); font-weight: 500; }
+.status-table th:first-child { width: 25%; }
+.status-table tbody tr:hover { background: var(--surface-hover); }
+.status-table small { display: block; margin-top: 6px; color: var(--text-muted); }
+.status-badge { display: inline-flex; align-items: center; gap: 5px; padding: 3px 7px; max-width: 100%; border: 1px solid currentColor; border-radius: 6px; font-size: 12px; font-weight: 600; }
+.status-badge svg { flex-shrink: 0; }
+.status-badge-pass { color: var(--accent); background: var(--accent-tint); }
+.status-badge-warn { color: var(--surprise-up); background: var(--surface); }
+.status-badge-fail { color: var(--surprise-down); background: var(--surface); }
+.check-filter { display: flex; flex-wrap: wrap; gap: 8px; margin-block: 18px; }
+.check-filter button { min-height: 40px; padding: 8px 14px; border: 1px solid var(--border-control); border-radius: 7px; background: var(--surface); color: var(--text); font: inherit; cursor: pointer; }
+.check-filter button:hover { background: var(--surface-hover); border-color: var(--accent); }
+.check-filter button[aria-pressed="true"] { background: var(--accent-tint); border-color: var(--accent); }
+.check-filter button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.check-filter button span { margin-left: 6px; font-variant-numeric: tabular-nums; }
+.status-check-table th:first-child { width: 25%; }
+.status-check-table td:last-child { width: 40%; }
+@media (max-width: 639px) {
+  .status-table, .status-table tbody, .status-table tr, .status-table th, .status-table td { display: block; width: auto; }
+  .status-table thead { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+  .status-table tr { margin-bottom: 12px; padding: 10px; border: 1px solid var(--border); border-radius: 8px; }
+  .status-table th:first-child, .status-check-table td:last-child { width: auto; }
+  .status-table th, .status-table td { padding: 8px 2px; border: 0; }
+  .status-table td::before { content: attr(data-label); display: block; margin-bottom: 5px; color: var(--text-muted); font-size: 11px; }
+}
+@media (max-width: 479px) {
+  .status-summary { grid-template-columns: minmax(0, 1fr); }
+  .check-filter { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (horizontal-viewport-segments: 2) {
+  .status-page { max-width: env(viewport-segment-width 0 0); margin-inline: 0; }
+  .status-summary { grid-template-columns: minmax(0, 1fr); }
+}

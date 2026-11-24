@@ -24,6 +24,8 @@ describe("url state", () => {
     expect(parseUrlState(pageSearch("compare")).page).toBe("compare");
     expect(parseUrlState(pageSearch("scorecard")).page).toBe("scorecard");
     expect(parseUrlState(pageSearch("revisions")).page).toBe("revisions");
+    expect(parseUrlState(pageSearch("status")).page).toBe("status");
+    expect(parseUrlState(pageSearch("arena")).page).toBe("arena");
     expect(parseUrlState("?page=unknown").page).toBe("overview");
   });
 

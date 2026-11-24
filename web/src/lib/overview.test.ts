@@ -32,8 +32,8 @@ it("derives findings independently when only one source is available", () => {
 
 it("keeps About and Overview outside Learn, with every page reachable once", () => {
   expect(PRIMARY.map(([p]) => p)).toEqual(["overview", "events", "compare", "scorecard", "revisions", "about"]);
-  expect(LEARN.map(([p]) => p)).toEqual(["models", "method", "glossary"]);
-  expect(new Set([...PRIMARY, ...LEARN].map(([p]) => p)).size).toBe(9);
+  expect(LEARN.map(([p]) => p)).toEqual(["models", "arena", "method", "glossary", "status"]);
+  expect(new Set([...PRIMARY, ...LEARN].map(([p]) => p)).size).toBe(11);
   expect(STORY.map((s) => parseUrlState(storyHref(s.page)).page)).toEqual(
     ["events", "compare", "scorecard", "revisions"],
   );

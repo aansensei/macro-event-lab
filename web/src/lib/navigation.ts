@@ -7,8 +7,8 @@ type Entry = [Page, string];
 export function navigationFor(isPublic: boolean): { primary: Entry[]; learn: Entry[] } {
   if (isPublic) {
     return {
-      primary: [["overview", "Home"], ["revisions", "Revisions"], ["models", "GDP nowcast"], ["about", "About"]],
-      learn: [["method", "Method"], ["glossary", "Glossary"]],
+      primary: [["overview", "Home"], ["arena", "Arena"], ["revisions", "Revisions"], ["models", "GDP nowcast"], ["about", "About"]],
+      learn: [["method", "Method"], ["glossary", "Glossary"], ["status", "Data status"]],
     };
   }
   return {
@@ -16,7 +16,7 @@ export function navigationFor(isPublic: boolean): { primary: Entry[]; learn: Ent
       ["overview", "Overview"], ["events", "Events"], ["compare", "Compare"],
       ["scorecard", "Scorecard"], ["revisions", "Revisions"], ["about", "About"],
     ],
-    learn: [["models", "Models"], ["method", "Method"], ["glossary", "Glossary"]],
+    learn: [["models", "Models"], ["arena", "Arena"], ["method", "Method"], ["glossary", "Glossary"], ["status", "Data status"]],
   };
 }
 

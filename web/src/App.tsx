@@ -9,6 +9,8 @@ import { Method } from "./pages/Method";
 import { Models } from "./pages/Models";
 import { PublicHome } from "./pages/PublicHome";
 import { Revisions } from "./pages/Revisions";
+import { Status } from "./pages/Status";
+import { Arena } from "./pages/Arena";
 
 export function App() {
   const navigation = useNavigation();
@@ -19,6 +21,8 @@ export function App() {
     {!inEdition(route.page) && <PublicNotice />}
     {route.page === "overview" && <PublicHome />}
     {route.page === "revisions" && <Revisions />}
+    {route.page === "status" && <Status />}
+    {route.page === "arena" && <Arena />}
     {route.page === "models" && <Models />}
     {route.page === "method" && <Method />}
     {route.page === "glossary" && <Glossary />}
