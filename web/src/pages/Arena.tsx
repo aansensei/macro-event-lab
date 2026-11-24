@@ -15,7 +15,7 @@ import { TargetSwitch } from "../components/TargetSwitch";
 import { WindowToggle } from "../components/WindowToggle";
 import { ARENA_NOT_BUILT, loadArena, type ArenaWindow, type TargetId } from "../data/arena";
 import { useResource } from "../hooks/useResource";
-import { leaderboardRows } from "../lib/arenaStats";
+import { contestantsPerTarget, leaderboardRows } from "../lib/arenaStats";
 import { ARENA_GUIDE } from "../lib/arenaWords";
 
 const RAIL: RailSection[] = [
@@ -44,7 +44,7 @@ export function Arena() {
     ?? data.contestants.find((entry) => entry.kind === "classical" || entry.kind === "foundation") ?? data.contestants[0];
   return <RailPage sections={RAIL}><div className="arena-page page-fade">
     <StoryPath current="arena" />
-    <ArenaIntro informationDate={data.information_date} contestantIds={data.contestants.map((c) => c.id)} />
+    <ArenaIntro informationDate={data.information_date} contestantIds={data.contestants.map((c) => c.id)} perTarget={contestantsPerTarget(data)} />
     <PageGuide
       purpose="See how close each forecaster and model came to the number first published, release after release."
       lookAt="The leaderboard first (a lower RMSE means closer), then the history chart for one contestant, then the worst period share."

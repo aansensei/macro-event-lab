@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 import type { Arena } from "../data/arena";
 import { arenaFixture } from "../data/arenaFixture";
 import {
-  arenaRange, intervalCovered, leaderboardRows, relativeToNaive, sortLeaderboard, worstPeriodShare,
+  arenaRange, contestantsPerTarget, intervalCovered, leaderboardRows, relativeToNaive, sortLeaderboard, worstPeriodShare,
 } from "./arenaStats";
 
 it("ranks RMSE with shared competition ranks and unavailable rows last", () => {
@@ -72,5 +72,21 @@ describe("worstPeriodShare", () => {
   it("is null when the contestant has no error or no forecast", () => {
     expect(worstPeriodShare(arena, "gdp", "b")).toBeNull();
     expect(worstPeriodShare(arena, "gdp", "missing")).toBeNull();
+  });
+});
+
+describe("contestantsPerTarget", () => {
+  const arena = {
+    targets: [{ id: "gdp", label: "GDP growth" }, { id: "cpi", label: "Inflation" }],
+    scores: [
+      { target: "gdp", window: "all", contestant: "a", rmse: 1 },
+      { target: "gdp", window: "all", contestant: "b", rmse: 2 },
+      { target: "gdp", window: "all", contestant: "c", rmse: null },
+      { target: "gdp", window: "clean", contestant: "d", rmse: 1 },
+      { target: "cpi", window: "all", contestant: "a", rmse: 1 },
+    ],
+  } as unknown as Arena;
+  it("counts contestants with a score in the full window for each target", () => {
+    expect(contestantsPerTarget(arena)).toEqual([{ label: "GDP growth", count: 2 }, { label: "Inflation", count: 1 }]);
   });
 });

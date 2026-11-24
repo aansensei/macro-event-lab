@@ -23,4 +23,12 @@ describe("ArenaIntro", () => {
     expect(html).toContain("not sponsored, endorsed or approved");
     expect(render(["naive", "ar"])).not.toContain("Philadelphia");
   });
+
+  it("says how many contestants have a score for each target", () => {
+    const html = renderToStaticMarkup(createElement(ArenaIntro, {
+      informationDate: "2026-11-24", contestantIds: ["naive", "ar"],
+      perTarget: [{ label: "GDP growth", count: 6 }, { label: "Inflation", count: 2 }],
+    }));
+    expect(html).toContain("Contestants with a score so far: GDP growth 6, Inflation 2.");
+  });
 });

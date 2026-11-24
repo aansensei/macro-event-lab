@@ -62,3 +62,12 @@ export function arenaRange(values: (number | null)[]): { maximum: number; clippe
   const maximum = Math.max(0.1, cap * 1.15);
   return { maximum, clipped: values.map((value) => value !== null && Math.abs(value) > maximum) };
 }
+
+// how many contestants have a score for each target, so a page can say where results are thin
+export function contestantsPerTarget(arena: Arena): { label: string; count: number }[] {
+  return arena.targets.map((target) => ({
+    label: target.label,
+    count: new Set(arena.scores.filter((s) => s.target === target.id && s.window === "all" && s.rmse !== null)
+      .map((s) => s.contestant)).size,
+  }));
+}
