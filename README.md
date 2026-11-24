@@ -44,7 +44,7 @@ ALFRED API ──┼─► raw (bronze) ──► ├─ silver/kalshi_candles.p
 | Source | What | Access |
 | --- | --- | --- |
 | [Kalshi API](https://docs.kalshi.com) | Markets and hourly candles for CPI (`KXCPI`), payrolls (`KXPAYROLLS`), Fed rate (`KXFED`), GDP (`KXGDP`) | Public REST, no key |
-| [ALFRED](https://alfred.stlouisfed.org) | Every vintage of CPI, core CPI, CPI shelter, payrolls, unemployment, real GDP | Free FRED API key |
+| [ALFRED](https://alfred.stlouisfed.org) | Vintages of prices, employment, national accounts, spending, production, housing, credit and interest rates | Free FRED API key |
 | [Survey of Professional Forecasters](https://www.philadelphiafed.org/surveys-and-data/real-time-data-research/survey-of-professional-forecasters) | Quarterly median forecasts and their official publication calendar | Approved aggregate files, non-commercial research |
 
 Raw data stays local (not committed). Kalshi's Developer Agreement and Data Terms of Use require written permission before anything derived from its market data is published, so nothing Kalshi-derived is public yet.
@@ -106,7 +106,7 @@ npm run dev
 | `ingest releases` | Download CPI, jobs and GDP release dates (FRED); FOMC dates come from `pipeline/src/macro_event_lab/seeds/` |
 | `build` | Rebuild silver tables from raw, then gold tables (contract prices, implied distributions, stats, surprises), then the website JSON in `data/web/` |
 | `check [--show N]` | Data quality checks on silver (duplicates, bid above ask, prices outside [0, 1], missing months, markets without a strike); exits 1 on errors |
-| `build-public` | Rebuild only the ALFRED tables (revisions and the GDP nowcast, including the live nowcast for the quarter not yet released) and write the public website files to `data/web_public/`; this is what the scheduled Public site workflow runs |
+| `build-public` | Rebuild the ALFRED revisions and GDP nowcast, including the live nowcast, then export source freshness and executed quality checks alongside them in `data/web_public/`; this is what the scheduled Public site workflow runs |
 | `nowcast` | Evaluate the GDP nowcast walk-forward: out-of-sample errors against the naive guess, ridge coefficients with block bootstrap intervals, and the Kalshi market on the quarters it covered |
 | `model` | Build local calibration training rows, MAP coefficients and temporal score comparisons of raw prices, isotonic and MAP, with Bonferroni intervals and a fixed prior sensitivity grid. See [model card](pipeline/MODEL_CARD.md). |
 | `model --bayesian` | Sample a hierarchical event-weighted generalized posterior with learned pooling scales, convergence gates and limited marginal predictive checks. Requires the optional `bayes` dependencies; descriptive local results only. |
