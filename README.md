@@ -204,6 +204,8 @@ $env:VITE_EDITION = "public"; npm run dev
 | `model --bayesian` | Sample a hierarchical event-weighted generalized posterior with learned pooling scales, convergence gates and limited marginal predictive checks. Requires the optional `bayes` dependencies; descriptive local results only. |
 | `model --joint` | Fit one categorical outcome per event at T-1h and simulate contract labels from shared event outcomes. Requires `bayes`; includes a documented fixed support mixture and remains local and descriptive. |
 | `asof 2026-10-14T12:31Z` | Print what was public at that moment: newest ALFRED vintages and open Kalshi markets |
+| `timemachine 2020-04-15 [--format json] [--series PAYEMS]` | Print the latest value, the previous value and the revision history of GDP, inflation and payrolls as they were known on that date, from the saved ALFRED vintages |
+| `ledger-append --arena arena.json` and `verify-ledger` | Append the live forecasts to the hash chained forecast ledger, and check that no row of the ledger was changed, removed or reordered |
 | `verify [--claims-file PATH]` | Run verification tests for all claims documented in CLAIMS.md |
 
 ## License

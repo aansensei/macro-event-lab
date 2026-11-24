@@ -19,6 +19,7 @@ from macro_event_lab import (
     pit,
     public_build,
     quality,
+    timemachine,
     verify,
 )
 from macro_event_lab.arena import export as arena_export
@@ -254,6 +255,17 @@ def cmd_ledger_append(args: argparse.Namespace) -> None:
     print(f"Appended {len(new_rows)} rows to {args.file}")
 
 
+def cmd_timemachine(args: argparse.Namespace) -> None:
+    parquet_path = config.get_paths().silver / "alfred_observations.parquet"
+    output = timemachine.run_timemachine(
+        args.date,
+        output_format=args.format,
+        series_arg=args.series,
+        parquet_path=parquet_path,
+    )
+    print(output)
+
+
 def cmd_build(_: argparse.Namespace) -> None:
     paths = config.get_paths()
     for table, n in build_silver(paths).items():
@@ -376,6 +388,20 @@ def main(argv: list[str] | None = None) -> None:
         help="UTC timestamp in YYYY-MM-DDTHH:MM:SSZ format (default: current UTC time)",
     )
     p_ledger_append.set_defaults(func=cmd_ledger_append)
+
+    p_tm = sub.add_parser(
+        "timemachine", help="print what was known in ALFRED on a past date"
+    )
+    p_tm.add_argument("date", help="ISO calendar date (YYYY-MM-DD)")
+    p_tm.add_argument(
+        "--format", choices=["text", "json"], default="text",
+        help="output format (default: text)",
+    )
+    p_tm.add_argument(
+        "--series", default=None,
+        help="comma-separated series ids (default: GDPC1,CPIAUCSL,PAYEMS)",
+    )
+    p_tm.set_defaults(func=cmd_timemachine)
 
     args = parser.parse_args(argv)
     args.func(args)
