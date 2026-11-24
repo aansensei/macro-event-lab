@@ -34,6 +34,18 @@
   </head>
   <body>
     <div id="root"></div>
+    <noscript>
+      <h1>Macro Event Lab</h1>
+      <p>Every economic number is published once, then revised. Who predicted the first version best? This site replays real US releases using only what was known at the time, shows how much each number changed afterwards, and scores forecasters and models against the first published value. Results are preliminary. It is rebuilt every day from public data: ALFRED and FRED of the Federal Reserve Bank of St. Louis and the Survey of Professional Forecasters of the Federal Reserve Bank of Philadelphia.</p>
+      <ul>
+        <li><a href="?page=revisions">Revisions</a>: how much the first published CPI, jobs and GDP numbers changed later.</li>
+        <li><a href="?page=arena">Arena</a>: forecasters and models scored against the first published number.</li>
+        <li><a href="?page=models">GDP nowcast</a>: a model built only from data public before each release.</li>
+        <li><a href="?page=briefing">Next releases</a>: the next scheduled releases with the current forecasts, a calendar file and a news feed.</li>
+        <li><a href="?page=data">Open data</a>: the tables as downloadable files.</li>
+      </ul>
+      <p>The charts need JavaScript. The source code, the formulas and the tests are on <a href="https://github.com/aansensei/macro-event-lab">GitHub</a>.</p>
+    </noscript>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

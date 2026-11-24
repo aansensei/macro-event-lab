@@ -65,7 +65,6 @@ Intervals are 90 percent split conformal intervals from the last 40 errors. Diff
 | --- | --- | --- |
 | [`pipeline/`](pipeline) | Ingestion, point-in-time tables, analytics, tests | Python, Polars, DuckDB, Parquet |
 | [`web/`](web) | Overview, four story pages and supporting research and reference pages | React, TypeScript, Vite, hand-drawn SVG charts |
-| [`api/`](api) | MCP server for as-of-date questions (Spring 2027) | FastAPI, MCP |
 | `data/` | raw / silver / gold tables, shared by pipeline and web (not committed) | |
 
 ## Why point-in-time matters

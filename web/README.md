@@ -60,7 +60,6 @@ npm run dev
 - Overview's Open this release link carries the current reveal stage into Events. Browser history restores both the snapshot hour and stage, including a return to the same release.
 - Daily Treasury yield changes describe an association over the day. Missing maturities stay unavailable while recorded maturities remain visible. The source notes link to the Federal Reserve H.15 description.
 - `?page=events` opens Events explicitly; the root opens Overview. Models reads its separate ALFRED-only nowcast export.
-- `prototype/`: the static design prototype the site is being built from.
 - `DESIGN_RESEARCH.md`, `DESIGN_BRIEF.md`: design research and the brief behind the prototype.
 
 `public/data/` is never committed: data derived from market prices is published only after a review of the data providers' terms.
