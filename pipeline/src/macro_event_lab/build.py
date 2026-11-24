@@ -13,7 +13,7 @@ import polars as pl
 from macro_event_lab.config import RELEASES, Paths
 from macro_event_lab.pit import attach_known_from
 from macro_event_lab.raw_store import iter_manifest, load_raw, load_raw_bytes
-from macro_event_lab.sources import alfred, fred_daily, french, kalshi, releases
+from macro_event_lab.sources import alfred, fred_daily, french, kalshi, releases, spf
 
 UTC_TS = pl.Datetime("us", "UTC")
 
@@ -68,6 +68,17 @@ FRENCH_SCHEMA = {
     "ret_pct": pl.Float64,
     "fetched_at_utc": pl.String,
 }
+SPF_SCHEMA = {
+    "survey_year": pl.Int32,
+    "survey_quarter": pl.Int8,
+    "variable": pl.String,
+    "horizon": pl.Int8,
+    "statistic": pl.String,
+    "value": pl.Float64,
+    "unit": pl.String,
+    "known_from": UTC_TS,
+    "known_from_source": pl.String,
+}
 
 
 def _latest_first(records):
@@ -84,9 +95,13 @@ def build_silver(paths: Paths) -> dict[str, int]:
     calendar_pages_seen: set[tuple[str, int]] = set()
     french_rows: list[dict] = []
     french_files_seen: set[str] = set()
+    survey_files = {}
 
     # Newest fetch first, so `unique(keep="first")` keeps the latest copy of each key.
     for record in _latest_first(iter_manifest(paths.raw)):
+        if record.kind in {spf.WORKBOOK_KIND, spf.CALENDAR_KIND}:
+            survey_files.setdefault(record.meta["name"], record)
+            continue
         if record.kind == french.KIND:
             # the library rebuilds its history monthly, so only the newest copy of a file counts
             name = record.meta["name"]
@@ -158,6 +173,19 @@ def build_silver(paths: Paths) -> dict[str, int]:
         sort=["file", "portfolio", "date"],
     )
     counts["french_daily"] = _write(french_daily, paths.silver / "french_daily.parquet")
+    if any(name in survey_files for name in ("levels", "growth")):
+        survey_calendar = spf.parse_release_dates(
+            load_raw_bytes(paths.raw, survey_files["calendar"]).decode("utf-8-sig")
+        ) if "calendar" in survey_files else {}
+        survey_rows = [
+            row
+            for name in ("levels", "growth") if name in survey_files
+            for row in spf.parse_workbook(
+                load_raw_bytes(paths.raw, survey_files[name]), name, survey_calendar,
+            )
+        ]
+        forecasts = pl.DataFrame(survey_rows, schema=SPF_SCHEMA).sort(spf.FORECAST_KEY)
+        counts["spf_forecasts"] = _write(forecasts, paths.silver / "spf_forecasts.parquet")
     return counts
 
 

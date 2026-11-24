@@ -17,6 +17,7 @@ dependencies = [
     "python-dotenv>=1.0",
     "tzdata>=2024.1",  # zoneinfo has no system time zone database on Windows
     "numpy>=2.0",
+    "openpyxl>=3.1,<4",
 ]
 
 [project.optional-dependencies]

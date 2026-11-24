@@ -12,7 +12,7 @@ from macro_event_lab import calibration, config, nowcast, pit, public_build, qua
 from macro_event_lab.build import build_silver
 from macro_event_lab.gold import build_gold
 from macro_event_lab.http import RateLimitedClient
-from macro_event_lab.sources import alfred, fred_daily, french, kalshi, releases
+from macro_event_lab.sources import alfred, fred_daily, french, kalshi, releases, spf
 from macro_event_lab.web_export import build_web
 
 
@@ -42,6 +42,14 @@ def cmd_ingest_french(_args: argparse.Namespace) -> None:
         for name, filename in config.FRENCH_FILES.items():
             size = french.ingest_file(client, paths.raw, name, filename)
             print(f"French {name}: {size:,} bytes")
+
+
+def cmd_ingest_spf(args: argparse.Namespace) -> None:
+    paths = config.get_paths()
+    with RateLimitedClient(spf.BASE_URL, 0.5, accept="*/*") as client:
+        for name in ("calendar", "levels", "growth"):
+            size = spf.ingest_file(client, paths.raw, name, refresh=args.refresh)
+            print(f"SPF {spf.FILES[name]}: {size:,} bytes")
 
 
 def cmd_ingest_kalshi(args: argparse.Namespace) -> None:
@@ -115,7 +123,12 @@ def cmd_asof(args: argparse.Namespace) -> None:
 
 
 def cmd_check(args: argparse.Namespace) -> None:
-    results = quality.run_checks(pit.connect(config.get_paths().silver))
+    silver_dir = config.get_paths().silver
+    connection = pit.connect(silver_dir)
+    survey_path = silver_dir / "spf_forecasts.parquet"
+    if survey_path.exists():
+        connection.from_parquet(str(survey_path)).create_view("spf_forecasts")
+    results = quality.run_checks(connection)
     for r in results:
         found = "" if r.problems is None else f" ({r.problems.height:,} rows)"
         excused = f", {r.excused.height:,} known anomaly rows excused" if r.excused.height else ""
@@ -216,6 +229,12 @@ def main(argv: list[str] | None = None) -> None:
         "french", help="daily industry and market returns from the Kenneth French Data Library"
     )
     p_french.set_defaults(func=cmd_ingest_french)
+
+    p_spf = ingest_sub.add_parser("spf", help="approved median forecasts and release calendar")
+    p_spf.add_argument(
+        "--refresh", action="store_true", help="fetch updated copies of all SPF files",
+    )
+    p_spf.set_defaults(func=cmd_ingest_spf)
 
     p_kalshi = ingest_sub.add_parser("kalshi", help="markets + candlesticks from Kalshi")
     p_kalshi.add_argument("--series", nargs="*", help="series tickers (default: KALSHI_SERIES)")

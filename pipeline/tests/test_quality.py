@@ -79,7 +79,9 @@ def test_clean_data_passes_every_check():
             ("KXCPI-26OCT-T0.3", 1, 0.40, 0.42, None), ("KXCPI-26OCT-T0.3", 2, 0.41, 0.43, 0.42),
         ]),
     ))
-    assert {name: r.status for name, r in results.items()} == dict.fromkeys(results, "PASS")
+    assert results["spf_forecasts"].status == "SKIP"
+    available = {name: result.status for name, result in results.items() if name != "spf_forecasts"}
+    assert available == dict.fromkeys(available, "PASS")
 
 
 def test_daily_yields_with_weekend_and_holiday_gaps_are_not_missing_months():

@@ -135,6 +135,42 @@ CHECKS: list[Check] = [
     _duplicates("kalshi_candles", ["ticker", "end_period_ts"]),
     _duplicates("release_calendar", ["release", "release_date"]),
     Check(
+        name="spf_forecasts",
+        severity="error",
+        description=(
+            "quarterly median forecasts have unique survey keys, finite numeric values and "
+            "publication timestamps on or after the survey quarter starts"
+        ),
+        sql="""
+            WITH counted AS (
+                SELECT *, count(*) OVER (
+                    PARTITION BY survey_year, survey_quarter, variable, horizon, statistic
+                ) AS copies
+                FROM spf_forecasts
+            )
+            SELECT survey_year, survey_quarter, variable, horizon, statistic, value,
+                   known_from, known_from_source, copies
+            FROM counted
+            WHERE copies > 1
+               OR survey_year IS NULL OR survey_year NOT BETWEEN 1 AND 9999
+               OR survey_quarter IS NULL OR survey_quarter NOT BETWEEN 1 AND 4
+               OR variable IS NULL OR variable NOT IN (
+                   'gdp', 'cpi', 'core_cpi', 'unemployment', 'payrolls',
+                   'housing_starts', 'industrial_production'
+               )
+               OR horizon IS NULL OR horizon NOT BETWEEN 0 AND 4
+               OR statistic IS NULL OR statistic <> 'median'
+               OR TRY_CAST(value AS DOUBLE) IS NULL OR NOT isfinite(TRY_CAST(value AS DOUBLE))
+               OR unit IS NULL OR trim(unit) = ''
+               OR known_from IS NULL OR known_from_source IS NULL OR trim(known_from_source) = ''
+               OR CASE WHEN survey_year BETWEEN 1 AND 9999 AND survey_quarter BETWEEN 1 AND 4
+                       THEN (known_from AT TIME ZONE 'America/New_York')::DATE
+                            < make_date(survey_year, (survey_quarter - 1) * 3 + 1, 1)
+                       ELSE TRUE END
+            ORDER BY survey_year, survey_quarter, variable, horizon
+        """,
+    ),
+    Check(
         name="bid_above_ask",
         severity="error",
         description="a candle's closing yes bid is never above its closing yes ask",

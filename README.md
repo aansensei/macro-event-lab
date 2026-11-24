@@ -45,8 +45,27 @@ ALFRED API ──┼─► raw (bronze) ──► ├─ silver/kalshi_candles.p
 | --- | --- | --- |
 | [Kalshi API](https://docs.kalshi.com) | Markets and hourly candles for CPI (`KXCPI`), payrolls (`KXPAYROLLS`), Fed rate (`KXFED`), GDP (`KXGDP`) | Public REST, no key |
 | [ALFRED](https://alfred.stlouisfed.org) | Every vintage of CPI, core CPI, CPI shelter, payrolls, unemployment, real GDP | Free FRED API key |
+| [Survey of Professional Forecasters](https://www.philadelphiafed.org/surveys-and-data/real-time-data-research/survey-of-professional-forecasters) | Quarterly median forecasts and their official publication calendar | Approved aggregate files, non-commercial research |
 
 Raw data stays local (not committed). Kalshi's Developer Agreement and Data Terms of Use require written permission before anything derived from its market data is published, so nothing Kalshi-derived is public yet.
+
+SPF attribution: **Federal Reserve Bank of Philadelphia, Survey of Professional Forecasters (SPF)**.
+SPF data are used for non-commercial education and research. The Philadelphia Fed name is not used
+for advertising or as an endorsement. This project and its evaluations are independent and are not
+sponsored, endorsed or approved by the Federal Reserve Bank of Philadelphia. Proprietary bond
+series are excluded from the survey parser.
+
+`ingest spf` saves the release calendar and the two median workbooks before parsing. A rerun resumes
+from complete saved files; `--refresh` requests updated copies. Survey `known_from` uses the official
+News Release Date at the end of that New York day, never the submission deadline. A missing release
+date, a release before its deadline, or a release before the survey quarter uses the later of quarter
+end and the deadline, also at the end of the New York day. `known_from_source` records that fallback
+and its reason. Historical workbook corrections remain a limitation: a publication-calendar timestamp
+does not establish that a downloaded historical value is unchanged from its original release.
+
+SPF payroll forecasts retain quarterly employment levels in thousands of jobs. They are not monthly
+job gains. Housing starts retain millions of units at an annual rate. No monthly forecast is inferred
+from either quarterly level series.
 
 ## Quickstart (Windows PowerShell)
 
@@ -80,6 +99,7 @@ npm run dev
 | Command | Does |
 | --- | --- |
 | `ingest alfred [--series ...]` | Download all vintages of the ALFRED series |
+| `ingest spf [--refresh]` | Save approved median level and growth workbooks plus the official survey publication calendar |
 | `ingest kalshi [--series ...] [--since YYYY-MM-DD] [--max-markets N] [--period 1/60/1440]` | Download markets and candlesticks |
 | `ingest yields [--series ...]` | Download daily 2 and 10 year Treasury yields (FRED `DGS2`, `DGS10`); each close counts as known at the end of its New York day |
 | `ingest french` | Download daily returns of the 12 industry portfolios and the market factor from the Kenneth R. French Data Library (kept local until permission to show them) |
