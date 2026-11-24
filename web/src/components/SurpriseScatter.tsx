@@ -3,6 +3,7 @@ import { niceTicks } from "../lib/charts";
 import { MINUS, fixed, formatBp, signed } from "../lib/format";
 import type { Fit } from "../lib/stats";
 import { useWidth } from "../hooks/useWidth";
+import { HowToRead } from "./HowToRead";
 
 interface Props {
   points: SummaryPoint[];
@@ -32,6 +33,7 @@ export function SurpriseScatter({ points, yieldKey, fit }: Props) {
   const yTicks = niceTicks(-yMax, yMax, 5);
 
   return (
+    <>
     <div ref={ref} className="chart-box">
       {width > 0 && (
         <svg
@@ -74,5 +76,14 @@ export function SurpriseScatter({ points, yieldKey, fit }: Props) {
         </svg>
       )}
     </div>
+    <HowToRead>
+      <p>
+        Each dot is one release. How far right it sits is the surprise, measured in standard deviations of the
+        market's own uncertainty, and how far up it sits is the change in the Treasury yield that day, in basis
+        points. Dots in the top right and bottom left mean the yield moved with the surprise. The dashed line is
+        the best straight fit through the dots, and a flat line means no clear link.
+      </p>
+    </HowToRead>
+    </>
   );
 }

@@ -2,12 +2,14 @@ import { expect, it } from "vitest";
 
 import { aboutCopyFor } from "./aboutCopy";
 
-it("describes the public arena and distinguishes planned surveys from available data", () => {
+it("describes the live preliminary arena and keeps the foundation models marked as not yet run", () => {
   const copy = aboutCopyFor(true);
   expect(copy.lead).toContain("auditable, point-in-time forecast arena");
   expect(copy.lead).toContain("professional forecaster surveys");
   expect(JSON.stringify(copy)).not.toMatch(/kalshi|KX(CPI|GDP|PAYROLLS|FED)/i);
-  expect(copy.stack[0]?.[1]).toContain("pending");
+  expect(copy.lead).toContain("Preliminary results");
+  expect(copy.stack[1]?.[1]).toContain("have not run");
+  expect(JSON.stringify(copy)).not.toMatch(/\u2014|\u2013/);
 });
 
 it("preserves the research explanation and survey comparison", () => {

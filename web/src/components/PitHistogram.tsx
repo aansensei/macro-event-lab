@@ -1,4 +1,5 @@
 import { useWidth } from "../hooks/useWidth";
+import { HowToRead } from "./HowToRead";
 
 const PAD_L = 28;
 const PAD_R = 8;
@@ -18,6 +19,7 @@ export function PitHistogram({ hist, label }: { hist: number[]; label: string })
   const y = (v: number) => PAD_T + plotH - (v / top) * plotH;
 
   return (
+    <>
     <div ref={ref} className="chart-box">
       {width > 0 && (
         <svg
@@ -45,5 +47,14 @@ export function PitHistogram({ hist, label }: { hist: number[]; label: string })
         </svg>
       )}
     </div>
+    <HowToRead>
+      <p>
+        Each bar counts the real numbers that landed in one tenth of the market's odds, from the lowest tenth on
+        the left to the highest on the right. The dashed line is the count a perfectly calibrated market would
+        put in every bar. Tall bars at both ends mean the market was too confident, and a hump in the middle
+        means it was too cautious.
+      </p>
+    </HowToRead>
+    </>
   );
 }

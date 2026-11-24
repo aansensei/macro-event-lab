@@ -1,4 +1,5 @@
 import { MINUS } from "../lib/format";
+import { HowToRead } from "../components/HowToRead";
 import { DataLineage } from "../components/DataLineage";
 
 function Code({ children }: { children: string }) {
@@ -28,6 +29,14 @@ function TimelineDiagram() {
         <text x="510" y="80" textAnchor="middle" fontSize="12" fill="var(--text-muted)">never used</text>
       </svg>
       </div>
+      <HowToRead>
+        <p>
+          Time runs left to right. The dot on the left is the first market snapshot, seven days before the
+          close. The dashed line is the hour you chose, and only the snapshots to its left are visible to the
+          page. The release on the right supplies the first published number used for the surprise. The later
+          revision is never used, so nothing known afterwards can leak into an earlier view.
+        </p>
+      </HowToRead>
     </figure>
   );
 }

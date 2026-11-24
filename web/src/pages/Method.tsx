@@ -9,7 +9,8 @@ export function Method() {
       <h1 className="t-h1">Method</h1>
       <p className="about-lead">How official economic numbers are saved, matched in time and checked.</p>
       <p>The public edition reads ALFRED vintages and FRED release calendars. Revisions and the GDP nowcast
-        use only official economic observations. Professional survey ingestion and the forecast arena are pending.</p>
+        use only official economic observations. The forecast arena adds the Survey of Professional Forecasters and
+        several models, and its results are preliminary until every contestant has run.</p>
       <DataLineage />
       <h2 className="t-h2">First prints and later revisions</h2>
       <p>The first print is the earliest published value for a period. Revisions arrive later and are shown

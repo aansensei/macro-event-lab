@@ -44,115 +44,133 @@ const FAQ: [string, string][] = [
 ];
 
 const PUBLIC_COPY = {
-  lead: "An auditable, point-in-time forecast arena for US macro releases, built on ALFRED, FRED and professional forecaster surveys. The arena is being built; this edition currently publishes official revisions and a GDP nowcast.",
+  lead: "An auditable, point-in-time forecast arena for US macro releases, built on ALFRED, FRED and professional forecaster surveys. Preliminary results are live for GDP growth, inflation and payrolls; the foundation model contestants have not run yet.",
   glance: [
-  [
-    "The problem",
-    "Forecasts can look better when judged against revised numbers or information unavailable on forecast day."
-  ],
-  [
-    "What it does",
-    "Compares forecasts of first-published US macro numbers, with an audit trail of when each input became available."
-  ],
-  [
-    "How",
-    "An automated pipeline saves source responses, builds typed tables and checks publication timestamps before exporting the website data."
-  ],
-  [
-    "Built with",
-    "Python, Polars, DuckDB, Parquet, pytest and Hypothesis for the pipeline; React, TypeScript and Vite for the site; public economic data from ALFRED and FRED. Professional survey ingestion is pending."
-  ]
-] as [string, string][],
+    [
+      "The problem",
+      "Forecasts can look better when judged against revised numbers or information unavailable on forecast day.",
+    ],
+    [
+      "What it does",
+      "Scores forecasts of first-published US GDP growth, inflation and payroll changes, from professional forecasters, classical models and baselines, with a record of when each input became available.",
+    ],
+    [
+      "How",
+      "A frozen protocol fixes the contestants, the scoring and the leakage rules before results are read. A daily pipeline saves every source response, builds typed tables, replays each forecast as of its own date and exports the website data.",
+    ],
+    [
+      "Built with",
+      "Python, Polars, DuckDB, Parquet, pytest and Hypothesis for the pipeline; React, TypeScript and Vite for the site; public economic data from ALFRED and FRED and the Survey of Professional Forecasters from the Federal Reserve Bank of Philadelphia.",
+    ],
+  ] as [string, string][],
   idea: [
-  "Every economic release begins with a first published number. Later revisions can change that number, so a fair forecast comparison must record both the forecast date and the version used as the outcome.",
-  "The arena is designed to compare professional forecasters, classical methods and time-series foundation models against the same first prints. Official ALFRED vintages and FRED release calendars provide the point-in-time evidence.",
-  "I built it to practise the whole path from raw data to a public product: collecting data carefully, modelling it honestly, and explaining the result so anyone can follow it."
-],
+    "Every economic release begins with a first published number. Later revisions can change that number, so a fair forecast comparison must record both the forecast date and the version used as the outcome.",
+    "The arena compares professional forecasters, classical methods and, once they have run, time series foundation models against the same first prints. A naive forecast that repeats the previous first print is the bar every contestant must clear. Official ALFRED vintages and FRED release calendars provide the point-in-time evidence.",
+    "The results are preliminary. Evaluation periods are short, releases are not independent of each other, and extreme periods such as spring 2020 can dominate an average. The site shows how much of each contestant's error comes from its single worst period so that no ranking is read without it.",
+    "I built it to practise the whole path from raw data to a public product: collecting data carefully, modelling it honestly, and explaining the result so anyone can follow it.",
+  ],
   questions: [
-  "What was first published, and how much was it revised later?",
-  "Which forecasts used only information available at the time?",
-  "How do forecast errors compare against repeating the previous first print?",
-  "How often do forecast intervals contain the first print?"
-],
+    "What was first published, and how much was it revised later?",
+    "Which forecasts used only information available at the time?",
+    "How do forecast errors compare against repeating the previous first print?",
+    "How often do forecast intervals contain the first print?",
+    "Is one period responsible for most of a contestant's error?",
+  ],
   why: [
-  [
-    "Numbers as they were known",
-    "Every value carries the moment it became public. Later revisions cannot enter an earlier forecast."
-  ],
-  [
-    "Checked, not just shown",
-    "Forecasts must be compared over the same periods and against a simple baseline, with uncertainty and missing observations shown."
-  ],
-  [
-    "Readable without an economics degree",
-    "Plain explanations and the Glossary explain the economic numbers and methods."
-  ],
-  [
-    "Honest about gaps",
-    "Unavailable releases remain missing. The pipeline does not fill them with invented observations."
-  ],
-  [
-    "An engineering project",
-    "A tested pipeline rebuilds economic tables from saved source responses."
-  ]
-] as [string, string][],
+    [
+      "Numbers as they were known",
+      "Every value carries the moment it became public. Later revisions cannot enter an earlier forecast.",
+    ],
+    [
+      "Rules written before results",
+      "The contestants, the error measures, the interval method and the leakage rules are fixed in a protocol document. Changes are listed after it instead of rewriting it.",
+    ],
+    [
+      "Checked, not just shown",
+      "Forecasts are compared over the same periods and against a simple baseline, with interval coverage, a test against the baseline and the worst period share shown next to every error.",
+    ],
+    [
+      "Readable without an economics degree",
+      "Plain explanations, a note under every graph on how to read it, and the Glossary explain the economic numbers and methods.",
+    ],
+    [
+      "Honest about gaps",
+      "Unavailable releases remain missing. The pipeline does not fill them with invented observations, and results stay labelled preliminary until every contestant has run.",
+    ],
+    [
+      "An engineering project",
+      "A tested pipeline rebuilds economic tables from saved source responses, and the same checks run on every change.",
+    ],
+  ] as [string, string][],
   stack: [
-  [
-    "Data sources",
-    "ALFRED vintages for first prints and FRED release calendars. The planned professional benchmark is the Philadelphia Fed Survey of Professional Forecasters; ingestion and publication checks are pending."
-  ],
-  [
-    "Pipeline",
-    "Python with httpx, Polars, DuckDB and Parquet. Source responses are saved as compressed, content-addressed files before parsing."
-  ],
-  [
-    "Methods",
-    "As-of joins select only information published by the forecast cutoff. First prints and subsequent revisions are kept separate."
-  ],
-  [
-    "Quality",
-    "pytest with Hypothesis property tests, ruff, data quality checks and continuous integration on GitHub Actions."
-  ],
-  [
-    "Website",
-    "React and TypeScript built with Vite into static files with SVG charts and checked JSON inputs."
-  ]
-] as [string, string][],
+    [
+      "Data sources",
+      "ALFRED vintages for first prints and FRED release calendars, from the Federal Reserve Bank of St. Louis. The Survey of Professional Forecasters from the Federal Reserve Bank of Philadelphia supplies the professional benchmark for GDP growth.",
+    ],
+    [
+      "Contestants",
+      "A naive baseline, an autoregression, ridge regression, ridge on principal components and LASSO, all written for this project and refit at every forecast date, plus the survey median. Two time series foundation models are planned and have not run.",
+    ],
+    [
+      "Pipeline",
+      "Python with httpx, Polars, DuckDB and Parquet. Source responses are saved as compressed, content-addressed files before parsing, and the site data is rebuilt every day.",
+    ],
+    [
+      "Methods",
+      "As-of joins select only information published by the forecast cutoff. First prints and later revisions are kept separate. Intervals use a conformal rule on recent absolute errors, and differences from the baseline use a Diebold-Mariano test with a small sample correction.",
+    ],
+    [
+      "Quality",
+      "pytest with Hypothesis property tests, ruff, data quality checks, an independent recomputation of the key numbers and continuous integration on GitHub Actions.",
+    ],
+    [
+      "Website",
+      "React and TypeScript built with Vite into static files with SVG charts and checked JSON inputs.",
+    ],
+  ] as [string, string][],
   faq: [
-  [
-    "What does \"point in time\" mean here?",
-    "Each forecast may use only information already published at its stated cutoff. Later observations and revisions are excluded."
-  ],
-  [
-    "Why compare professional surveys with forecasting methods?",
-    "They offer different ways of forecasting the same economic release. A common information date and first-print outcome make the comparison auditable."
-  ],
-  [
-    "Why compare with the first print and not today's number?",
-    "The first print was the number available on release day. Revisions arrive later, so they are shown separately."
-  ],
-  [
-    "What happens when a release is not published?",
-    "Its first print remains empty. Missing releases are not filled with invented values."
-  ],
-  [
-    "Where do the numbers come from?",
-    "From saved ALFRED vintages and FRED release calendars, run through the checked pipeline described above. Professional survey data are planned and have not yet been ingested."
-  ],
-  [
-    "Can I see the values behind a chart?",
-    "Yes. Available chart readouts and data tables show the values drawn by each chart."
-  ],
-  [
-    "Is this investment advice?",
-    "No. Macro Event Lab is a research and engineering project. Nothing on this site is a recommendation to buy, sell or trade anything."
-  ]
-] as [string, string][],
+    [
+      "What does \"point in time\" mean here?",
+      "Each forecast may use only information already published at its stated cutoff. Later observations and revisions are excluded.",
+    ],
+    [
+      "Which forecasts are in the arena today?",
+      "A naive baseline, an autoregression, ridge regression, ridge on principal components, LASSO and, for GDP growth only, the survey median. The two foundation models are planned and have not run, so the results are labelled preliminary.",
+    ],
+    [
+      "Why compare professional surveys with forecasting methods?",
+      "They offer different ways of forecasting the same economic release. A common information date and first-print outcome make the comparison auditable.",
+    ],
+    [
+      "Why compare with the first print and not today's number?",
+      "The first print was the number available on release day. Revisions arrive later, so they are shown separately.",
+    ],
+    [
+      "Why does one period matter so much?",
+      "Errors are squared, so one extreme period can supply most of the total. The leaderboard shows each contestant's worst period share so you can see when that happens.",
+    ],
+    [
+      "What happens when a release is not published?",
+      "Its first print remains empty. Missing releases are not filled with invented values.",
+    ],
+    [
+      "Where do the numbers come from?",
+      "From saved ALFRED vintages, FRED release calendars and the Philadelphia Fed survey, run through the checked pipeline described above.",
+    ],
+    [
+      "Can I see the values behind a chart?",
+      "Yes. Chart readouts and data tables show the values drawn by each chart.",
+    ],
+    [
+      "Is this investment advice?",
+      "No. Macro Event Lab is a research and engineering project. Nothing on this site is a recommendation to buy, sell or trade anything.",
+    ],
+  ] as [string, string][],
   disclaimer: [
-  "It can contain mistakes. Data can be missing, delayed or wrong, and forecasting methods rest on assumptions that may not hold. Please check anything important against the original sources.",
-  "Nothing on this site is investment, trading, financial, legal or tax advice, and nothing here is an offer or a recommendation to buy or sell anything. Past forecasts do not predict future results.",
-  "The site is not affiliated with, endorsed by or sponsored by the Federal Reserve, the Federal Reserve Bank of St. Louis, the Bureau of Labor Statistics or the Bureau of Economic Analysis. Their names identify data sources, whose data remain subject to their own terms."
-],
+    "It can contain mistakes. Data can be missing, delayed or wrong, and forecasting methods rest on assumptions that may not hold. Please check anything important against the original sources.",
+    "Nothing on this site is investment, trading, financial, legal or tax advice, and nothing here is an offer or a recommendation to buy or sell anything. Past forecasts do not predict future results.",
+    "The site is not affiliated with, endorsed by or sponsored by the Federal Reserve, the Federal Reserve Bank of Philadelphia, the Federal Reserve Bank of St. Louis, the Bureau of Labor Statistics or the Bureau of Economic Analysis. Their names identify data sources, whose data remain subject to their own terms.",
+  ],
 };
 
 const RESEARCH_COPY: typeof PUBLIC_COPY = PUBLIC_EDITION ? PUBLIC_COPY : {

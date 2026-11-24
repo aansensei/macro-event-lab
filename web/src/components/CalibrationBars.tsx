@@ -2,6 +2,7 @@ import type { SeriesSummary } from "../data/types";
 import { pct } from "../lib/format";
 import { CountUp } from "./CountUp";
 import { useCountUp } from "../hooks/useCountUp";
+import { HowToRead } from "./HowToRead";
 
 // a bar that grows from zero together with its count-up percentage
 function HitRow({ name, hit, ideal }: { name: string; hit: number | null; ideal: number }) {
@@ -23,6 +24,7 @@ function HitRow({ name, hit, ideal }: { name: string; hit: number | null; ideal:
 // for each series, how often the real number landed inside the market's 50% and 90% ranges, against the ideal
 export function CalibrationBars({ series }: { series: SeriesSummary[] }) {
   return (
+    <>
     <div className="calibration" role="table" aria-label="Share of releases inside the market's ranges">
       {series.map((s) => (
         <div key={s.series} className="calibration-series" role="rowgroup">
@@ -32,5 +34,14 @@ export function CalibrationBars({ series }: { series: SeriesSummary[] }) {
         </div>
       ))}
     </div>
+    <HowToRead>
+      <p>
+        Each bar is the share of releases whose real number landed inside the market's range, and the tick on the
+        track is the share an ideal market would catch: 50 percent for the 50 percent range and 90 percent for the
+        90 percent range. A bar that stops short of the tick means the market was too confident, and a bar past it
+        means the market was too cautious. The number in brackets is how many releases were counted.
+      </p>
+    </HowToRead>
+    </>
   );
 }

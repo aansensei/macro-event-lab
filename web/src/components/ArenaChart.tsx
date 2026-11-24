@@ -6,6 +6,7 @@ import { arenaRange } from "../lib/arenaStats";
 import { forecastReadout } from "../lib/arenaWords";
 import { niceTicks } from "../lib/charts";
 import { periodLabel } from "../lib/revisionWords";
+import { HowToRead } from "./HowToRead";
 
 export function ArenaChart({ target, points, contestant }: {
   target: ArenaTarget; points: ArenaForecast[]; contestant: Contestant | undefined;
@@ -76,6 +77,16 @@ export function ArenaChart({ target, points, contestant }: {
         </svg>
       </div>
       <p className="t-micro muted">Solid: first print. Dashed: selected forecast. Shading: supplied 90 percent interval. Triangles mark clipped values; the readout retains full values. The scale uses the 98th percentile of absolute plotted values with a margin.</p>
+      <HowToRead>
+        <p>
+          Each step along the bottom is one release period, oldest on the left. The solid line is the number
+          first published for that period. The dashed line is what the chosen contestant forecast before the
+          release, so the gap between the two lines at any period is that contestant's miss. The shaded band is
+          its 90 percent interval: the first print should fall inside it about nine times in ten. Move across the
+          chart to read one period in the line above it. The chart shows one contestant at a time, so use the
+          selector to compare.
+        </p>
+      </HowToRead>
     </>}
   </figure>;
 }

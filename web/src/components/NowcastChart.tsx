@@ -1,6 +1,7 @@
 import type { NowcastPoint } from "../data/nowcast";
 import { niceTicks } from "../lib/charts";
 import { useWidth } from "../hooks/useWidth";
+import { HowToRead } from "./HowToRead";
 
 export function NowcastChart({ points }: { points: NowcastPoint[] }) {
   const [ref, measured] = useWidth<HTMLDivElement>();
@@ -25,5 +26,13 @@ export function NowcastChart({ points }: { points: NowcastPoint[] }) {
         textAnchor={i === 0 ? "start" : i === points.length - 1 ? "end" : "middle"}
         fill="var(--text-muted)" fontSize="12">{points[i]!.reference_period.slice(0, 4)}</text>)}
     </svg>
+    <HowToRead>
+      <p>
+        Each point on the lines is one quarter, oldest on the left. The solid line is the GDP growth first
+        published for that quarter. The dashed line is what the model forecast using only information available
+        before the release. The closer the two lines run together, the better the forecast. The vertical axis is
+        annualized percent growth, and the scale is set by the highest and lowest values drawn.
+      </p>
+    </HowToRead>
   </div>;
 }
