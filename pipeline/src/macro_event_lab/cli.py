@@ -14,6 +14,7 @@ from macro_event_lab import (
     calibration,
     config,
     freshness,
+    ledger,
     nowcast,
     pit,
     public_build,
@@ -226,6 +227,33 @@ def cmd_check_freshness(args: argparse.Namespace) -> None:
         raise SystemExit(exit_code)
 
 
+def cmd_verify_ledger(args: argparse.Namespace) -> None:
+    rows = ledger.read_ledger(args.file)
+    problems = ledger.verify_ledger(rows)
+    if not problems:
+        print(f"OK: {len(rows)} rows")
+        return
+    for problem in problems:
+        print(f"PROBLEM row {problem['index']}: {problem['code']}")
+    raise SystemExit(1)
+
+
+def cmd_ledger_append(args: argparse.Namespace) -> None:
+    arena = json.loads(args.arena.read_text(encoding="utf-8"))
+    recorded_at = args.recorded_at or datetime.now(UTC).strftime("%Y-%m-%dT%H:%M:%SZ")
+    current_rows = ledger.read_ledger(args.file)
+    existing = {
+        (str(row["target"]), str(row["reference_period"]), str(row["model_id"]))
+        for row in current_rows
+    }
+    last_hash = str(current_rows[-1]["entry_hash"]) if current_rows else ledger.GENESIS_HASH
+    last_sequence = int(current_rows[-1]["sequence"]) if current_rows else 0
+    fields = ledger.entries_from_arena(arena, recorded_at, existing)
+    new_rows = ledger.build_rows(fields, last_hash, last_sequence)
+    ledger.append_rows(args.file, new_rows)
+    print(f"Appended {len(new_rows)} rows to {args.file}")
+
+
 def cmd_build(_: argparse.Namespace) -> None:
     paths = config.get_paths()
     for table, n in build_silver(paths).items():
@@ -321,6 +349,33 @@ def main(argv: list[str] | None = None) -> None:
     )
     p_fresh.add_argument("--status", type=Path, required=True, help="path to status.json")
     p_fresh.set_defaults(func=cmd_check_freshness)
+
+    p_verify_ledger = sub.add_parser(
+        "verify-ledger", help="verify hash chain integrity of a forecast ledger"
+    )
+    p_verify_ledger.add_argument(
+        "--file",
+        type=Path,
+        default=Path("ledger/forecast_ledger.jsonl"),
+        help="path to the ledger JSONL file",
+    )
+    p_verify_ledger.set_defaults(func=cmd_verify_ledger)
+
+    p_ledger_append = sub.add_parser(
+        "ledger-append", help="append live arena forecasts to the forecast ledger"
+    )
+    p_ledger_append.add_argument("--arena", type=Path, required=True, help="path to arena.json")
+    p_ledger_append.add_argument(
+        "--file",
+        type=Path,
+        default=Path("ledger/forecast_ledger.jsonl"),
+        help="path to the ledger JSONL file",
+    )
+    p_ledger_append.add_argument(
+        "--recorded-at",
+        help="UTC timestamp in YYYY-MM-DDTHH:MM:SSZ format (default: current UTC time)",
+    )
+    p_ledger_append.set_defaults(func=cmd_ledger_append)
 
     args = parser.parse_args(argv)
     args.func(args)
