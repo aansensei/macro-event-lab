@@ -1,7 +1,7 @@
 import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 
-export const PUBLIC_DATA_FILES = ["revisions.json", "nowcast.json", "status.json"] as const;
+export const PUBLIC_DATA_FILES = ["revisions.json", "nowcast.json", "status.json", "arena.json"] as const;
 
 export function collectPublicAssets(publicDir: string): { fileName: string; source: Uint8Array }[] {
   const assets: { fileName: string; source: Uint8Array }[] = [];

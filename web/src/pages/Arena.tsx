@@ -31,7 +31,7 @@ export function Arena() {
   const contestant = data.contestants.find((entry) => entry.id === contestantId)
     ?? data.contestants.find((entry) => entry.kind === "classical" || entry.kind === "foundation") ?? data.contestants[0];
   return <div className="arena-page page-fade">
-    <ArenaIntro informationDate={data.information_date} />
+    <ArenaIntro informationDate={data.information_date} contestantIds={data.contestants.map((c) => c.id)} />
     {!target ? <p className="state-banner">No economic targets are available yet.</p> : <>
       <TargetSwitch targets={data.targets} selected={target.id} onChange={setTarget} />
       <section className="arena-section" aria-labelledby="arena-leaderboard">

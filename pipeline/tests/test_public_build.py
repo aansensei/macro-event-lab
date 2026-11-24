@@ -41,6 +41,10 @@ def test_public_build_writes_only_the_public_files(tmp_path, monkeypatch):
     assert {check["name"] for check in status["checks"]} == {
         "duplicates_alfred_observations", "missing_observations",
     }
+    arena = json.loads((out / "arena.json").read_text(encoding="utf-8"))
+    assert arena["schema_version"] == 1
+    assert arena["information_date"] == "2025-03-10"
+    assert arena["leakage"] == []
     revisions = json.loads((out / "revisions.json").read_text(encoding="utf-8"))
     assert [s["series"] for s in revisions["series"]] == ["payrolls"]
     for path in out.rglob("*"):
