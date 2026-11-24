@@ -66,6 +66,15 @@ export function PublicHome() {
       </p>
     </section>
 
+    <section className="public-play" aria-labelledby="public-play-title">
+      <a className="public-play-card" href={pageSearch("play")}>
+        <span className="live-kicker">Interactive round</span>
+        <h2 className="public-card-title t-h3" id="public-play-title">Try it: beat the forecasters</h2>
+        <span className="public-card-question">Enter your own forecast using only the history known before each past release and compare your miss with the contestants.</span>
+        <Icon name="arrow-right" size={18} className="public-card-arrow" />
+      </a>
+    </section>
+
     {upcoming.length > 0 && <section className="public-next-releases" aria-labelledby="home-next-releases">
       <h2 className="t-h2" id="home-next-releases">Next releases</h2>
       <div className="public-release-cards">

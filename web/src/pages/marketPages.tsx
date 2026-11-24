@@ -11,6 +11,7 @@ import { Revisions } from "./Revisions";
 import { Status } from "./Status";
 import { Arena } from "./Arena";
 import { Data } from "./Data";
+import { Play } from "./Play";
 
 const Events = /* @__PURE__ */ lazy(() => import("./Events").then((page) => ({ default: page.Events })));
 const Compare = /* @__PURE__ */ lazy(() => import("./Compare").then((page) => ({ default: page.Compare })));
@@ -29,6 +30,7 @@ export function MarketPages(navigation: AppNavigation) {
       {route.page === "revisions" && <Revisions />}
       {route.page === "status" && <Status />}
       {route.page === "data" && <Data />}
+      {route.page === "play" && <Play />}
       {route.page === "arena" && <Arena />}
       {route.page === "models" && <Models />}
       {route.page === "method" && <Method />}
