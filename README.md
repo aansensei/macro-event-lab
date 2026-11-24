@@ -2,9 +2,17 @@
 
 ![Macro Event Lab](docs/images/readme-banner.svg)
 
-Live site: <https://aansensei.dev/macro-event-lab/>
+**Every economic number is published once, then revised. Who predicted the first version best?**
 
-Who forecasts first published US economic numbers best, and how do we know no forecast saw the future? Macro Event Lab rebuilds US macroeconomic data as it was known at the time (ALFRED vintages), scores forecasts against the number as first published, and checks every forecast for information leakage.
+Live site: <https://aansensei.dev/macro-event-lab/>. Open the release file on the home page: the forecasts are shown first, and the real number stays sealed until you click.
+
+| | |
+| --- | --- |
+| **The problem** | A US economic number such as jobs, inflation or GDP is published once and revised later. Judging a forecast against the revised number quietly uses facts nobody had at the time. |
+| **What I built** | A fair test. Every forecast is replayed as of its own date, using only data published by then, and scored against the number as first published. |
+| **What it shows** | How large revisions really are, and how professional forecasters and models compare. The forecast results are preliminary and labelled that way. |
+| **Proof it works** | A daily automated rebuild, unit and property tests, a leakage check on every forecast, and key numbers recomputed independently. |
+| **Built with** | Python, Polars, DuckDB, Parquet, React, TypeScript and GitHub Actions. |
 
 What the public site shows:
 

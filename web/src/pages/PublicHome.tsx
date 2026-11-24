@@ -25,10 +25,10 @@ export function PublicHome() {
   const errors = data && nowcastErrors(data.points);
   return <div className="public-home page-fade">
     <p className="section-kicker">Macro Event Lab</p>
-    <h1 className="t-h1">Official numbers, before and after release day</h1>
+    <h1 className="t-h1">Every economic number is published once, then revised. Who predicted the first version best?</h1>
     <p className="about-lead">
-      A US economic number is published once and then revised. This site shows how much it changes, and how well
-      forecasters and models predict the first version. It is rebuilt every day from public data.
+      This site replays real releases using only what was known at the time, shows how much each number changed
+      afterwards, and scores forecasters and models against the first version. It is rebuilt every day from public data.
     </p>
 
     {arena.kind === "ready" && revisions.kind === "ready" && <ReleaseFile arena={arena.data} revisions={revisions.data} />}
