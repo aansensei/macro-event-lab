@@ -1,5 +1,6 @@
 import { ExploreMore } from "../components/ExploreMore";
 import { ExternalLink } from "../components/ExternalLink";
+import { HeadlineStrip } from "../components/HeadlineStrip";
 import { Icon } from "../components/Icon";
 import { LiveProof } from "../components/LiveProof";
 import { ReleaseFile } from "../components/ReleaseFile";
@@ -56,6 +57,13 @@ export function PublicHome() {
       This site replays real releases using only what was known at the time, shows how much each number changed
       afterwards, and scores forecasters and models against the first version. It is rebuilt every day from public data.
     </p>
+
+    {(arena.kind === "ready" || revisions.kind === "ready") && (
+      <HeadlineStrip
+        arena={arena.kind === "ready" ? arena.data : null}
+        revisions={revisions.kind === "ready" ? revisions.data : null}
+      />
+    )}
 
     {arena.kind === "ready" && revisions.kind === "ready" && <ReleaseFile arena={arena.data} revisions={revisions.data} />}
 

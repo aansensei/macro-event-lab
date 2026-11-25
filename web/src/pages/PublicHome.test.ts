@@ -94,4 +94,57 @@ it("places Explore more after Next releases and before The wider record without 
   expect(exploreIndex).toBeGreaterThan(nextIndex);
   expect(recordIndex).toBeGreaterThan(exploreIndex);
   expect(host.textContent).not.toContain("Try it: beat the forecasters");
+  expect(host.querySelector(".headline-strip")).toBeNull();
+});
+
+it("places HeadlineStrip right after the lead paragraph and before The release file when data qualify", async () => {
+  const qualifiedArena: Arena = {
+    ...ARENA,
+    targets: [
+      { id: "gdp", label: "GDP growth", unit: "annualized percent q/q", frequency: "quarterly" },
+      { id: "cpi", label: "Inflation", unit: "percent m/m", frequency: "monthly" },
+    ],
+    contestants: [
+      { id: "naive", label: "Naive", kind: "baseline", note: "Previous print" },
+      { id: "spf", label: "Survey median", kind: "human", note: "SPF" },
+    ],
+    forecasts: Array.from({ length: 20 }, (_, i) => ({
+      target: "gdp",
+      period: `${2000 + Math.floor(i / 4)}-${String(1 + (i % 4) * 3).padStart(2, "0")}-01`,
+      made_on: `${2000 + Math.floor(i / 4)}-${String(1 + (i % 4) * 3).padStart(2, "0")}-15`,
+      actual: 4,
+      values: { spf: 3, naive: 1 },
+      intervals: {},
+    })),
+    calibration: [
+      { target: "cpi", contestant: "naive", level: 0.9, n: 25, coverage: 0.902, coverage_lo: 0.72, coverage_hi: 0.98 },
+    ],
+  };
+  const qualifiedRevisions = {
+    ...REVISIONS,
+    series: [{
+      series: "payrolls",
+      label: "Jobs",
+      unit: "jobs",
+      resolution: 1000,
+      latest_vintage: "2026-10-02",
+      n: 30,
+      mean_abs_revision: 73900,
+      points: [{ period: "2024-01-01", first: 100, next: null, latest: 112, settled: true }],
+    }],
+  } as unknown as Revisions;
+  vi.mocked(loadArena).mockResolvedValueOnce(qualifiedArena);
+  vi.mocked(loadRevisions).mockResolvedValueOnce(qualifiedRevisions);
+  await act(async () => root.render(createElement(PublicHome)));
+  const lead = host.querySelector(".about-lead");
+  const strip = host.querySelector(".headline-strip");
+  const release = host.querySelector(".release-file");
+  expect(lead).not.toBeNull();
+  expect(strip).not.toBeNull();
+  expect(release).not.toBeNull();
+  expect(lead!.compareDocumentPosition(strip!) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  expect(strip!.compareDocumentPosition(release!) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  expect(strip!.textContent).toContain("74 thousand jobs");
+  expect(strip!.textContent).toContain("1.0 and 3.0 points");
+  expect(strip!.textContent).toContain("90%");
 });

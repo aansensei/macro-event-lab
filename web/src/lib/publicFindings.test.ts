@@ -12,17 +12,20 @@ const arena = {
 } as unknown as Arena;
 const revisions = {
   settled_months: 24,
-  series: [{ series: "payrolls", n: 300, mean_abs_revision: 61234.4 }],
+  series: [
+    { series: "gdp", n: 99, mean_abs_revision: 1.188 },
+    { series: "cpi", n: 298, mean_abs_revision: 0.083 },
+  ],
 } as unknown as Revisions;
 
-it("counts contestants that beat the naive RMSE and takes the median interval coverage", () => {
-  const [jobs, beat, held] = publicFindings(arena, revisions);
-  expect(jobs?.value).toBe("61,234 jobs");
-  expect(jobs?.page).toBe("revisions");
+it("reports GDP and CPI revisions and counts contestants below naive RMSE without repeating headline cards", () => {
+  const [gdpRev, beat, cpiRev] = publicFindings(arena, revisions);
+  expect(gdpRev?.value).toBe("1.2 points");
+  expect(gdpRev?.page).toBe("revisions");
   expect(beat?.value).toBe("2 of 3");
   expect(beat?.detail).toContain("40 quarters");
-  expect(held?.value).toBe("90%");
-  expect(held?.detail).toContain("3 contestants");
+  expect(cpiRev?.value).toBe("0.08 points");
+  expect(cpiRev?.page).toBe("revisions");
 });
 
 it("reports every finding as not available when the data have not loaded", () => {

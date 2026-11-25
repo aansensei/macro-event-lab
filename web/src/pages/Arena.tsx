@@ -76,6 +76,9 @@ export function Arena() {
       <section className="arena-section" aria-labelledby="arena-guide"><h2 id="arena-guide" className="t-h3">How to read this page</h2>
         <p>{ARENA_GUIDE}</p><p className="muted">Rankings and relative errors describe the supplied records. A short evaluation window and dependence between economic releases limit inference. The table does not establish a winning method.</p>
       </section>
+      <section className="arena-section" aria-labelledby="arena-roadmap"><h2 id="arena-roadmap" className="t-h3">Roadmap</h2>
+        <p>Planned and not yet run: two time series foundation models, which are part of the evaluation protocol and will be added as they run.</p>
+      </section>
       <StoryNext current="arena" />
     </>}
   </div></RailPage>;

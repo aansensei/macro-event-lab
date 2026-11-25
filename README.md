@@ -14,7 +14,7 @@ Live site: <https://aansensei.dev/macro-event-lab/>. Open the release file on th
 | --- | --- |
 | **The problem** | A US economic number such as jobs, inflation or GDP is published once and revised later. Judging a forecast against the revised number quietly uses facts nobody had at the time. |
 | **What I built** | A fair test. Every forecast is replayed as of its own date, using only data published by then, and scored against the number as first published. |
-| **What it shows** | How large revisions really are, and how professional forecasters and models compare. The forecast results are preliminary and labelled that way. |
+| **What it shows** | How large revisions really are, and how professional forecasters and models compare. The forecast results describe a short sample, rank nobody and say so on every page. |
 | **Proof it works** | A daily automated rebuild, unit and property tests, a leakage check on every forecast, and a second implementation of the five models in the test suite that agrees with the production code on test data. |
 | **Built with** | Python, Polars, DuckDB, Parquet, React, TypeScript and GitHub Actions. |
 
@@ -23,7 +23,12 @@ What the public site shows:
 - **Revisions:** how the first published CPI, payrolls and GDP numbers changed later.
 - **GDP nowcast:** a live nowcast built only from data that was public before each release.
 - **Data status:** the age of each source and the quality checks that ran.
-- **Forecast arena:** professional forecasters and classical models, scored point in time against the first published number. Every target has a naive baseline, an autoregression, ridge, principal component ridge and LASSO; GDP growth also has the survey median. The two time series foundation models have not run, so the results are preliminary. The rules are fixed in advance in [`pipeline/EVAL_PROTOCOL.md`](pipeline/EVAL_PROTOCOL.md).
+- **Forecast arena:** professional forecasters and classical models, scored point in time against the first published number. Every target has a naive baseline, an autoregression, ridge, principal component ridge and LASSO; GDP growth also has the survey median. The rules are fixed in advance in [`pipeline/EVAL_PROTOCOL.md`](pipeline/EVAL_PROTOCOL.md).
+- **Next releases:** the scheduled CPI, jobs and GDP releases with every contestant's forecast, a countdown, a calendar file and a news feed, and for each contestant the chance, estimated from its own recent errors, that the number ends above a chosen level.
+- **Reactions:** how the 2 and 10 year Treasury yields moved on release days against the size of the surprise, described and never read as a cause.
+- **Live proof:** the forecast ledger (each row hashed with the one before it), the time of the last data refresh and the next release, each linked to its evidence.
+- **Economist's notes:** a prediction and its reasoning written before a release and never edited afterwards, and a **build journal** of what went wrong and how it was fixed.
+- **Play:** forecast a past release yourself with only what was known then and compare your miss with every contestant.
 - Open data: the arena and revisions tables as Parquet files, recommended for analysis, with CSV copies for spreadsheet programs, and a DuckDB query you can run straight on the web address.
 
 A second, local research edition replays hour by hour prediction market odds around each release. It uses market data from Kalshi and is not published, because Kalshi's terms require written permission before anything derived from its data is made public.
@@ -56,7 +61,7 @@ Every model is fitted only on data that was public on the forecast date, refit a
 | Ridge on principal components | Principal components of the indicators, then ridge on 1 to 4 of them | GDP, inflation, payrolls |
 | LASSO | L1 penalized regression solved by coordinate descent | GDP, inflation, payrolls |
 | Survey median | Median forecast of the Survey of Professional Forecasters | GDP |
-| Two foundation models | Planned, not yet run | not yet |
+| Two foundation models | On the roadmap, part of the evaluation protocol, not yet run | not yet |
 
 Intervals are 90 percent split conformal intervals from the last 40 errors. Differences from the naive forecast use a Diebold and Mariano test with the Harvey, Leybourne and Newbold correction. Results are preliminary and the arena names no winner.
 

@@ -154,9 +154,13 @@ it("renders coverage intervals, closed More scores and Nested model tests sectio
   expect(moreText).toContain("Pinball 5%");
   expect(moreText).toContain("Adaptive coverage");
   expect(moreText).toContain("Forecasts scored");
+  expect(moreText).toContain("CRPS");
+  expect(moreText).toContain("CRPS scores the whole range of a forecast at once, in the unit of the number: a smaller value means the whole range sat closer to what happened.");
   expect(moreText).toContain("0.15");
+  expect(moreText).toContain("0.55");
   expect(moreText).toContain("Not available");
   expect(moreText).toContain("A few dozen forecasts cannot separate close scores.");
+  expect(leaderboardText).not.toContain("CRPS");
 
   const nestedText = details[1]?.textContent ?? "";
   expect(nestedText).toContain("Fixture A");
@@ -194,4 +198,19 @@ it("renders Nested model tests without More scores when only nested pairs exist,
   expect(details).toHaveLength(1);
   expect(details[0]?.textContent).toContain("1 tests are shown in this table. No correction for several comparisons is applied.");
   expect(details[0]?.querySelector("table")?.textContent).toContain("Not available");
+});
+
+it("shows the non-ranking intro banner and places the Roadmap block after How to read this page", async () => {
+  await act(async () => root.render(createElement(Arena)));
+  const banner = host.querySelector(".arena-intro .state-banner")?.textContent ?? "";
+  expect(banner).toContain("Results describe the periods available so far and rank nobody.");
+  expect(banner).not.toContain("planned contestants");
+  const guide = host.querySelector('[aria-labelledby="arena-guide"]');
+  const roadmap = host.querySelector('[aria-labelledby="arena-roadmap"]');
+  expect(guide).not.toBeNull();
+  expect(roadmap?.textContent).toContain("Roadmap");
+  expect(roadmap?.textContent).toContain("Planned and not yet run: two time series foundation models, which are part of the evaluation protocol and will be added as they run.");
+  expect(guide!.compareDocumentPosition(roadmap!) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  const sections = [...host.querySelectorAll(".arena-page > .arena-section")];
+  expect(sections[sections.length - 1]).toBe(roadmap);
 });

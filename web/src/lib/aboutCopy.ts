@@ -44,7 +44,7 @@ const FAQ: [string, string][] = [
 ];
 
 const PUBLIC_COPY = {
-  lead: "An auditable, point-in-time forecast arena for US macro releases, built on ALFRED, FRED and professional forecaster surveys. Preliminary results are live for GDP growth, inflation and payrolls. Five contestants have run for each target, the survey median joins for GDP growth, and the foundation models have not run.",
+  lead: "An auditable, point-in-time forecast arena for US macro releases, built on ALFRED, FRED and professional forecaster surveys. Preliminary results are live for GDP growth, inflation and payrolls. Five contestants have run for each target, the survey median joins for GDP growth, and two planned time series foundation models have not run.",
   glance: [
     [
       "The problem",
