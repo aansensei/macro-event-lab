@@ -142,3 +142,9 @@
 @media (min-width: 1440px) {
   .footer-mascot { right: max(32px, calc((100vw - 1200px) / 2)); }
 }
+
+/* on phones the Data and Project columns stack in the right column beside the long Explore column; wider screens keep four columns */
+.footer-stack { display: contents; }
+@media (max-width: 639px) {
+  .footer-stack { display: grid; gap: 28px; align-content: start; min-width: 0; }
+}

@@ -76,26 +76,28 @@ export function Footer({ dataThrough, onNavigate }: Props) {
           </ul>
         </nav>
 
-        <div className="footer-col">
-          <h2 className="footer-head">Data</h2>
-          <ul className="footer-list">
-            {SOURCES.map(([name, href, role]) => (
-              <li key={name} className="footer-source">
-                <ExternalLink className="footer-link" href={href}>{name}</ExternalLink>
-                <span className="footer-role">{role}</span>
-              </li>
-            ))}
-          </ul>
-        </div>
+        <div className="footer-stack">
+          <div className="footer-col">
+            <h2 className="footer-head">Data</h2>
+            <ul className="footer-list">
+              {SOURCES.map(([name, href, role]) => (
+                <li key={name} className="footer-source">
+                  <ExternalLink className="footer-link" href={href}>{name}</ExternalLink>
+                  <span className="footer-role">{role}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
 
-        <div className="footer-col">
-          <h2 className="footer-head">Project</h2>
-          <ul className="footer-list">
-            <li><ExternalLink className="footer-link" href={REPO}>Source code</ExternalLink></li>
-            <li><button type="button" className="footer-link" onClick={() => onNavigate("notes")}>Economist's notes</button></li>
-            <li><button type="button" className="footer-link" onClick={() => onNavigate("journal")}>Build journal</button></li>
-            <li><ExternalLink className="footer-link" href={`${REPO}/issues`}>Report an issue</ExternalLink></li>
-          </ul>
+          <div className="footer-col">
+            <h2 className="footer-head">Project</h2>
+            <ul className="footer-list">
+              <li><ExternalLink className="footer-link" href={REPO}>Source code</ExternalLink></li>
+              <li><button type="button" className="footer-link" onClick={() => onNavigate("notes")}>Economist's notes</button></li>
+              <li><button type="button" className="footer-link" onClick={() => onNavigate("journal")}>Build journal</button></li>
+              <li><ExternalLink className="footer-link" href={`${REPO}/issues`}>Report an issue</ExternalLink></li>
+            </ul>
+          </div>
         </div>
       </div>
 
