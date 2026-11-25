@@ -14,7 +14,7 @@ it("shows the name, the role, the portrait with a description and the fun fact",
   expect(html).toContain("Revisions since first print: zero.");
 });
 
-it("links to the five places, the email without a new tab and the others with one", () => {
+it("links to the five places and opens every one in a new tab", () => {
   const hrefs = [...html.matchAll(/<a [^>]*href="([^"]+)"/g)].map((match) => match[1]);
   expect(hrefs).toEqual([
     "https://aansensei.dev",
@@ -23,8 +23,8 @@ it("links to the five places, the email without a new tab and the others with on
     "mailto:cnguyen49@wisc.edu",
     "https://github.com/aansensei/macro-event-lab",
   ]);
-  expect(html.match(/target="_blank"/g)).toHaveLength(4);
-  expect(html.match(/rel="noopener noreferrer"/g)).toHaveLength(4);
+  expect(html.match(/target="_blank"/g)).toHaveLength(5);
+  expect(html.match(/rel="noopener noreferrer"/g)).toHaveLength(5);
 });
 
 it("hides the decorative status bar from assistive technology", () => {

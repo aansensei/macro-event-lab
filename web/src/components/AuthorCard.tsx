@@ -8,7 +8,7 @@ const LINKS: { icon: IconName; label: string; handle: string; href: string; exte
   { icon: "globe", label: "Portfolio", handle: "aansensei.dev", href: "https://aansensei.dev", external: true },
   { icon: "linkedin", label: "LinkedIn", handle: "in/cao-thien-an-nguyen", href: "https://www.linkedin.com/in/cao-thien-an-nguyen", external: true },
   { icon: "github", label: "GitHub", handle: "github.com/aansensei", href: "https://github.com/aansensei", external: true },
-  { icon: "mail", label: "Email", handle: "cnguyen49@wisc.edu", href: "mailto:cnguyen49@wisc.edu", external: false },
+  { icon: "mail", label: "Email", handle: "cnguyen49@wisc.edu", href: "mailto:cnguyen49@wisc.edu", external: true },
   { icon: "code", label: "Source code", handle: "github.com/aansensei/macro-event-lab", href: REPO, external: true },
 ];
 

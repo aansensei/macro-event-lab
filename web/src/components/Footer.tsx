@@ -59,7 +59,7 @@ export function Footer({ dataThrough, onNavigate }: Props) {
                 {icon}
               </a>
             ))}
-            <a className="footer-social-btn" href="mailto:cnguyen49@wisc.edu" aria-label="Email" title="Email">
+            <a className="footer-social-btn" href="mailto:cnguyen49@wisc.edu" target="_blank" rel="noopener noreferrer" aria-label="Email" title="Email">
               <Icon><rect x="3" y="5" width="18" height="14" rx="2" /><polyline points="3 7 12 13 21 7" /></Icon>
             </a>
           </div>
