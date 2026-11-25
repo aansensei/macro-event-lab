@@ -2,7 +2,8 @@ import type { ReactNode } from "react";
 
 export type IconName =
   | "sun" | "moon" | "monitor" | "chevron-down" | "arrow-up" | "arrow-right" | "arrow-up-right"
-  | "check" | "circle-check" | "circle-alert" | "circle-x" | "list" | "x" | "menu";
+  | "check" | "circle-check" | "circle-alert" | "circle-x" | "list" | "x" | "menu"
+  | "globe" | "linkedin" | "github" | "mail" | "code";
 
 const SHAPES: Record<IconName, ReactNode> = {
   sun: <><circle cx="12" cy="12" r="4" /><path d="M12 2.5v2M12 19.5v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2.5 12h2M19.5 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4" /></>,
@@ -19,6 +20,11 @@ const SHAPES: Record<IconName, ReactNode> = {
   "circle-check": <><circle cx="12" cy="12" r="9" /><path d="m8 12.5 2.8 2.8L16 9.7" /></>,
   "circle-alert": <><circle cx="12" cy="12" r="9" /><path d="M12 7.5v5M12 16.2h.01" /></>,
   "circle-x": <><circle cx="12" cy="12" r="9" /><path d="m9.2 9.2 5.6 5.6m0-5.6-5.6 5.6" /></>,
+  globe: <><circle cx="12" cy="12" r="9" /><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18" /></>,
+  linkedin: <><rect x="3" y="3" width="18" height="18" rx="3" /><path d="M8 11v5M8 8h.01M12 16v-5m0 2.5c0-1.4 1-2.5 2.3-2.5s2 1 2 2.5V16" /></>,
+  github: <path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22" />,
+  mail: <><rect x="3" y="5" width="18" height="14" rx="2.5" /><path d="m3.5 7.5 8.5 6 8.5-6" /></>,
+  code: <path d="m8 7-5 5 5 5m8-10 5 5-5 5M14 4l-4 16" />,
 };
 
 // one small set of rounded line icons on a 24 unit grid, drawn in the current text color

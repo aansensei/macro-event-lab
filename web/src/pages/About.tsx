@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 
+import { AuthorCard } from "../components/AuthorCard";
 import { ExternalLink } from "../components/ExternalLink";
 import { SectionRail, type RailSection } from "../components/SectionRail";
 
@@ -80,41 +81,7 @@ export function About() {
 
       <section className="about-section" aria-labelledby="about-author">
         <h2 className="t-h2" id="about-author">Author</h2>
-        <div className="author-card">
-          <img
-            className="author-photo"
-            src={`${import.meta.env.BASE_URL}author.jpg`}
-            alt="Avatar of Cao Thien An Nguyen"
-            width="96"
-            height="96"
-            draggable={false}
-          />
-          <div>
-            <p className="author-name">
-              Cao Thien An Nguyen
-              <img className="author-mark" src={`${import.meta.env.BASE_URL}ncta.png`} alt="ncta" width="42" height="22" draggable={false} />
-            </p>
-            <p className="author-role">Data Science and Economics, University of Wisconsin-Madison</p>
-            <p className="author-bio">
-              From Ho Chi Minh City, Vietnam, now in Madison, where the winters are long enough to build a
-              whole data pipeline indoors. I blend economics with data science to turn raw data into stories
-              about the economy that anyone can follow, and I only trust a number after checking when it was
-              first published.
-            </p>
-            <p className="author-fun">
-              <span className="author-fun-tag">Fun fact</span> Runs on crispy fried noodles (mì xào giòn):
-              one plate a week through all of 2025, about 52 plates. Revisions to this preference since the
-              first print: zero.
-            </p>
-            <dl className="author-links">
-              <div><dt>Portfolio</dt><dd><ExternalLink href="https://aansensei.dev">aansensei.dev</ExternalLink></dd></div>
-              <div><dt>LinkedIn</dt><dd><ExternalLink href="https://www.linkedin.com/in/cao-thien-an-nguyen">in/cao-thien-an-nguyen</ExternalLink></dd></div>
-              <div><dt>GitHub</dt><dd><ExternalLink href="https://github.com/aansensei">github.com/aansensei</ExternalLink></dd></div>
-              <div><dt>Email</dt><dd><a href="mailto:cnguyen49@wisc.edu">cnguyen49@wisc.edu</a></dd></div>
-              <div><dt>Code</dt><dd><ExternalLink href={REPO}>github.com/aansensei/macro-event-lab</ExternalLink></dd></div>
-            </dl>
-          </div>
-        </div>
+        <AuthorCard />
         <p className="about-note">
           Found a mistake or have a question? Open an issue on <ExternalLink href={`${REPO}/issues`}>GitHub</ExternalLink>.
         </p>
