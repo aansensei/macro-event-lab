@@ -14,6 +14,8 @@ import { PlayInvite } from "../components/PlayInvite";
 import { RailPage, type RailSection } from "../components/SectionRail";
 import { StoryNext, StoryPath } from "../components/Story";
 import { LiveForecast } from "../components/LiveForecast";
+import { LiveTrackRecord } from "../components/LiveTrackRecord";
+import { EconomicPeriods } from "../components/EconomicPeriods";
 import { ResourceError } from "../components/ResourceError";
 import { Select } from "../components/Select";
 import { TargetSwitch } from "../components/TargetSwitch";
@@ -67,6 +69,8 @@ export function Arena() {
         <MoreScoresTable rows={rows} target={target} />
         <NestedTestsTable tests={data.nested_tests ?? []} contestants={data.contestants} target={target} window={window} />
         <CoverageCalibration rows={data.calibration ?? []} contestants={data.contestants} target={target} />
+        <EconomicPeriods rows={data.regimes ?? []} contestants={data.contestants} target={target} />
+        <LiveTrackRecord target={target} contestants={data.contestants} />
       </section>
       <section className="arena-section" aria-labelledby="arena-history">
         <h2 className="t-h3" id="arena-history">First published number against forecasts</h2>

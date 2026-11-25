@@ -22,6 +22,15 @@ export interface NestedTest {
   target: TargetId; restricted: string; larger: string; window: ArenaWindow;
   n: number; statistic: number | null; p_value: number | null;
 }
+export const ECONOMIC_PERIODS = [
+  { id: "2000_2009", label: "2000 to 2009" }, { id: "2010_2019", label: "2010 to 2019" },
+  { id: "2020", label: "2020" }, { id: "2021_2023", label: "2021 to 2023" },
+  { id: "2024_on", label: "2024 onward" },
+] as const;
+export interface RegimeScore {
+  target: TargetId; contestant: string; regime: string; n: number;
+  rmse: number | null; mae: number | null; naive_rmse: number | null; vs_naive_pct: number | null;
+}
 export interface ParsedArenaScore extends ArenaScore {
   n_intervals: number | null; coverage_90_lo: number | null; coverage_90_hi: number | null;
   pinball_05: number | null; pinball_50: number | null; pinball_95: number | null;
@@ -36,21 +45,25 @@ export interface CalibrationRow {
   target: TargetId; contestant: string; level: number; n: number;
   coverage: number; coverage_lo: number; coverage_hi: number;
 }
+export interface ForecastContribution { baseline: number; terms: { feature: string; value: number }[] }
 export interface LiveForecastRow {
   target: TargetId; period: string; as_of: string; values: Record<string, number | null>;
   // predictive quantiles at probabilities 0.05 to 0.95 in steps of 0.05, for contestants with enough history
   quantiles?: Record<string, number[]>;
+  contributions?: Record<string, ForecastContribution>;
 }
 export interface Arena {
   schema_version: 1; information_date: string; targets: ArenaTarget[]; contestants: Contestant[];
   forecasts: ArenaForecast[]; scores: ArenaScore[]; leakage: LeakageRow[]; live: LiveForecastRow[];
   nested_tests?: NestedTest[];
   calibration?: CalibrationRow[];
+  regimes?: RegimeScore[];
 }
 export interface ParsedArena extends Arena {
   scores: ParsedArenaScore[];
   nested_tests: NestedTest[];
   calibration: CalibrationRow[];
+  regimes: RegimeScore[];
 }
 
 function nullableNumber(value: unknown, where: string, maximum = Infinity, minimum = -Infinity): number | null {
@@ -181,6 +194,19 @@ export function parseArena(value: unknown): ParsedArena {
     return { target: targetReference(row.target), contestant: contestantReference(row.contestant), level,
       n: countValue(row.n, "Calibration forecast count"), coverage, coverage_lo: low, coverage_hi: high };
   });
+  const regimes = root.regimes === undefined ? [] : arrayValue(root.regimes, "Economic periods").map((raw): RegimeScore => {
+    const row = objectValue(raw, "Economic period score");
+    const regime = textValue(row.regime, "Economic period");
+    if (!ECONOMIC_PERIODS.some((period) => period.id === regime)) throw new Error("Unknown economic period.");
+    const n = countValue(row.n, "Economic period count");
+    const rmse = nullableNumber(row.rmse, "Period RMSE", Infinity, 0);
+    const mae = nullableNumber(row.mae, "Period MAE", Infinity, 0);
+    const relative = nullableNumber(row.vs_naive_pct, "Period difference");
+    if (n < 4 && (rmse !== null || mae !== null || relative !== null)) throw new Error("Economic periods with fewer than four forecasts cannot be scored.");
+    return { target: targetReference(row.target), contestant: contestantReference(row.contestant), regime, n, rmse, mae,
+      naive_rmse: nullableNumber(row.naive_rmse, "Period naive RMSE", Infinity, 0), vs_naive_pct: relative };
+  });
+  uniqueValues(regimes.map((row) => `${row.target}:${row.contestant}:${row.regime}`), "Economic periods");
   const live = arrayValue(root.live, "Live forecasts").map((raw): LiveForecastRow => {
     const row = objectValue(raw, "Live forecast");
     const entry: LiveForecastRow = { target: targetReference(row.target), period: periodValue(row.period), as_of: originValue(row.as_of), values: forecastValues(row.values) };
@@ -198,6 +224,25 @@ export function parseArena(value: unknown): ParsedArena {
       }
       entry.quantiles = quantiles;
     }
+    if (row.contributions !== undefined) {
+      const contributions: Record<string, ForecastContribution> = {};
+      for (const [id, raw] of Object.entries(objectValue(row.contributions, "Forecast contributions"))) {
+        contestantReference(id);
+        if (id !== "ridge" && id !== "lasso") throw new Error("Only Ridge and LASSO have forecast contributions.");
+        const parts = objectValue(raw, "Forecast contribution");
+        const baseline = nullableNumber(parts.baseline, "Forecast baseline");
+        if (baseline === null) throw new Error("Forecast baseline is missing.");
+        const terms = arrayValue(parts.terms, "Forecast terms").map((raw) => {
+          const term = objectValue(raw, "Forecast term");
+          const value = nullableNumber(term.value, "Forecast term value");
+          if (value === null) throw new Error("Forecast term is missing.");
+          return { feature: textValue(term.feature, "Feature name"), value };
+        });
+        uniqueValues(terms.map((term) => term.feature), "Forecast terms");
+        contributions[id] = { baseline, terms };
+      }
+      entry.contributions = contributions;
+    }
     return entry;
   });
   uniqueValues(forecasts.map((row) => `${row.target}:${row.period}`), "Forecasts");
@@ -206,7 +251,7 @@ export function parseArena(value: unknown): ParsedArena {
   uniqueValues(leakage.map((row) => row.contestant), "Audit rows");
   uniqueValues(live.map((row) => `${row.target}:${row.period}:${row.as_of}`), "Live forecasts");
   return { schema_version: 1, information_date: informationDate, targets, contestants,
-    forecasts: forecasts.sort((a, b) => a.period.localeCompare(b.period)), scores, leakage, live, nested_tests: nestedTests, calibration };
+    forecasts: forecasts.sort((a, b) => a.period.localeCompare(b.period)), scores, leakage, live, nested_tests: nestedTests, calibration, regimes };
 }
 
 export async function loadArena(fetchImpl: typeof fetch = fetch): Promise<Arena> {

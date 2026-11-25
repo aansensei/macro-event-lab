@@ -108,3 +108,11 @@
 .release-odds-bar { display: block; height: 10px; border-radius: 5px; background-color: var(--surface-hover); overflow: hidden; }
 .release-odds-bar > span { display: block; height: 100%; background-color: var(--accent); }
 .release-odds-value { text-align: right; }
+.forecast-push { display: grid; gap: 12px; padding-top: 18px; border-top: 1px solid var(--border); min-width: 0; }
+.forecast-push > p { margin: 0; }
+.forecast-push-bars { display: grid; gap: 14px; list-style: none; margin: 0; padding: 0; }
+.forecast-push-bars li { min-width: 0; }
+.forecast-push-label { display: flex; justify-content: space-between; align-items: baseline; gap: 16px; font-size: 13px; overflow-wrap: anywhere; }
+.forecast-push-label .num { flex: none; }
+.forecast-push-bars svg { display: block; width: 100%; height: 14px; margin-top: 5px; }
+.forecast-push-total { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px; padding-top: 14px; border-top: 1px solid var(--border-control); font-size: 14px; }

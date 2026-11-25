@@ -156,7 +156,9 @@ def test_only_allowlisted_public_files_are_copied_to_site() -> None:
     assert "*" not in copy_step
     assert "?" not in copy_step
     copied = set(re.findall(r"\$MEL_DATA_DIR/web_public/([^\s\"']+)", copy_step))
-    allowed = set(public_build.PUBLIC_FILES) | {"ledger.json", "reactions.json"}
+    allowed = set(public_build.PUBLIC_FILES) | {
+        "ledger.json", "ledger_track.json", "reactions.json",
+    }
     assert copied
     assert copied <= allowed
     if PUBLIC_ASSETS_PATH.is_file():

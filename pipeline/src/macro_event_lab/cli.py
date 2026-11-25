@@ -15,6 +15,7 @@ from macro_event_lab import (
     config,
     freshness,
     ledger,
+    ledger_track,
     nowcast,
     pit,
     public_build,
@@ -253,6 +254,26 @@ def cmd_ledger_summary(args: argparse.Namespace) -> None:
     print(f"Wrote {args.out}: {summary['rows']} rows, chain_ok={summary['chain_ok']}")
 
 
+def cmd_ledger_track(args: argparse.Namespace) -> None:
+    rows = ledger.read_ledger(args.file)
+    if ledger.verify_ledger(rows):
+        print("The forecast ledger failed verification. No track record was written.")
+        raise SystemExit(1)
+    observations = pl.read_parquet(config.get_paths().silver / "alfred_observations.parquet")
+    from macro_event_lab.arena.targets import first_print_targets
+
+    prints = [
+        {"target": row["target"], "reference_period": row["period"].isoformat(),
+         "release_date": row["release_date"].isoformat(), "first_print": row["first_print"]}
+        for row in first_print_targets(observations).iter_rows(named=True)
+    ]
+    payload = ledger_track.score_ledger(rows, prints)
+    args.out.parent.mkdir(parents=True, exist_ok=True)
+    args.out.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    print(f"Wrote {args.out}: {len(payload['scored'])} scored, "
+          f"{len(payload['pending'])} pending periods, {payload['late']} late")
+
+
 def cmd_ledger_append(args: argparse.Namespace) -> None:
     arena = json.loads(args.arena.read_text(encoding="utf-8"))
     recorded_at = args.recorded_at or datetime.now(UTC).strftime("%Y-%m-%dT%H:%M:%SZ")
@@ -386,6 +407,11 @@ def main(argv: list[str] | None = None) -> None:
         help="path to the ledger JSONL file",
     )
     p_verify_ledger.set_defaults(func=cmd_verify_ledger)
+
+    p_ledger_track = sub.add_parser("ledger-track", help="score forecasts against first prints")
+    p_ledger_track.add_argument("--file", type=Path, default=Path("ledger/forecast_ledger.jsonl"))
+    p_ledger_track.add_argument("--out", type=Path, required=True)
+    p_ledger_track.set_defaults(func=cmd_ledger_track)
 
     p_ledger_summary = sub.add_parser(
         "ledger-summary", help="write a public JSON summary of the forecast ledger"

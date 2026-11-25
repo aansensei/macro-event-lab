@@ -50,7 +50,7 @@ jobs:
             if [ "$changed" != "FAILED" ] && [ -n "$changed" ] && ! echo "$changed" | grep -qE '^(pipeline/|\.github/|ledger/|Dockerfile)'; then
               mkdir -p web/public/data
               reuse=1
-              for name in revisions.json nowcast.json status.json arena.json briefing.json ledger.json calendar.ics feed.xml arena_forecasts.parquet arena_scores.parquet revisions.parquet arena_forecasts.csv arena_scores.csv revisions.csv; do
+              for name in revisions.json nowcast.json status.json arena.json briefing.json ledger.json ledger_track.json calendar.ics feed.xml arena_forecasts.parquet arena_scores.parquet revisions.parquet arena_forecasts.csv arena_scores.csv revisions.csv; do
                 if ! curl -fsSL --retry 2 -o "web/public/data/$name" "$SITE/data/$name"; then reuse=0; break; fi
                 case "$name" in *.json) jq empty "web/public/data/$name" || { reuse=0; break; } ;; esac
               done
@@ -154,6 +154,9 @@ jobs:
       - name: Summarize the forecast ledger for the site
         if: steps.mode.outputs.full == 'true'
         run: python -m macro_event_lab ledger-summary --file ledger/forecast_ledger.jsonl --out "$MEL_DATA_DIR/web_public/ledger.json"
+      - name: Score recorded forecasts against first published numbers
+        if: steps.mode.outputs.full == 'true'
+        run: python -m macro_event_lab ledger-track --file ledger/forecast_ledger.jsonl --out "$MEL_DATA_DIR/web_public/ledger_track.json"
       - name: Check source freshness
         id: fresh
         if: steps.mode.outputs.full == 'true'
@@ -172,7 +175,7 @@ jobs:
         if: steps.mode.outputs.full == 'true'
         run: |
           mkdir -p web/public/data
-          cp "$MEL_DATA_DIR/web_public/revisions.json" "$MEL_DATA_DIR/web_public/nowcast.json" "$MEL_DATA_DIR/web_public/status.json" "$MEL_DATA_DIR/web_public/arena.json" "$MEL_DATA_DIR/web_public/briefing.json" "$MEL_DATA_DIR/web_public/ledger.json" "$MEL_DATA_DIR/web_public/calendar.ics" "$MEL_DATA_DIR/web_public/feed.xml" "$MEL_DATA_DIR/web_public/arena_forecasts.parquet" "$MEL_DATA_DIR/web_public/arena_scores.parquet" "$MEL_DATA_DIR/web_public/revisions.parquet" "$MEL_DATA_DIR/web_public/arena_forecasts.csv" "$MEL_DATA_DIR/web_public/arena_scores.csv" "$MEL_DATA_DIR/web_public/revisions.csv" web/public/data/
+          cp "$MEL_DATA_DIR/web_public/revisions.json" "$MEL_DATA_DIR/web_public/nowcast.json" "$MEL_DATA_DIR/web_public/status.json" "$MEL_DATA_DIR/web_public/arena.json" "$MEL_DATA_DIR/web_public/briefing.json" "$MEL_DATA_DIR/web_public/ledger.json" "$MEL_DATA_DIR/web_public/ledger_track.json" "$MEL_DATA_DIR/web_public/calendar.ics" "$MEL_DATA_DIR/web_public/feed.xml" "$MEL_DATA_DIR/web_public/arena_forecasts.parquet" "$MEL_DATA_DIR/web_public/arena_scores.parquet" "$MEL_DATA_DIR/web_public/revisions.parquet" "$MEL_DATA_DIR/web_public/arena_forecasts.csv" "$MEL_DATA_DIR/web_public/arena_scores.csv" "$MEL_DATA_DIR/web_public/revisions.csv" web/public/data/
           reactions_file="$MEL_DATA_DIR/web_public/reactions.json"
           if [ -f "$reactions_file" ]; then cp "$reactions_file" web/public/data/; fi
       - uses: actions/setup-node@v7

@@ -29,10 +29,12 @@ MIN_AR_OBSERVATIONS = 20
 KINDS = {
     "naive": "baseline", "ar": "classical", "ridge": "classical",
     "factor_ridge": "classical", "lasso": "classical", "spf": "human",
+    "ensemble": "classical",
 }
 LABELS = {
     "naive": "Naive", "ar": "Autoregression", "ridge": "Ridge",
     "factor_ridge": "Factors and ridge", "lasso": "LASSO", "spf": "Professional forecasters",
+    "ensemble": "Online ensemble",
 }
 NOTES = {
     "naive": "Repeats the previous first published number.",
@@ -41,6 +43,8 @@ NOTES = {
     "factor_ridge": "Principal components of the indicators, then ridge on one to four factors.",
     "lasso": "LASSO regression on the indicators known on the forecast date.",
     "spf": "Median of the Survey of Professional Forecasters for the current quarter.",
+    "ensemble": ("Weights the other contestants by how well each did in releases that were "
+                 "already public, then averages their forecasts."),
 }
 
 
@@ -182,13 +186,24 @@ def ridge_forecast(
     train_made_on: Sequence[date], x_now: np.ndarray, made_on: date,
 ) -> float | None:
     """Ridge on rows whose answer was public on made_on; missing features take the training mean."""
+    result = ridge_parts(train_x, train_y, train_release, train_made_on, x_now, made_on)
+    return result[0] if result is not None else None
+
+
+def ridge_parts(
+    train_x: np.ndarray, train_y: Sequence[float], train_release: Sequence[date],
+    train_made_on: Sequence[date], x_now: np.ndarray, made_on: date,
+) -> tuple[float, float, list[float]] | None:
+    """Return the ridge forecast, its intercept and each standardized feature contribution."""
     prepared = _training_matrix(train_x, train_y, train_release, train_made_on, made_on)
     if prepared is None:
         return None
     x, y, release, forecast_dates, means = prepared
     lam = choose_lambda(x, y, release_dates=release, as_of_dates=forecast_dates)
     model = ridge_fit(x, y, lam)
-    return float(model.predict(_fill_missing(x_now, means).reshape(1, -1))[0])
+    now = _fill_missing(x_now, means).reshape(1, -1)
+    terms = ((now[0] - model.mean) / model.scale) * model.coef
+    return float(model.predict(now)[0]), model.intercept, terms.tolist()
 
 
 FACTOR_COUNTS = (1, 2, 3, 4)
@@ -235,13 +250,26 @@ def lasso_forecast(
     train_made_on: Sequence[date], x_now: np.ndarray, made_on: date,
 ) -> float | None:
     """LASSO on the standardized indicators with the penalty chosen by the inner walk forward."""
+    result = lasso_parts(train_x, train_y, train_release, train_made_on, x_now, made_on)
+    return result[0] if result is not None else None
+
+
+def lasso_parts(
+    train_x: np.ndarray, train_y: Sequence[float], train_release: Sequence[date],
+    train_made_on: Sequence[date], x_now: np.ndarray, made_on: date,
+) -> tuple[float, float, list[float]] | None:
+    """Return the LASSO forecast, its intercept and each standardized feature contribution."""
     prepared = _training_matrix(train_x, train_y, train_release, train_made_on, made_on)
     if prepared is None:
         return None
     x, y, release, forecast_dates, means = prepared
     grid = linalg.lasso_grid(linalg.standardize(x)[0], y)
     best = selection.select_candidate(grid, x, y, release, forecast_dates, _lasso_fit_predict)
-    return _lasso_fit_predict(best, x, y, _fill_missing(x_now, means).reshape(1, -1))
+    z_train, z_now, _mean, _scale = linalg.standardize(
+        x, _fill_missing(x_now, means).reshape(1, -1),
+    )
+    intercept, coefficients = linalg.lasso_fit(z_train, y, best)
+    return float(intercept + z_now[0] @ coefficients), intercept, (z_now[0] * coefficients).tolist()
 
 
 def spf_forecast(survey: pl.DataFrame, period: date, made_on: date) -> float | None:

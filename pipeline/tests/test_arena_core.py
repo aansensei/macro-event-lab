@@ -179,9 +179,12 @@ def test_arena_file_follows_the_contract_and_stays_point_in_time() -> None:
     assert payload["schema_version"] == 1
     assert {t["id"] for t in payload["targets"]} == {"gdp", "cpi", "payrolls"}
     assert [c["id"] for c in payload["contestants"]] == [
-        "naive", "ar", "ridge", "factor_ridge", "lasso",
+        "naive", "ar", "ridge", "factor_ridge", "lasso", "ensemble",
     ]
     assert payload["leakage"] == []
+    assert any("ensemble" in row["intervals"] for row in payload["forecasts"])
+    assert any(row["contestant"] == "ensemble" for row in payload["calibration"])
+    assert "ensemble" in payload["live"][0]["values"]
     release = {
         (r["target"], r["period"].isoformat()): r["release_date"]
         for r in first_print_targets(observations).iter_rows(named=True)
@@ -277,7 +280,7 @@ def test_build_arena_keeps_existing_scores_unchanged_and_adds_new_fields() -> No
     ]
     observations = monthly_series("CPIAUCSL", random_walk(120))
     payload = export.build_arena(observations, None, date(2010, 6, 1))
-    scores = payload["scores"]
+    scores = [row for row in payload["scores"] if row["contestant"] != "ensemble"]
     expected_keys = [
         "target", "contestant", "window", "n", "mae", "rmse", "coverage_90", "dm_vs_naive_p",
         "n_intervals", "coverage_90_lo", "coverage_90_hi",

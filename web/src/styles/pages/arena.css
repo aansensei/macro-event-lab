@@ -1,4 +1,15 @@
 .arena-page { width: 100%; min-width: 0; }
+.live-track { margin-top: 32px; padding-top: 28px; border-top: 1px solid var(--border-control); }
+.live-track h3 { margin: 8px 0 12px; }
+.track-waiting { display: flex; align-items: flex-start; gap: 20px; padding: 20px; margin: 20px 0; border: 1px solid var(--border); border-left: 3px solid var(--accent); border-radius: 10px; background: var(--surface); }
+.track-count { color: var(--accent); font-size: 40px; line-height: 1.1; flex: none; }
+.track-waiting p { margin-bottom: 0; max-width: 65ch; color: var(--text-muted); }
+.track-record-list { list-style: none; padding: 0; }
+.track-record-list li { padding-block: 16px; border-bottom: 1px solid var(--border); overflow-wrap: anywhere; }
+.track-record-list dl { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 150px), 1fr)); gap: 12px; }
+.track-record-list dt { font-size: 12px; color: var(--text-muted); }
+.track-record-list dd { margin: 5px 0 0; font-size: 13px; }
+@media (max-width: 639px) { .track-waiting { flex-direction: column; gap: 12px; padding: 16px; } }
 .arena-intro p, .arena-section > p, .arena-leakage > p { max-width: 70ch; }
 .arena-section { margin-block: 32px; }
 .arena-targets { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin-block: 28px; }

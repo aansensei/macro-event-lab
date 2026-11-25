@@ -8,6 +8,7 @@ import numpy as np
 import polars as pl
 
 from macro_event_lab.arena import conformal, contestants
+from macro_event_lab.arena.ensemble import add_ensemble
 from macro_event_lab.arena.targets import data_as_of
 
 FORECAST_SCHEMA = {
@@ -60,6 +61,7 @@ def origin_forecasts(
     target: str, frame: pl.DataFrame, survey: pl.DataFrame | None,
     train_x: np.ndarray | None, train_y: list[float], train_release: list[date],
     train_made_on: list[date], x_now: np.ndarray | None, period: date, made_on: date,
+    parts: dict[str, tuple[float, float, list[float]]] | None = None,
 ) -> dict[str, float | None]:
     """Forecasts from every contestant that can produce one at `(period, made_on)`."""
     known = data_as_of(frame, made_on).sort("period")["first_print"].to_list()
@@ -71,6 +73,15 @@ def origin_forecasts(
         forecasts["spf"] = contestants.spf_forecast(survey, period, made_on)
     if x_now is not None and train_x is not None:
         for name, forecast in PENALIZED_CONTESTANTS:
+            if parts is not None and name in ("ridge", "lasso"):
+                decompose = contestants.ridge_parts if name == "ridge" else contestants.lasso_parts
+                result = decompose(
+                    train_x, train_y, train_release, train_made_on, x_now, made_on,
+                )
+                forecasts[name] = result[0] if result else None
+                if result is not None:
+                    parts[name] = result
+                continue
             forecasts[name] = forecast(
                 train_x, train_y, train_release, train_made_on, x_now, made_on,
             )
@@ -107,7 +118,7 @@ def run_walk_forward(
                     "release_date": truth[period]["release_date"], "lo": None, "hi": None,
                 })
     forecasts_frame = pl.DataFrame(rows, schema=FORECAST_SCHEMA, orient="row")
-    return add_intervals(forecasts_frame)
+    return add_intervals(add_ensemble(forecasts_frame))
 
 
 def add_intervals(forecasts: pl.DataFrame) -> pl.DataFrame:

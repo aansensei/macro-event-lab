@@ -2,6 +2,7 @@ import type { Arena } from "./arena";
 
 export const arenaFixture: Arena = {
   schema_version: 1, information_date: "2026-11-20",
+  regimes: [],
   targets: [
     { id: "gdp", label: "GDP growth", unit: "annualized percent q/q", frequency: "quarterly" },
     { id: "cpi", label: "Inflation", unit: "percent m/m", frequency: "monthly" },

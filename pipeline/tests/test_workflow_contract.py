@@ -24,6 +24,7 @@ ALLOWED_PUBLIC_DATA_FILES = {
     "arena.json",
     "briefing.json",
     "ledger.json",
+    "ledger_track.json",
     "reactions.json",
     "calendar.ics",
     "feed.xml",
@@ -297,6 +298,18 @@ def test_pages_workflow_public_allowlist_unchanged() -> None:
     assert copied_files
     assert set(copied_files) == ALLOWED_PUBLIC_DATA_FILES
     assert len(copied_files) == len(ALLOWED_PUBLIC_DATA_FILES)
+
+
+def test_track_record_is_scored_after_the_ledger_summary_in_full_builds() -> None:
+    _, workflow = _load_workflow()
+    steps = _build_steps(workflow)
+    summary = _find_step(steps, "Summarize the forecast ledger for the site")
+    track = _find_step(steps, "Score recorded forecasts against first published numbers")
+    assert steps.index(summary) < steps.index(track)
+    assert track.get("if") == "steps.mode.outputs.full == 'true'"
+    run = str(track.get("run", ""))
+    assert "ledger-track --file ledger/forecast_ledger.jsonl" in run
+    assert '--out "$MEL_DATA_DIR/web_public/ledger_track.json"' in run
 
 
 def test_pages_workflow_ledger_push_retries_with_backoff_and_rebase_abort() -> None:

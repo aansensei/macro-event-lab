@@ -1,5 +1,6 @@
 import { Icon } from "../components/Icon";
 import { ReleaseOdds } from "../components/ReleaseOdds";
+import { ForecastPush } from "../components/ForecastPush";
 import { PageGuide } from "../components/PageGuide";
 import { ResourceError } from "../components/ResourceError";
 import { RailPage, type RailSection } from "../components/SectionRail";
@@ -67,6 +68,7 @@ function ReleaseCard({ release, informationDate, arena }: { release: BriefingRel
       </strong>
     </p>
     {live && arena && <ReleaseOdds row={live} contestants={arena.contestants} unit={release.unit} />}
+    {live && <ForecastPush row={live} unit={release.unit} />}
     {note && <p className="briefing-arena-link briefing-note-link">
       <a href={noteSearch(note.slug)}>Read the economist's note for this release <Icon name="arrow-right" size={16} /></a>
     </p>}

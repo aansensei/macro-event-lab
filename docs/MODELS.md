@@ -72,6 +72,14 @@ The median forecast of current quarter real GDP growth from the Federal Reserve 
 
 Time series foundation models are planned as the last two contestants. They are not part of any result yet.
 
+### Online ensemble
+
+The additional ensemble contestant averages eligible model forecasts using exponential weights from recent public errors. An expert needs at least 12 public errors and a current forecast, and at least two experts must qualify. Up to 40 errors per expert determine its weight. Errors whose actual was not public at the origin are excluded. When the naive scale is unavailable or zero the weights are equal. The dated roster entry in the evaluation protocol specifies the loss and weighting formula.
+
+### Live forecast contributions
+
+Ridge and LASSO expose their fitted baseline and the contribution of each standardized indicator for upcoming releases. A missing current indicator takes the training mean and contributes zero to numerical precision. The terms retain full precision and their sum is checked against the forecast before export. The display rounds values. These terms describe the model's correlations and do not identify economic causes.
+
 ## Intervals and scores
 
 ```text
@@ -107,6 +115,8 @@ The p values are not adjusted for the number of comparisons and describe a short
 | --- | --- |
 | Targets, origins, first prints | `pipeline/src/macro_event_lab/arena/targets.py` |
 | Contestants | `pipeline/src/macro_event_lab/arena/contestants.py` |
+| Online ensemble | `pipeline/src/macro_event_lab/arena/ensemble.py` |
+| Prospective ledger scoring | `pipeline/src/macro_event_lab/ledger_track.py` |
 | Standardization, principal components, LASSO | `pipeline/src/macro_event_lab/arena/linalg.py` |
 | Inner walk forward selection | `pipeline/src/macro_event_lab/arena/selection.py` |
 | Intervals | `pipeline/src/macro_event_lab/arena/conformal.py` |

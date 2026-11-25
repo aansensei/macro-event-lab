@@ -3,12 +3,14 @@
 from __future__ import annotations
 
 import json
+import math
 from datetime import date
 from pathlib import Path
 
 import polars as pl
 
 from macro_event_lab.arena import calibration, conformal, contestants, metrics
+from macro_event_lab.arena.ensemble import ensemble_forecast
 from macro_event_lab.arena.harness import (
     origin_forecasts,
     run_walk_forward,
@@ -28,8 +30,15 @@ from macro_event_lab.config import Paths
 SCHEMA_VERSION = 1
 LEVEL = 0.9
 DIGITS = 4
-ORDER = ("naive", "ar", "ridge", "factor_ridge", "lasso", "spf")
+ORDER = ("naive", "ar", "ridge", "factor_ridge", "lasso", "ensemble", "spf")
 NESTED_PAIRS = (("naive", "ar"), ("ar", "ridge"))
+REGIMES = (
+    ("2000_2009", "2000 to 2009", 2000, 2009),
+    ("2010_2019", "2010 to 2019", 2010, 2019),
+    ("2020", "2020", 2020, 2020),
+    ("2021_2023", "2021 to 2023", 2021, 2023),
+    ("2024_on", "2024 onward", 2024, 9999),
+)
 
 
 def _round(value: float | None) -> float | None:
@@ -118,6 +127,33 @@ def _scores(forecasts: pl.DataFrame) -> list[dict[str, object]]:
     )
 
 
+def _regimes(forecasts: pl.DataFrame) -> list[dict[str, object]]:
+    """Describe fixed economic periods using errors on each contestant's matched periods."""
+    baseline = {(r["target"], r["period"]): r["actual"] - r["value"]
+                for r in forecasts.filter(pl.col("contestant") == "naive").iter_rows(named=True)}
+    rows: list[dict[str, object]] = []
+    for (target, name), group in forecasts.group_by(["target", "contestant"]):
+        for regime, _label, first, last in REGIMES:
+            points = [r for r in group.iter_rows(named=True) if first <= r["period"].year <= last]
+            if not points:
+                continue
+            errors = [r["actual"] - r["value"] for r in points]
+            paired = [baseline[(target, r["period"])] for r in points
+                      if (target, r["period"]) in baseline]
+            base = (metrics.rmse(paired) if name != "naive" and len(paired) == len(points)
+                    else None)
+            rmse = metrics.rmse(errors) if len(points) >= 4 else None
+            rows.append({"target": target, "contestant": name, "regime": regime,
+                         "n": len(points), "rmse": _round(rmse),
+                         "mae": _round(metrics.mae(errors)) if len(points) >= 4 else None,
+                         "naive_rmse": _round(base),
+                         "vs_naive_pct": _round(100 * (rmse / base - 1))
+                         if rmse is not None and base is not None and base > 0 else None})
+    order = {r[0]: i for i, r in enumerate(REGIMES)}
+    return sorted(rows, key=lambda r: (str(r["target"]), ORDER.index(str(r["contestant"])),
+                                       order[str(r["regime"])]))
+
+
 def _nested_tests(forecasts: pl.DataFrame) -> list[dict[str, object]]:
     """Clark and West nested model tests per target, pair and window."""
     if forecasts.is_empty():
@@ -181,6 +217,24 @@ def _live_quantiles(
     return out
 
 
+def _contributions(
+    target: str, parts: dict[str, tuple[float, float, list[float]]],
+) -> dict[str, object]:
+    """Preserve additive terms at full precision and check them against each forecast."""
+    names = contestants.FEATURES if target == "gdp" else contestants.monthly_feature_names(target)
+    output: dict[str, object] = {}
+    for name, (forecast, baseline, terms) in parts.items():
+        total = baseline + sum(terms)
+        if not math.isfinite(total) or abs(total - forecast) > 1e-6:
+            raise ValueError(f"Forecast contributions do not sum to the {name} forecast.")
+        output[name] = {
+            "baseline": baseline,
+            "terms": [{"feature": key, "value": value}
+                      for key, value in zip(names, terms, strict=True)],
+        }
+    return output
+
+
 def _live(
     observations: pl.DataFrame, targets: pl.DataFrame, origins: pl.DataFrame,
     survey: pl.DataFrame | None, information_date: date, forecasts: pl.DataFrame | None = None,
@@ -202,16 +256,21 @@ def _live(
             schema=ORIGIN_SCHEMA, orient="row",
         )
         x_now = target_features(observations, targets, live_origin, target).get(period)
+        parts: dict[str, tuple[float, float, list[float]]] = {}
         raw = origin_forecasts(
             target, frame, survey, train_x, train_y, train_release, train_made_on,
-            x_now, period, information_date,
+            x_now, period, information_date, parts,
         )
+        if forecasts is not None:
+            raw["ensemble"] = ensemble_forecast(forecasts, target, period, information_date, raw)
         values = {name: _round(raw[name]) for name in ORDER if raw.get(name) is not None}
         if values:
             entry: dict[str, object] = {
                 "target": target, "period": period.isoformat(),
                 "as_of": information_date.isoformat(), "values": values,
             }
+            if parts:
+                entry["contributions"] = _contributions(target, parts)
             quantiles = _live_quantiles(forecasts, target, raw, information_date)
             if quantiles:
                 entry["quantiles"] = quantiles
@@ -253,6 +312,7 @@ def build_arena(
         ],
         "forecasts": [by_period[key] for key in sorted(by_period)],
         "scores": _scores(forecasts),
+        "regimes": _regimes(forecasts),
         "nested_tests": _nested_tests(forecasts),
         "leakage": [],
         "calibration": _calibration(forecasts),

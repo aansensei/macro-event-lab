@@ -288,6 +288,7 @@ def test_existing_score_fields_unchanged_against_fixed_fixture() -> None:
     observations = _monthly_series("CPIAUCSL", _random_walk(120))
     payload = export.build_arena(observations, None, date(2010, 6, 1))
     scores = payload["scores"]
+    scores = [row for row in scores if row["contestant"] != "ensemble"]
     assert len(scores) == len(FIXED_FIXTURE_BASELINE)
     for actual_row, expected_row in zip(scores, FIXED_FIXTURE_BASELINE, strict=True):
         assert list(actual_row.keys()) == EXPECTED_SCORE_KEYS
