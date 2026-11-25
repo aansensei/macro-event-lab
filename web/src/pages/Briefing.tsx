@@ -1,7 +1,9 @@
 import { Icon } from "../components/Icon";
+import { ReleaseOdds } from "../components/ReleaseOdds";
 import { PageGuide } from "../components/PageGuide";
 import { ResourceError } from "../components/ResourceError";
 import { RailPage, type RailSection } from "../components/SectionRail";
+import { loadArena, type Arena } from "../data/arena";
 import { BRIEFING_NOT_BUILT, loadBriefing, type BriefingRelease } from "../data/briefing";
 import { useResource } from "../hooks/useResource";
 import { daysUntil, formatReleaseDate, periodTitle } from "../lib/briefingWords";
@@ -27,7 +29,8 @@ function formatNumber(value: number): string {
   return Number.isInteger(value) ? value.toFixed(1) : value.toFixed(2);
 }
 
-function ReleaseCard({ release, informationDate }: { release: BriefingRelease; informationDate: string }) {
+function ReleaseCard({ release, informationDate, arena }: { release: BriefingRelease; informationDate: string; arena: Arena | null }) {
+  const live = arena?.live.find((row) => row.target === release.target && row.period === release.period);
   const hasSchedule = release.release_date !== null;
   const note = noteForRelease(release.target, release.release_date);
   return <article className="briefing-card">
@@ -63,6 +66,7 @@ function ReleaseCard({ release, informationDate }: { release: BriefingRelease; i
         {release.last_first_print === null ? "Not available" : `${formatNumber(release.last_first_print)} (${release.unit})`}
       </strong>
     </p>
+    {live && arena && <ReleaseOdds row={live} contestants={arena.contestants} unit={release.unit} />}
     {note && <p className="briefing-arena-link briefing-note-link">
       <a href={noteSearch(note.slug)}>Read the economist's note for this release <Icon name="arrow-right" size={16} /></a>
     </p>}
@@ -74,6 +78,8 @@ function ReleaseCard({ release, informationDate }: { release: BriefingRelease; i
 
 export function Briefing() {
   const { state, retry } = useResource(loadBriefing);
+  const arenaState = useResource(loadArena).state;
+  const arena = arenaState.kind === "ready" ? arenaState.data : null;
   if (state.kind !== "ready") {
     return <div className="briefing-page page-fade">
       <p className="section-kicker">Next releases</p>
@@ -113,7 +119,7 @@ export function Briefing() {
       {data.releases.length === 0
         ? <p className="state-banner">No upcoming releases are listed in the current briefing.</p>
         : <div className="briefing-grid">
-          {data.releases.map((release) => <ReleaseCard key={`${release.target}:${release.period}`} release={release} informationDate={data.information_date} />)}
+          {data.releases.map((release) => <ReleaseCard key={`${release.target}:${release.period}`} release={release} informationDate={data.information_date} arena={arena} />)}
         </div>}
     </section>
 

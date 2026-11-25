@@ -94,3 +94,17 @@
   .briefing-page { max-width: env(viewport-segment-width 0 0); margin-inline: 0; }
   .briefing-grid { grid-template-columns: minmax(0, 1fr); }
 }
+/* the odds block of a release card: level chips and one bar per contestant */
+.release-odds { display: grid; gap: 10px; padding-top: 12px; border-top: 1px solid var(--border); }
+.release-odds-title { margin: 0; font-size: 14px; font-weight: 600; }
+.release-odds-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.release-odds-chip { min-height: 44px; min-width: 56px; padding: 6px 12px; border: 1px solid var(--border-control); border-radius: 10px; background-color: var(--bg); color: var(--text); font-size: 14px; cursor: pointer; }
+.release-odds-chip:hover { border-color: var(--accent); }
+.release-odds-chip[aria-pressed="true"] { border-color: var(--accent); background-color: var(--accent-tint); font-weight: 600; }
+.release-odds-chip:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.release-odds-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.release-odds-list li { display: grid; grid-template-columns: minmax(0, 9em) minmax(0, 1fr) 5.5em; align-items: center; gap: 10px; font-size: 14px; }
+.release-odds-name { overflow-wrap: anywhere; }
+.release-odds-bar { display: block; height: 10px; border-radius: 5px; background-color: var(--surface-hover); overflow: hidden; }
+.release-odds-bar > span { display: block; height: 100%; background-color: var(--accent); }
+.release-odds-value { text-align: right; }

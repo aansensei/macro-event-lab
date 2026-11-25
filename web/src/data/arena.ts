@@ -30,15 +30,25 @@ export interface LeakageRow {
   contestant: string; cutoff_rule: "published" | "weights_release_date" | "none"; cutoff: string | null;
   n_before: number; n_after: number; rmse_before: number | null; rmse_after: number | null;
 }
-export interface LiveForecastRow { target: TargetId; period: string; as_of: string; values: Record<string, number | null> }
+export interface CalibrationRow {
+  target: TargetId; contestant: string; level: number; n: number;
+  coverage: number; coverage_lo: number; coverage_hi: number;
+}
+export interface LiveForecastRow {
+  target: TargetId; period: string; as_of: string; values: Record<string, number | null>;
+  // predictive quantiles at probabilities 0.05 to 0.95 in steps of 0.05, for contestants with enough history
+  quantiles?: Record<string, number[]>;
+}
 export interface Arena {
   schema_version: 1; information_date: string; targets: ArenaTarget[]; contestants: Contestant[];
   forecasts: ArenaForecast[]; scores: ArenaScore[]; leakage: LeakageRow[]; live: LiveForecastRow[];
   nested_tests?: NestedTest[];
+  calibration?: CalibrationRow[];
 }
 export interface ParsedArena extends Arena {
   scores: ParsedArenaScore[];
   nested_tests: NestedTest[];
+  calibration: CalibrationRow[];
 }
 
 function nullableNumber(value: unknown, where: string, maximum = Infinity, minimum = -Infinity): number | null {
@@ -157,9 +167,34 @@ export function parseArena(value: unknown): ParsedArena {
       n_before: countValue(row.n_before, "Before count"), n_after: countValue(row.n_after, "After count"),
       rmse_before: nullableNumber(row.rmse_before, "Before error", Infinity, 0), rmse_after: nullableNumber(row.rmse_after, "After error", Infinity, 0) };
   });
+  const calibration = root.calibration === undefined ? [] : arrayValue(root.calibration, "Calibration").map((raw): CalibrationRow => {
+    const row = objectValue(raw, "Calibration row");
+    const level = nullableNumber(row.level, "Calibration level", 1, 0);
+    const coverage = nullableNumber(row.coverage, "Calibration coverage", 1, 0);
+    const low = nullableNumber(row.coverage_lo, "Calibration lower bound", 1, 0);
+    const high = nullableNumber(row.coverage_hi, "Calibration upper bound", 1, 0);
+    if (level === null || coverage === null || low === null || high === null) throw new Error("Calibration row: missing number.");
+    return { target: targetReference(row.target), contestant: contestantReference(row.contestant), level,
+      n: countValue(row.n, "Calibration forecast count"), coverage, coverage_lo: low, coverage_hi: high };
+  });
   const live = arrayValue(root.live, "Live forecasts").map((raw): LiveForecastRow => {
     const row = objectValue(raw, "Live forecast");
-    return { target: targetReference(row.target), period: periodValue(row.period), as_of: originValue(row.as_of), values: forecastValues(row.values) };
+    const entry: LiveForecastRow = { target: targetReference(row.target), period: periodValue(row.period), as_of: originValue(row.as_of), values: forecastValues(row.values) };
+    if (row.quantiles !== undefined) {
+      const quantiles: Record<string, number[]> = {};
+      for (const [id, list] of Object.entries(objectValue(row.quantiles, "Live quantiles"))) {
+        const numbers = arrayValue(list, "Live quantile list").map((value) => {
+          if (typeof value !== "number" || !Number.isFinite(value)) throw new Error("Live quantiles: invalid numeric value.");
+          return value;
+        });
+        if (numbers.length !== 19 || numbers.some((value, i) => i > 0 && value < numbers[i - 1]!)) {
+          throw new Error("Live quantiles: expected 19 numbers in increasing order.");
+        }
+        quantiles[contestantReference(id)] = numbers;
+      }
+      entry.quantiles = quantiles;
+    }
+    return entry;
   });
   uniqueValues(forecasts.map((row) => `${row.target}:${row.period}`), "Forecasts");
   uniqueValues(scores.map((row) => `${row.target}:${row.contestant}:${row.window}`), "Scores");
@@ -167,7 +202,7 @@ export function parseArena(value: unknown): ParsedArena {
   uniqueValues(leakage.map((row) => row.contestant), "Audit rows");
   uniqueValues(live.map((row) => `${row.target}:${row.period}:${row.as_of}`), "Live forecasts");
   return { schema_version: 1, information_date: informationDate, targets, contestants,
-    forecasts: forecasts.sort((a, b) => a.period.localeCompare(b.period)), scores, leakage, live, nested_tests: nestedTests };
+    forecasts: forecasts.sort((a, b) => a.period.localeCompare(b.period)), scores, leakage, live, nested_tests: nestedTests, calibration };
 }
 
 export async function loadArena(fetchImpl: typeof fetch = fetch): Promise<Arena> {

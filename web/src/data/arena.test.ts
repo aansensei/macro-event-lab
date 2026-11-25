@@ -125,3 +125,22 @@ it("loads the configured arena path and preserves the missing-file message", asy
   expect(request).toHaveBeenCalledWith(`${import.meta.env.BASE_URL}data/arena.json`);
   await expect(loadArena(vi.fn<typeof fetch>().mockResolvedValue(new Response(null, { status: 404 })))).rejects.toThrow("The arena has not been built yet");
 });
+
+const QUANTILES = Array.from({ length: 19 }, (_, i) => i * 5);
+
+it("reads predictive quantiles of a live row and rejects a wrong count or an order that falls", () => {
+  const live = { target: "gdp", period: "2026-10-01", as_of: "2026-11-15", values: { naive: 0 }, quantiles: { naive: QUANTILES } };
+  expect(parseArena({ ...arenaFixture, live: [live] }).live[0]?.quantiles?.naive).toEqual(QUANTILES);
+  expect(parseArena({ ...arenaFixture, live: [{ ...live, quantiles: undefined }] }).live[0]?.quantiles).toBeUndefined();
+  expect(() => parseArena({ ...arenaFixture, live: [{ ...live, quantiles: { naive: QUANTILES.slice(1) } }] })).toThrow(/19 numbers/);
+  expect(() => parseArena({ ...arenaFixture, live: [{ ...live, quantiles: { naive: [...QUANTILES.slice(0, 18), 1] } }] })).toThrow(/increasing/);
+  expect(() => parseArena({ ...arenaFixture, live: [{ ...live, quantiles: { unknown: QUANTILES } }] })).toThrow();
+});
+
+it("reads calibration rows, defaults a missing list to empty and rejects a share outside 0 to 1", () => {
+  const row = { target: "gdp", contestant: "naive", level: 0.9, n: 60, coverage: 0.9, coverage_lo: 0.8, coverage_hi: 0.95 };
+  expect(parseArena({ ...arenaFixture, calibration: [row] }).calibration).toEqual([row]);
+  expect(parseArena(arenaFixture).calibration).toEqual([]);
+  expect(() => parseArena({ ...arenaFixture, calibration: [{ ...row, coverage: 1.2 }] })).toThrow();
+  expect(() => parseArena({ ...arenaFixture, calibration: [{ ...row, contestant: "unknown" }] })).toThrow();
+});

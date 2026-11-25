@@ -8,6 +8,7 @@ import { LeakageTable } from "../components/LeakageTable";
 import { MoreScoresTable } from "../components/MoreScoresTable";
 import { NestedTestsTable } from "../components/NestedTestsTable";
 import { PageGuide } from "../components/PageGuide";
+import { CoverageCalibration } from "../components/CoverageCalibration";
 import { PlayInvite } from "../components/PlayInvite";
 import { RailPage, type RailSection } from "../components/SectionRail";
 import { StoryNext, StoryPath } from "../components/Story";
@@ -63,6 +64,7 @@ export function Arena() {
         <ArenaLeaderboard rows={rows} target={target} />
         <MoreScoresTable rows={rows} target={target} />
         <NestedTestsTable tests={data.nested_tests ?? []} contestants={data.contestants} target={target} window={window} />
+        <CoverageCalibration rows={data.calibration ?? []} contestants={data.contestants} target={target} />
       </section>
       <section className="arena-section" aria-labelledby="arena-history">
         <h2 className="t-h3" id="arena-history">First published number against forecasts</h2>

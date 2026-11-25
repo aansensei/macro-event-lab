@@ -48,6 +48,8 @@
   .arena-table tr { margin-bottom: 12px; padding: 12px; border: 1px solid var(--border); border-radius: 8px; background: var(--surface); }
   .arena-table th, .arena-table td { padding: 6px 0; border: 0; }
   .arena-table th:nth-child(2) { width: auto; }
+  /* a caption inside a table shown as a block would shrink to one letter per line, so it is a plain block too */
+  .arena-table caption { display: block; width: auto; }
   .arena-table td::before { content: attr(data-label); display: block; margin-bottom: 3px; font-size: 11px; color: var(--text-muted); }
   .arena-chart, .arena-leakage, .arena-details { padding: 12px; }
   .arena-nested-table th[data-label]::before { content: attr(data-label); display: block; margin-bottom: 3px; font-size: 11px; color: var(--text-muted); }
@@ -69,3 +71,6 @@
 .play-invite-text { display: grid; gap: 4px; min-width: 0; }
 .play-invite-text span { color: var(--text-muted); font-size: 14px; line-height: 21px; }
 .play-invite-arrow { flex: none; color: var(--accent); }
+
+/* the calibration table: the share inside the interval with its range under it */
+.calibration-table td small { display: block; color: var(--text-muted); font-size: 12px; line-height: 16px; }

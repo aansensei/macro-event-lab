@@ -35,4 +35,5 @@ export const arenaFixture: Arena = {
     { target: "gdp", restricted: "naive", larger: "fixture-b", window: "all", n: 2, statistic: 1.45, p_value: 0.142 },
     { target: "gdp", restricted: "fixture-b", larger: "fixture-c", window: "all", n: 2, statistic: -0.35, p_value: 0.618 },
   ],
+  calibration: [],
 };
