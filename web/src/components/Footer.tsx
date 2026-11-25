@@ -109,6 +109,7 @@ export function Footer({ dataThrough, onNavigate }: Props) {
           <p>This product uses the FRED® API but is not endorsed or certified by the Federal Reserve Bank of St. Louis.</p>
         </div>
       </div>
+      <img className="footer-mascot" src={`${import.meta.env.BASE_URL}mascot.webp`} srcSet={`${import.meta.env.BASE_URL}mascot-small.webp 312w, ${import.meta.env.BASE_URL}mascot.webp 575w`} sizes="(min-width: 1024px) 240px, 150px" alt="" width="575" height="700" loading="lazy" decoding="async" draggable={false} aria-hidden="true" />
     </footer>
   );
 }

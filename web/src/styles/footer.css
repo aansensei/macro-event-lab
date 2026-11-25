@@ -131,3 +131,14 @@
 @media (prefers-reduced-motion: reduce) {
   .footer-status-dot { animation: none; }
 }
+
+/* a decorative illustration: centred under the footer on phones, in the empty right corner on wide screens */
+.footer-mascot { display: block; width: 150px; height: auto; margin: 28px auto 0; pointer-events: none; user-select: none; -webkit-user-select: none; }
+@media (max-width: 359px) { .footer-mascot { display: none; } }
+@media (min-width: 1024px) {
+  .footer-mascot { position: absolute; right: 32px; bottom: 0; width: 240px; margin: 0; }
+  .footer-bottom { padding-right: 270px; }
+}
+@media (min-width: 1440px) {
+  .footer-mascot { right: max(32px, calc((100vw - 1200px) / 2)); }
+}
