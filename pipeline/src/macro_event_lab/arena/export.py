@@ -9,8 +9,14 @@ from pathlib import Path
 import polars as pl
 
 from macro_event_lab.arena import contestants, metrics
-from macro_event_lab.arena.harness import run_walk_forward
+from macro_event_lab.arena.harness import (
+    origin_forecasts,
+    run_walk_forward,
+    target_features,
+    training_panel,
+)
 from macro_event_lab.arena.targets import (
+    ORIGIN_SCHEMA,
     TARGETS,
     add_months,
     build_origins,
@@ -65,22 +71,31 @@ def _scores(forecasts: pl.DataFrame) -> list[dict[str, object]]:
 
 
 def _live(
-    targets: pl.DataFrame, survey: pl.DataFrame | None, information_date: date,
+    observations: pl.DataFrame, targets: pl.DataFrame, origins: pl.DataFrame,
+    survey: pl.DataFrame | None, information_date: date,
 ) -> list[dict[str, object]]:
     rows: list[dict[str, object]] = []
     for target, (_ticker, _label, _unit, frequency) in TARGETS.items():
         frame = targets.filter(pl.col("target") == target)
         if frame.is_empty():
             continue
+        released = data_as_of(frame, information_date)
+        latest_period = (released if not released.is_empty() else frame)["period"].max()
         step = 3 if frequency == "quarterly" else 1
-        period = add_months(frame["period"].max(), step)
-        known = data_as_of(frame, information_date).sort("period")["first_print"].to_list()
-        values = {
-            "naive": contestants.naive_forecast(known), "ar": contestants.ar_forecast(known),
-        }
-        if target == "gdp" and survey is not None:
-            values["spf"] = contestants.spf_forecast(survey, period, information_date)
-        values = {k: _round(v) for k, v in values.items() if v is not None}
+        period = add_months(latest_period, step)
+        _hist, train_x, train_y, train_release, train_made_on = training_panel(
+            observations, targets, origins, target,
+        )
+        live_origin = pl.DataFrame(
+            [{"target": target, "period": period, "made_on": information_date}],
+            schema=ORIGIN_SCHEMA, orient="row",
+        )
+        x_now = target_features(observations, targets, live_origin, target).get(period)
+        raw = origin_forecasts(
+            target, frame, survey, train_x, train_y, train_release, train_made_on,
+            x_now, period, information_date,
+        )
+        values = {name: _round(raw[name]) for name in ORDER if raw.get(name) is not None}
         if values:
             rows.append({
                 "target": target, "period": period.isoformat(),
@@ -124,7 +139,7 @@ def build_arena(
         "forecasts": [by_period[key] for key in sorted(by_period)],
         "scores": _scores(forecasts),
         "leakage": [],
-        "live": _live(targets, survey, information_date),
+        "live": _live(observations, targets, origins, survey, information_date),
     }
 
 
