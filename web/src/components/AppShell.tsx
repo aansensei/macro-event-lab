@@ -13,7 +13,7 @@ export function AppShell({ route, navigate, navigationKey, children, eventTitle,
   AppNavigation & { children: ReactNode; eventTitle?: string; dataThrough?: string | null }) {
   const mainRef = useRef<HTMLElement>(null);
   const label = !inEdition(route.page) ? "Not published yet"
-    : [...PRIMARY, ...LEARN].find(([page]) => page === route.page)?.[1] ?? "Overview";
+    : [...PRIMARY, ...LEARN].find(([page]) => page === route.page)?.[1] ?? (route.page === "journal" ? "Build journal" : "Overview");
   const title = route.page === "events" ? eventTitle ?? label : label;
 
   useEffect(() => { document.title = `${title} | Macro Event Lab`; }, [title]);

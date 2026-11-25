@@ -2,6 +2,7 @@ import { useEffect } from "react";
 
 import { AuthorCard } from "../components/AuthorCard";
 import { ExternalLink } from "../components/ExternalLink";
+import { Icon } from "../components/Icon";
 import { SectionRail, type RailSection } from "../components/SectionRail";
 
 import { PUBLIC_EDITION } from "../lib/edition";
@@ -82,6 +83,10 @@ export function About() {
       <section className="about-section" aria-labelledby="about-author">
         <h2 className="t-h2" id="about-author">Author</h2>
         <AuthorCard />
+        <a className="about-journal-link" href="?page=journal">
+          <span>Read the build journal</span>
+          <Icon name="arrow-right" size={18} />
+        </a>
         <p className="about-note">
           Found a mistake or have a question? Open an issue on <ExternalLink href={`${REPO}/issues`}>GitHub</ExternalLink>.
         </p>

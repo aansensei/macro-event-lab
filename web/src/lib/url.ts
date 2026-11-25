@@ -1,9 +1,9 @@
 // The page, selected event and hour live in the query string so any view can be shared as a link.
 
-export type Page = "overview" | "events" | "compare" | "scorecard" | "revisions" | "method" | "glossary" | "about" | "models" | "status" | "arena" | "data" | "briefing" | "play";
+export type Page = "overview" | "events" | "compare" | "scorecard" | "revisions" | "method" | "glossary" | "about" | "models" | "status" | "arena" | "data" | "briefing" | "play" | "journal";
 export type RevealStage = 0 | 1 | 2;
 
-const PAGES: Page[] = ["overview", "events", "compare", "scorecard", "revisions", "method", "glossary", "about", "models", "status", "arena", "data", "briefing", "play"];
+const PAGES: Page[] = ["overview", "events", "compare", "scorecard", "revisions", "method", "glossary", "about", "models", "status", "arena", "data", "briefing", "play", "journal"];
 
 export interface UrlState {
   page: Page;

@@ -175,3 +175,28 @@
 .dossier-link svg { flex: none; color: var(--accent); }
 .dossier-link:hover { border-color: var(--accent); background-color: var(--accent-tint); text-decoration: none; }
 .dossier-link:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+/* the link from the author section to the build journal */
+.about-journal-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+  margin-top: 16px;
+  padding: 8px 16px;
+  border: 1px solid var(--border-control);
+  border-radius: 10px;
+  background-color: var(--surface);
+  color: var(--text);
+  font-weight: 600;
+  text-decoration: none;
+}
+.about-journal-link svg { color: var(--accent); }
+.about-journal-link:hover { border-color: var(--accent); background-color: var(--accent-tint); text-decoration: none; }
+.about-journal-link:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+/* the build journal: one card per moment, in the order they happened */
+.journal { max-width: 760px; }
+.journal-list { list-style: none; margin: 32px 0; padding: 0; display: grid; gap: 16px; }
+.journal-entry { border: 1px solid var(--border); border-left: 3px solid var(--accent); border-radius: 10px; background-color: var(--surface); padding: 16px 18px; }
+.journal-entry h2 { margin: 4px 0 8px; }
+.journal-entry p { margin: 8px 0 0; line-height: 26px; color: var(--text-muted); }
+.journal-entry .journal-month { margin: 0; color: var(--accent); }

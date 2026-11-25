@@ -14,6 +14,7 @@ import { Arena } from "./pages/Arena";
 import { Briefing } from "./pages/Briefing";
 import { Play } from "./pages/Play";
 import { Data } from "./pages/Data";
+import { Journal } from "./pages/Journal";
 
 export function App() {
   const navigation = useNavigation();
@@ -33,5 +34,6 @@ export function App() {
     {route.page === "method" && <Method />}
     {route.page === "glossary" && <Glossary />}
     {route.page === "about" && <About />}
+    {route.page === "journal" && <Journal />}
   </AppShell>;
 }
