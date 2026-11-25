@@ -53,3 +53,11 @@
 .arena-page > h1 + .state-banner,
 .arena-page > h1 + [role="alert"],
 .arena-page > h1 + section { margin-top: 24px; max-width: 720px; }
+
+/* the card that leads from the leaderboard to the play mode */
+.play-invite { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin: 20px 0; padding: 16px 18px; border: 1px solid var(--border); border-left: 3px solid var(--accent); border-radius: 10px; background-color: var(--surface); color: var(--text); text-decoration: none; }
+.play-invite:hover { border-color: var(--accent); text-decoration: none; }
+.play-invite:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.play-invite-text { display: grid; gap: 4px; min-width: 0; }
+.play-invite-text span { color: var(--text-muted); font-size: 14px; line-height: 21px; }
+.play-invite-arrow { flex: none; color: var(--accent); }

@@ -6,6 +6,7 @@ import { ArenaLeaderboard } from "../components/ArenaLeaderboard";
 import { ArenaPending } from "../components/ArenaPending";
 import { LeakageTable } from "../components/LeakageTable";
 import { PageGuide } from "../components/PageGuide";
+import { PlayInvite } from "../components/PlayInvite";
 import { RailPage, type RailSection } from "../components/SectionRail";
 import { StoryNext, StoryPath } from "../components/Story";
 import { LiveForecast } from "../components/LiveForecast";
@@ -49,6 +50,7 @@ export function Arena() {
       purpose="See how close each forecaster and model came to the number first published, release after release."
       lookAt="The leaderboard first (a lower RMSE means closer), then the history chart for one contestant, then the worst period share."
       limit="Which method is best. The results are preliminary, the periods are few, and one extreme period can drive an average." />
+    <PlayInvite />
     {!target ? <p className="state-banner">No economic targets are available yet.</p> : <>
       <TargetSwitch targets={data.targets} selected={target.id} onChange={setTarget} />
       <section className="arena-section" aria-labelledby="arena-leaderboard">
