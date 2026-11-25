@@ -7,6 +7,7 @@ export const PUBLIC_DATA_FILES = [
   "status.json",
   "arena.json",
   "briefing.json",
+  "ledger.json",
   "calendar.ics",
   "feed.xml",
   "arena_forecasts.parquet",

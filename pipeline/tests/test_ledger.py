@@ -173,3 +173,49 @@ def test_cli_verify_ledger_exit_codes(
     assert exc_info.value.code == 1
     captured = capsys.readouterr()
     assert "PROBLEM row 4: HASH_MISMATCH" in captured.out
+
+
+def test_summarize_ledger_reports_size_newest_row_and_chain_verdict() -> None:
+    rows = _sample_chain(10)
+    summary = ledger.summarize_ledger(rows)
+    assert summary == {
+        "schema_version": 1,
+        "rows": 10,
+        "first_recorded_at_utc": rows[0]["recorded_at_utc"],
+        "last_recorded_at_utc": rows[-1]["recorded_at_utc"],
+        "last_as_of": "2026-11-24",
+        "head_hash": rows[-1]["entry_hash"],
+        "chain_ok": True,
+        "problems": 0,
+    }
+
+
+def test_summarize_ledger_flags_a_tampered_row() -> None:
+    rows = _sample_chain(10)
+    rows[4]["point_forecast"] = rows[4]["point_forecast"] + 2.0
+    summary = ledger.summarize_ledger(rows)
+    assert summary["chain_ok"] is False
+    assert summary["problems"] >= 1
+
+
+def test_summarize_ledger_of_an_empty_ledger_has_no_dates_and_a_clean_chain() -> None:
+    summary = ledger.summarize_ledger([])
+    assert summary["rows"] == 0
+    assert summary["last_recorded_at_utc"] is None
+    assert summary["head_hash"] is None
+    assert summary["chain_ok"] is True
+
+
+def test_cli_ledger_summary_writes_the_json_file(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    import json
+
+    ledger_path = tmp_path / "ledger.jsonl"
+    ledger.append_rows(ledger_path, _sample_chain(10))
+    out = tmp_path / "out" / "ledger.json"
+    cli.main(["ledger-summary", "--file", str(ledger_path), "--out", str(out)])
+    written = json.loads(out.read_text(encoding="utf-8"))
+    assert written["rows"] == 10
+    assert written["chain_ok"] is True
+    assert "10 rows" in capsys.readouterr().out

@@ -239,6 +239,14 @@ def cmd_verify_ledger(args: argparse.Namespace) -> None:
     raise SystemExit(1)
 
 
+def cmd_ledger_summary(args: argparse.Namespace) -> None:
+    summary = ledger.summarize_ledger(ledger.read_ledger(args.file))
+    args.out.parent.mkdir(parents=True, exist_ok=True)
+    with open(args.out, "w", encoding="utf-8", newline="\n") as handle:
+        handle.write(json.dumps(summary, indent=2, sort_keys=True) + "\n")
+    print(f"Wrote {args.out}: {summary['rows']} rows, chain_ok={summary['chain_ok']}")
+
+
 def cmd_ledger_append(args: argparse.Namespace) -> None:
     arena = json.loads(args.arena.read_text(encoding="utf-8"))
     recorded_at = args.recorded_at or datetime.now(UTC).strftime("%Y-%m-%dT%H:%M:%SZ")
@@ -372,6 +380,18 @@ def main(argv: list[str] | None = None) -> None:
         help="path to the ledger JSONL file",
     )
     p_verify_ledger.set_defaults(func=cmd_verify_ledger)
+
+    p_ledger_summary = sub.add_parser(
+        "ledger-summary", help="write a public JSON summary of the forecast ledger"
+    )
+    p_ledger_summary.add_argument(
+        "--file",
+        type=Path,
+        default=Path("ledger/forecast_ledger.jsonl"),
+        help="path to the ledger JSONL file",
+    )
+    p_ledger_summary.add_argument("--out", type=Path, required=True, help="path of the JSON file")
+    p_ledger_summary.set_defaults(func=cmd_ledger_summary)
 
     p_ledger_append = sub.add_parser(
         "ledger-append", help="append live arena forecasts to the forecast ledger"

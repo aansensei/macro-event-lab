@@ -1,12 +1,15 @@
 import { ExploreMore } from "../components/ExploreMore";
 import { ExternalLink } from "../components/ExternalLink";
 import { Icon } from "../components/Icon";
+import { LiveProof } from "../components/LiveProof";
 import { ReleaseFile } from "../components/ReleaseFile";
 import { RailPage, type RailSection } from "../components/SectionRail";
 import { loadArena } from "../data/arena";
 import { loadBriefing } from "../data/briefing";
+import { loadLedgerSummary } from "../data/ledger";
 import { loadRevisions } from "../data/load";
 import { loadNowcast, nowcastErrors } from "../data/nowcast";
+import { loadStatus } from "../data/status";
 import { useResource } from "../hooks/useResource";
 import { formatReleaseDate, periodTitle } from "../lib/briefingWords";
 import { liveSentence } from "../lib/nowcastWords";
@@ -16,6 +19,7 @@ import { pageSearch, type Page } from "../lib/url";
 const RAIL: RailSection[] = [
   { id: "home-top", label: "Top" },
   { id: "release-file-title", label: "The release file" },
+  { id: "live-proof-title", label: "Live proof" },
   { id: "start-here", label: "Start here" },
   { id: "home-next-releases", label: "Next releases" },
   { id: "explore-more", label: "Explore more" },
@@ -35,6 +39,8 @@ export function PublicHome() {
   const arena = useResource(loadArena).state;
   const briefing = useResource(loadBriefing).state;
   const revisions = useResource(loadRevisions).state;
+  const ledger = useResource(loadLedgerSummary).state;
+  const status = useResource(loadStatus).state;
   const data = state.kind === "ready" ? state.data : null;
   const upcoming = briefing.kind === "ready" ? briefing.data.releases.slice(0, 2) : [];
   const errors = data && nowcastErrors(data.points);
@@ -47,6 +53,11 @@ export function PublicHome() {
     </p>
 
     {arena.kind === "ready" && revisions.kind === "ready" && <ReleaseFile arena={arena.data} revisions={revisions.data} />}
+
+    <LiveProof
+      ledger={ledger.kind === "ready" ? ledger.data : null}
+      status={status.kind === "ready" ? status.data : null}
+      releases={briefing.kind === "ready" ? briefing.data.releases : []} />
 
     <section className="public-start" aria-labelledby="start-here">
       <h2 className="t-h2" id="start-here">Start here, in three steps</h2>

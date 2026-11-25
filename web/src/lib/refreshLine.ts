@@ -19,7 +19,7 @@ function pad2(value: number): string {
   return String(value).padStart(2, "0");
 }
 
-function formatUtcMinute(iso: string): string | null {
+export function formatUtcMinute(iso: string): string | null {
   const timestamp = Date.parse(iso);
   if (!Number.isFinite(timestamp)) return null;
   const date = new Date(timestamp);

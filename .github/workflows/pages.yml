@@ -65,6 +65,8 @@ jobs:
           git commit -m "Record forecasts as of ${as_of} [skip ci]"
           git pull --rebase origin main
           git push origin HEAD:main
+      - name: Summarize the forecast ledger for the site
+        run: python -m macro_event_lab ledger-summary --file ledger/forecast_ledger.jsonl --out "$MEL_DATA_DIR/web_public/ledger.json"
       - name: Check source freshness
         id: fresh
         continue-on-error: true
@@ -81,7 +83,7 @@ jobs:
       - name: Copy only the public files into the site
         run: |
           mkdir -p web/public/data
-          cp "$MEL_DATA_DIR/web_public/revisions.json" "$MEL_DATA_DIR/web_public/nowcast.json" "$MEL_DATA_DIR/web_public/status.json" "$MEL_DATA_DIR/web_public/arena.json" "$MEL_DATA_DIR/web_public/briefing.json" "$MEL_DATA_DIR/web_public/calendar.ics" "$MEL_DATA_DIR/web_public/feed.xml" "$MEL_DATA_DIR/web_public/arena_forecasts.parquet" "$MEL_DATA_DIR/web_public/arena_scores.parquet" "$MEL_DATA_DIR/web_public/revisions.parquet" "$MEL_DATA_DIR/web_public/arena_forecasts.csv" "$MEL_DATA_DIR/web_public/arena_scores.csv" "$MEL_DATA_DIR/web_public/revisions.csv" web/public/data/
+          cp "$MEL_DATA_DIR/web_public/revisions.json" "$MEL_DATA_DIR/web_public/nowcast.json" "$MEL_DATA_DIR/web_public/status.json" "$MEL_DATA_DIR/web_public/arena.json" "$MEL_DATA_DIR/web_public/briefing.json" "$MEL_DATA_DIR/web_public/ledger.json" "$MEL_DATA_DIR/web_public/calendar.ics" "$MEL_DATA_DIR/web_public/feed.xml" "$MEL_DATA_DIR/web_public/arena_forecasts.parquet" "$MEL_DATA_DIR/web_public/arena_scores.parquet" "$MEL_DATA_DIR/web_public/revisions.parquet" "$MEL_DATA_DIR/web_public/arena_forecasts.csv" "$MEL_DATA_DIR/web_public/arena_scores.csv" "$MEL_DATA_DIR/web_public/revisions.csv" web/public/data/
       - uses: actions/setup-node@v7
         with:
           node-version: "24"

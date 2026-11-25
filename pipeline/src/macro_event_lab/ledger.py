@@ -139,3 +139,19 @@ def verify_ledger(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
             ):
                 problems.append({"index": index, "code": "TIME_ORDER"})
     return problems
+
+
+def summarize_ledger(rows: list[dict[str, Any]]) -> dict[str, Any]:
+    """Describe the ledger for the public site: size, newest records and the chain verdict."""
+    problems = verify_ledger(rows)
+    last = rows[-1] if rows else None
+    return {
+        "schema_version": 1,
+        "rows": len(rows),
+        "first_recorded_at_utc": str(rows[0]["recorded_at_utc"]) if rows else None,
+        "last_recorded_at_utc": str(last["recorded_at_utc"]) if last else None,
+        "last_as_of": str(last["as_of"]) if last else None,
+        "head_hash": str(last["entry_hash"]) if last else None,
+        "chain_ok": not problems,
+        "problems": len(problems),
+    }

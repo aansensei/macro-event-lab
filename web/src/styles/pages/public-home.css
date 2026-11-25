@@ -95,3 +95,16 @@
   .public-explore-cards { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 }
 .public-explore-cards .public-card { padding-top: 16px; padding-right: 42px; }
+/* the live proof strip: three facts that link to their evidence */
+.live-proof { margin-top: 40px; }
+.live-proof-list { list-style: none; margin: 18px 0 0 0; padding: 0; display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px; }
+@media (min-width: 720px) {
+  .live-proof-list { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+.live-proof-card { position: relative; display: grid; align-content: start; gap: 6px; height: 100%; padding: 16px 42px 16px 18px; border: 1px solid var(--border); border-radius: 10px; background-color: var(--surface); color: var(--text); text-decoration: none; min-width: 0; }
+.live-proof-card:hover { border-color: var(--accent); text-decoration: none; }
+.live-proof-card:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.live-proof-title { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; line-height: 18px; color: var(--text-muted); }
+.live-proof-value { font-size: 18px; line-height: 26px; font-weight: 600; overflow-wrap: break-word; }
+.live-proof-detail { font-size: 14px; line-height: 21px; color: var(--text-muted); }
+.live-proof-arrow { position: absolute; top: 14px; right: 16px; color: var(--accent); }
