@@ -49,6 +49,18 @@ def test_public_build_writes_only_the_public_files(tmp_path, monkeypatch):
     assert [s["series"] for s in revisions["series"]] == ["payrolls"]
     for path in out.rglob("*"):
         if path.is_file():
-            content = path.read_text(encoding="utf-8").lower()
-            assert "kx" not in content
-            assert "kalshi" not in content
+            if path.suffix == ".parquet":
+                frame = pl.read_parquet(path)
+                for col in frame.columns:
+                    assert "kx" not in col.lower()
+                    assert "kalshi" not in col.lower()
+                for col, dtype in frame.schema.items():
+                    if dtype == pl.String:
+                        for value in frame[col].drop_nulls().to_list():
+                            lowered = value.lower()
+                            assert "kx" not in lowered
+                            assert "kalshi" not in lowered
+            else:
+                content = path.read_text(encoding="utf-8").lower()
+                assert "kx" not in content
+                assert "kalshi" not in content

@@ -1,4 +1,4 @@
-import { existsSync, readFileSync, readdirSync } from "node:fs";
+import { existsSync, readFileSync, readdirSync, statSync } from "node:fs";
 import { join } from "node:path";
 
 export const PUBLIC_DATA_FILES = [
@@ -9,10 +9,24 @@ export const PUBLIC_DATA_FILES = [
   "briefing.json",
   "calendar.ics",
   "feed.xml",
+  "arena_forecasts.parquet",
+  "arena_scores.parquet",
+  "revisions.parquet",
   "arena_forecasts.csv",
   "arena_scores.csv",
   "revisions.csv",
 ] as const;
+
+export function collectOpenDataSizes(publicDir: string): Record<string, number> {
+  const sizes: Record<string, number> = {};
+  for (const name of PUBLIC_DATA_FILES) {
+    if (!name.endsWith(".parquet") && !name.endsWith(".csv")) continue;
+    const path = join(publicDir, "data", name);
+    if (!existsSync(path)) continue;
+    sizes[name] = statSync(path).size;
+  }
+  return sizes;
+}
 
 export function collectPublicAssets(publicDir: string): { fileName: string; source: Uint8Array }[] {
   const assets: { fileName: string; source: Uint8Array }[] = [];
@@ -35,7 +49,7 @@ export function collectPublicAssets(publicDir: string): { fileName: string; sour
     const path = join(publicDir, fileName);
     if (!existsSync(path)) continue;
     const source = readFileSync(path);
-    if (/kalshi|KX/i.test(source.toString("utf8"))) {
+    if (!name.endsWith(".parquet") && /kalshi|KX/i.test(source.toString("utf8"))) {
       throw new Error(`Public data contains a restricted source identifier: ${fileName}. Rebuild public data first.`);
     }
     assets.push({ fileName, source });

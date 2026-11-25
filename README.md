@@ -24,6 +24,7 @@ What the public site shows:
 - **GDP nowcast:** a live nowcast built only from data that was public before each release.
 - **Data status:** the age of each source and the quality checks that ran.
 - **Forecast arena:** professional forecasters and classical models, scored point in time against the first published number. Every target has a naive baseline, an autoregression, ridge, principal component ridge and LASSO; GDP growth also has the survey median. The two time series foundation models have not run, so the results are preliminary. The rules are fixed in advance in [`pipeline/EVAL_PROTOCOL.md`](pipeline/EVAL_PROTOCOL.md).
+- Open data: the arena and revisions tables as Parquet files, recommended for analysis, with CSV copies for spreadsheet programs, and a DuckDB query you can run straight on the web address.
 
 A second, local research edition replays hour by hour prediction market odds around each release. It uses market data from Kalshi and is not published, because Kalshi's terms require written permission before anything derived from its data is made public.
 

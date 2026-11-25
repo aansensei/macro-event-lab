@@ -1,13 +1,16 @@
-"""Flatten public arena and revisions JSON exports into downloadable CSV tables."""
+"""Flatten public arena and revisions JSON exports into downloadable Parquet and CSV tables."""
 
 from __future__ import annotations
 
 import csv
 import io
 import json
+from datetime import date
 from decimal import Decimal
 from pathlib import Path
 from typing import Any
+
+import polars as pl
 
 FORECAST_HEADER = [
     "target",
@@ -44,6 +47,41 @@ REVISIONS_HEADER = [
     "settled",
 ]
 
+FORECAST_SCHEMA: dict[str, pl.DataType] = {
+    "target": pl.String,
+    "period": pl.Date,
+    "made_on": pl.Date,
+    "contestant_id": pl.String,
+    "contestant": pl.String,
+    "kind": pl.String,
+    "forecast": pl.Float64,
+    "first_print": pl.Float64,
+    "interval_lo": pl.Float64,
+    "interval_hi": pl.Float64,
+    "error": pl.Float64,
+}
+SCORE_SCHEMA: dict[str, pl.DataType] = {
+    "target": pl.String,
+    "contestant_id": pl.String,
+    "contestant": pl.String,
+    "window": pl.String,
+    "n": pl.Int64,
+    "mae": pl.Float64,
+    "rmse": pl.Float64,
+    "coverage_90": pl.Float64,
+    "dm_vs_naive_p": pl.Float64,
+}
+REVISIONS_SCHEMA: dict[str, pl.DataType] = {
+    "series": pl.String,
+    "label": pl.String,
+    "unit": pl.String,
+    "period": pl.Date,
+    "first_print": pl.Float64,
+    "next_print": pl.Float64,
+    "latest": pl.Float64,
+    "settled": pl.Boolean,
+}
+
 
 def _format_number(value: int | float | None) -> str:
     if value is None:
@@ -61,6 +99,14 @@ def _format_number(value: int | float | None) -> str:
     return text
 
 
+def _to_float(value: Any) -> float | None:
+    return None if value is None else float(value)
+
+
+def _to_int(value: Any) -> int | None:
+    return None if value is None else int(value)
+
+
 def _render_csv(header: list[str], rows: list[list[str]]) -> str:
     buffer = io.StringIO(newline="")
     writer = csv.writer(buffer, lineterminator="\n")
@@ -69,10 +115,9 @@ def _render_csv(header: list[str], rows: list[list[str]]) -> str:
     return buffer.getvalue()
 
 
-def arena_forecasts_csv(arena: dict[str, Any]) -> str:
-    """Flatten arena forecast entries into CSV text in contestant order."""
+def _arena_forecast_records(arena: dict[str, Any]) -> list[tuple[Any, ...]]:
     contestants = arena.get("contestants", [])
-    rows: list[list[str]] = []
+    records: list[tuple[Any, ...]] = []
     for entry in arena.get("forecasts", []):
         values = entry.get("values") or {}
         intervals = entry.get("intervals") or {}
@@ -84,62 +129,173 @@ def arena_forecasts_csv(arena: dict[str, Any]) -> str:
             forecast = values[cid]
             band = intervals.get(cid) or {}
             error = None if forecast is None or actual is None else round(actual - forecast, 4)
-            rows.append([
+            records.append((
                 str(entry["target"]),
                 str(entry["period"]),
                 str(entry["made_on"]),
                 str(cid),
                 str(contestant["label"]),
                 str(contestant["kind"]),
-                _format_number(forecast),
-                _format_number(actual),
-                _format_number(band.get("lo")),
-                _format_number(band.get("hi")),
-                _format_number(error),
-            ])
+                forecast,
+                actual,
+                band.get("lo"),
+                band.get("hi"),
+                error,
+            ))
+    return records
+
+
+def _arena_score_records(arena: dict[str, Any]) -> list[tuple[Any, ...]]:
+    labels = {str(c["id"]): str(c["label"]) for c in arena.get("contestants", [])}
+    records: list[tuple[Any, ...]] = []
+    for score in arena.get("scores", []):
+        cid = str(score["contestant"])
+        records.append((
+            str(score["target"]),
+            cid,
+            labels.get(cid, cid),
+            str(score["window"]),
+            score.get("n"),
+            score.get("mae"),
+            score.get("rmse"),
+            score.get("coverage_90"),
+            score.get("dm_vs_naive_p"),
+        ))
+    return records
+
+
+def _revisions_records(revisions: dict[str, Any]) -> list[tuple[Any, ...]]:
+    records: list[tuple[Any, ...]] = []
+    for series in revisions.get("series", []):
+        for point in series.get("points", []):
+            records.append((
+                str(series["series"]),
+                str(series["label"]),
+                str(series["unit"]),
+                str(point["period"]),
+                point.get("first"),
+                point.get("next"),
+                point.get("latest"),
+                bool(point["settled"]),
+            ))
+    return records
+
+
+def arena_forecasts_csv(arena: dict[str, Any]) -> str:
+    """Flatten arena forecast entries into CSV text in contestant order."""
+    rows = [
+        [
+            r[0], r[1], r[2], r[3], r[4], r[5],
+            _format_number(r[6]),
+            _format_number(r[7]),
+            _format_number(r[8]),
+            _format_number(r[9]),
+            _format_number(r[10]),
+        ]
+        for r in _arena_forecast_records(arena)
+    ]
     return _render_csv(FORECAST_HEADER, rows)
 
 
 def arena_scores_csv(arena: dict[str, Any]) -> str:
     """Flatten arena score entries into CSV text in file order."""
-    labels = {str(c["id"]): str(c["label"]) for c in arena.get("contestants", [])}
-    rows: list[list[str]] = []
-    for score in arena.get("scores", []):
-        cid = str(score["contestant"])
-        rows.append([
-            str(score["target"]),
-            cid,
-            labels.get(cid, cid),
-            str(score["window"]),
-            _format_number(score.get("n")),
-            _format_number(score.get("mae")),
-            _format_number(score.get("rmse")),
-            _format_number(score.get("coverage_90")),
-            _format_number(score.get("dm_vs_naive_p")),
-        ])
+    rows = [
+        [
+            r[0], r[1], r[2], r[3],
+            _format_number(r[4]),
+            _format_number(r[5]),
+            _format_number(r[6]),
+            _format_number(r[7]),
+            _format_number(r[8]),
+        ]
+        for r in _arena_score_records(arena)
+    ]
     return _render_csv(SCORE_HEADER, rows)
 
 
 def revisions_csv(revisions: dict[str, Any]) -> str:
     """Flatten revisions series points into CSV text in file order."""
-    rows: list[list[str]] = []
-    for series in revisions.get("series", []):
-        for point in series.get("points", []):
-            rows.append([
-                str(series["series"]),
-                str(series["label"]),
-                str(series["unit"]),
-                str(point["period"]),
-                _format_number(point.get("first")),
-                _format_number(point.get("next")),
-                _format_number(point.get("latest")),
-                "true" if point["settled"] else "false",
-            ])
+    rows = [
+        [
+            r[0], r[1], r[2], r[3],
+            _format_number(r[4]),
+            _format_number(r[5]),
+            _format_number(r[6]),
+            "true" if r[7] else "false",
+        ]
+        for r in _revisions_records(revisions)
+    ]
     return _render_csv(REVISIONS_HEADER, rows)
 
 
+def write_open_data_parquet(out_dir: Path) -> tuple[Path, Path, Path]:
+    """Read arena.json and revisions.json in out_dir and write three zstd Parquet files."""
+    out = Path(out_dir)
+    arena = json.loads((out / "arena.json").read_text(encoding="utf-8"))
+    revisions = json.loads((out / "revisions.json").read_text(encoding="utf-8"))
+
+    forecast_rows = [
+        (
+            r[0],
+            date.fromisoformat(r[1]),
+            date.fromisoformat(r[2]),
+            r[3],
+            r[4],
+            r[5],
+            _to_float(r[6]),
+            _to_float(r[7]),
+            _to_float(r[8]),
+            _to_float(r[9]),
+            _to_float(r[10]),
+        )
+        for r in _arena_forecast_records(arena)
+    ]
+    score_rows = [
+        (
+            r[0],
+            r[1],
+            r[2],
+            r[3],
+            _to_int(r[4]),
+            _to_float(r[5]),
+            _to_float(r[6]),
+            _to_float(r[7]),
+            _to_float(r[8]),
+        )
+        for r in _arena_score_records(arena)
+    ]
+    revision_rows = [
+        (
+            r[0],
+            r[1],
+            r[2],
+            date.fromisoformat(r[3]),
+            _to_float(r[4]),
+            _to_float(r[5]),
+            _to_float(r[6]),
+            bool(r[7]),
+        )
+        for r in _revisions_records(revisions)
+    ]
+
+    forecasts_path = out / "arena_forecasts.parquet"
+    scores_path = out / "arena_scores.parquet"
+    revisions_path = out / "revisions.parquet"
+
+    pl.DataFrame(forecast_rows, schema=FORECAST_SCHEMA, orient="row").write_parquet(
+        forecasts_path, compression="zstd",
+    )
+    pl.DataFrame(score_rows, schema=SCORE_SCHEMA, orient="row").write_parquet(
+        scores_path, compression="zstd",
+    )
+    pl.DataFrame(revision_rows, schema=REVISIONS_SCHEMA, orient="row").write_parquet(
+        revisions_path, compression="zstd",
+    )
+    return forecasts_path, scores_path, revisions_path
+
+
 def write_open_data(out_dir: Path) -> tuple[Path, Path, Path]:
-    """Read arena.json and revisions.json in out_dir and write the three CSV files."""
+    """Read arena.json and revisions.json in out_dir and write Parquet and CSV files."""
     out = Path(out_dir)
     arena = json.loads((out / "arena.json").read_text(encoding="utf-8"))
     revisions = json.loads((out / "revisions.json").read_text(encoding="utf-8"))
@@ -150,4 +306,5 @@ def write_open_data(out_dir: Path) -> tuple[Path, Path, Path]:
     )
     for path, content in targets:
         path.write_text(content, encoding="utf-8", newline="\n")
+    write_open_data_parquet(out)
     return targets[0][0], targets[1][0], targets[2][0]

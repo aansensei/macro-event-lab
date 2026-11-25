@@ -1,9 +1,22 @@
+declare const __OPEN_DATA_SIZES__: Record<string, number> | undefined;
+
+export const OPEN_DATA_SIZES: Record<string, number> =
+  typeof __OPEN_DATA_SIZES__ !== "undefined" ? __OPEN_DATA_SIZES__ : {};
+
+export function formatFileSize(bytes: number | undefined): string {
+  if (bytes === undefined || !Number.isFinite(bytes) || bytes < 0) return "Pending build";
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(2)} MB`;
+}
+
 export interface OpenDataColumn {
   name: string;
   meaning: string;
 }
 
 export interface OpenDataFile {
+  parquet: string;
   file: string;
   title: string;
   description: string;
@@ -11,12 +24,14 @@ export interface OpenDataFile {
 }
 
 export const OPEN_DATA_FILES: {
+  parquet: string;
   file: string;
   title: string;
   description: string;
   columns: { name: string; meaning: string }[];
 }[] = [
   {
+    parquet: "arena_forecasts.parquet",
     file: "arena_forecasts.csv",
     title: "Arena forecasts",
     description: "One row per target period and contestant with a recorded forecast, paired with the first published number and 90% interval bounds when available.",
@@ -35,6 +50,7 @@ export const OPEN_DATA_FILES: {
     ],
   },
   {
+    parquet: "arena_scores.parquet",
     file: "arena_scores.csv",
     title: "Arena summary scores",
     description: "Summary accuracy and interval coverage metrics across evaluated periods for each target, contestant, and evaluation window.",
@@ -51,6 +67,7 @@ export const OPEN_DATA_FILES: {
     ],
   },
   {
+    parquet: "revisions.parquet",
     file: "revisions.csv",
     title: "Macro data revisions",
     description: "First published, next release, and latest vintage values for each reference period in CPI, Jobs, and GDP.",
