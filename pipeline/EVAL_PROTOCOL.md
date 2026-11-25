@@ -115,3 +115,9 @@ These sentences describe what the code does. They change no forecast and no rule
 - The mean used for a missing feature, and the penalty grid of the LASSO, are computed on the whole training window known at the origin, including the 8 rows of the inner evaluation, so the grid uses their answers. Penalties, lags and factor counts are still chosen only by fits that use rows earlier than the row they predict, and nothing after the origin enters. Changing this would change forecasts already recorded in the ledger, so it is kept and stated as a limitation.
 - Reported on the Arena page now: root mean squared error, mean absolute error, coverage of the 90 percent interval, the Diebold and Mariano test and the number of tests shown in each table. A percent difference to `naive` compares both errors over the periods the contestant forecast.
 - Not yet reported, although section 6, 7 and 8 name them: pinball loss, the Wilson interval for coverage, adaptive conformal inference and the Clark and West test.
+
+### 2026-11-24, how the autoregression is estimated
+
+These sentences describe what the code does. They change no forecast and no rule above the marker line.
+
+- Every lag from 1 to 4 is fitted on the same rows, all rows except the first 4 observations, and the lag is chosen by the Bayesian information criterion on that common sample. The forecast uses the coefficients of the chosen lag from that fit. The model is not refitted on more rows after the lag is chosen. A second implementation written only from the earlier text refitted on all rows of the chosen lag and differed from the published forecasts, which is how this was found.

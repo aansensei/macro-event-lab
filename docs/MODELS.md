@@ -27,7 +27,9 @@ forecast(t) = y(t - 1)        the previous first published number
 ```text
 y(t) = c + phi_1 y(t-1) + ... + phi_p y(t-p) + e(t)
 p chosen from 1, 2, 3, 4 by the Bayesian information criterion on a common sample
-estimated by least squares, at least 20 observations
+(all rows except the first 4 observations, so every lag is compared on the same rows)
+estimated by least squares on that common sample, at least 20 observations
+the forecast uses the coefficients of the chosen lag from that fit, with no refit on more rows
 ```
 
 ### Ridge regression
