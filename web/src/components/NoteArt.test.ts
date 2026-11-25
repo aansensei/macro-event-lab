@@ -22,3 +22,15 @@ it("takes every colour from the site tokens, never a fixed colour", () => {
   expect(html).not.toMatch(/(fill|stroke)="#/);
   expect(html).not.toMatch(/(fill|stroke)="(?!none)[a-z]+"/);
 });
+
+it("draws a shopping basket for an inflation note and bars for the others", () => {
+  const cpi = renderToStaticMarkup(createElement(NoteArt, { target: "cpi" }));
+  expect(cpi).toContain("art-basket");
+  expect(cpi).not.toContain("art-bar");
+  expect(cpi).not.toMatch(/(fill|stroke)="#/);
+  for (const target of ["payrolls", "gdp", undefined]) {
+    const html = renderToStaticMarkup(createElement(NoteArt, { target }));
+    expect(html).toContain("art-bar");
+    expect(html).not.toContain("art-basket");
+  }
+});

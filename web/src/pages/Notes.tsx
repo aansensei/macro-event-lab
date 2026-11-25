@@ -162,7 +162,7 @@ function NotePostView({
         </div>
       </header>
 
-      <NoteArt caption={ART_CAPTION} />
+      <NoteArt target={note.target} caption={ART_CAPTION} />
 
       <div className="note-body">{renderMarkdown(note.body)}</div>
 

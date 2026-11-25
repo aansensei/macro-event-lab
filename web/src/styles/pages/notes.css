@@ -294,3 +294,9 @@
 .note-art-svg .art-eraser { fill: var(--surprise-down); stroke: var(--text); stroke-width: 2; }
 .note-art-svg .art-scribble { fill: none; stroke: var(--text); stroke-width: 2; stroke-linecap: round; }
 .note-art-svg .art-lens { fill: var(--accent-tint); stroke: var(--text); stroke-width: 2.5; }
+/* the shopping basket scene of the inflation notes */
+.note-art-svg .art-basket { fill: var(--accent); stroke: var(--text); stroke-width: 2; stroke-linejoin: round; }
+.note-art-svg .art-item-warm { fill: var(--surprise-up); stroke: var(--text); stroke-width: 2; }
+.note-art-svg .art-item-rose { fill: var(--surprise-down); stroke: var(--text); stroke-width: 2; }
+.note-art-svg .art-item-paper { fill: var(--bg); stroke: var(--text); stroke-width: 2; stroke-linejoin: round; }
+.note-art-svg .art-tag { fill: var(--bg); stroke: var(--text); stroke-width: 2; stroke-linejoin: round; }
