@@ -277,3 +277,20 @@
 @media (prefers-reduced-motion: reduce) {
   .notes-filter-chip, .note-card, .note-pager-link { transition: none; }
 }
+/* the editorial illustration: flat shapes in the site colours with one outline weight */
+.note-art { margin: 24px 0 8px; }
+.note-art-svg { display: block; width: 100%; height: auto; border: 1px solid var(--border); border-radius: 12px; background-color: var(--surface); }
+.note-art-caption { margin-top: 8px; color: var(--text-muted); }
+.note-art-svg .art-ground { stroke: var(--border-control); stroke-width: 2; }
+.note-art-svg .art-bar { fill: var(--accent); stroke: var(--text); stroke-width: 2; }
+.note-art-svg .art-ghost { fill: none; stroke: var(--text); stroke-width: 2; stroke-dasharray: 5 4; }
+.note-art-svg .art-unknown { fill: none; stroke: var(--text-muted); stroke-width: 2; stroke-dasharray: 6 5; }
+.note-art-svg .art-line { fill: none; stroke: var(--text); stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; }
+.note-art-svg .art-skin { fill: var(--bg); stroke: var(--text); stroke-width: 2.5; }
+.note-art-svg .art-pencil { fill: var(--surprise-up); stroke: var(--text); stroke-width: 2; }
+.note-art-svg .art-pencil-line { fill: none; stroke: var(--text); stroke-width: 1.5; opacity: 0.45; }
+.note-art-svg .art-wood { fill: var(--bg); stroke: var(--text); stroke-width: 2; stroke-linejoin: round; }
+.note-art-svg .art-lead { fill: var(--text); }
+.note-art-svg .art-eraser { fill: var(--surprise-down); stroke: var(--text); stroke-width: 2; }
+.note-art-svg .art-scribble { fill: none; stroke: var(--text); stroke-width: 2; stroke-linecap: round; }
+.note-art-svg .art-lens { fill: var(--accent-tint); stroke: var(--text); stroke-width: 2.5; }

@@ -1,6 +1,7 @@
 import { useState, type MouseEvent } from "react";
 
 import { Icon } from "../components/Icon";
+import { NoteArt } from "../components/NoteArt";
 import { NoteCard } from "../components/NoteCard";
 import { RailPage, type RailSection } from "../components/SectionRail";
 import { StatusChip } from "../components/StatusChip";
@@ -10,6 +11,9 @@ import { formatReleaseDateTime, NOTE_TARGET_META, NOTE_TARGETS, type NoteTarget 
 import { noteSearch, pageSearch } from "../lib/url";
 
 type FilterValue = "all" | NoteTarget;
+
+// the line under the illustration on every notes page
+const ART_CAPTION = "Published once, then edited. The pencil never rests.";
 
 function isPlainClick(event: MouseEvent<HTMLAnchorElement>): boolean {
   return event.button === 0 && !event.metaKey && !event.ctrlKey && !event.shiftKey && !event.altKey;
@@ -44,6 +48,7 @@ function NotesIndexView({
         afterwards. Once the number is published, a dated section is added at the bottom to record what held and what
         did not.
       </p>
+      <NoteArt caption={ART_CAPTION} />
 
       {showFilters && (
         <div className="notes-filters" role="group" aria-label="Filter notes by target">
@@ -156,6 +161,8 @@ function NotePostView({
           <StatusChip status={status} />
         </div>
       </header>
+
+      <NoteArt caption={ART_CAPTION} />
 
       <div className="note-body">{renderMarkdown(note.body)}</div>
 
