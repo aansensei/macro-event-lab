@@ -197,3 +197,134 @@ def test_arena_file_follows_the_contract_and_stays_point_in_time() -> None:
     assert "kalshi" not in text
     assert "kx" not in text
     assert payload["live"][0]["period"] == "2010-01-01"
+
+
+def test_aci_coverage_hand_computed_sequence() -> None:
+    # window=4, level=0.8, gamma=0.5, initial alpha=0.2, abs errors: [1,2,3,4, 0.5,0.5,3.5,10,1]
+    # t=4: calib=[1,2,3,4], alpha=0.2, ceil(5*0.8)=4 -> hw=4.0, e=0.5 <= 4.0 -> miss=0, alpha=0.3
+    # t=5: calib=[0.5,2,3,4], alpha=0.3, ceil(5*0.7)=4 -> hw=4.0, e=0.5 <= 4.0 -> miss=0, alpha=0.4
+    # t=6: calib=[0.5,0.5,3,4], alpha=0.4, ceil(5*0.6)=3 -> hw=3.0, e=3.5 > 3.0 -> miss=1, alpha=0.0
+    # t=7: calib=[0.5,0.5,3.5,4], alpha=0.0 <= 0 -> hw=inf, e=10.0 <= inf -> miss=0, alpha=0.1
+    # t=8: calib=[0.5,0.5,3.5,10], alpha=0.1, ceil(5*0.9)=5 > 4 -> hw=inf, e=1.0 <= inf -> miss=0
+    errors = [-1.0, 2.0, -3.0, 4.0, 0.5, -0.5, 3.5, -10.0, 1.0]
+    result = conformal.aci_coverage(errors, level=0.8, gamma=0.5, window=4)
+    assert result["n"] == 5
+    assert result["coverage"] == pytest.approx(4 / 5)
+
+    short = conformal.aci_coverage([1.0, 2.0, 3.0, 4.0], level=0.8, gamma=0.5, window=4)
+    assert short == {"n": 0, "coverage": None}
+
+    # alpha reaches 1.0 after repeated hits and remains bounded
+    many_hits = conformal.aci_coverage(
+        [1.0, 2.0, 3.0, 4.0, 0.1, 0.1, 0.1, 0.1], level=0.5, gamma=1.0, window=4,
+    )
+    assert many_hits["n"] == 4
+    assert 0.0 <= float(many_hits["coverage"]) <= 1.0
+
+
+def test_build_arena_keeps_existing_scores_unchanged_and_adds_new_fields() -> None:
+    expected_existing = [
+        {
+            "target": "cpi", "contestant": "naive", "window": "all",
+            "n": 118, "mae": 0.2025, "rmse": 0.2499, "coverage_90": 0.9359,
+            "dm_vs_naive_p": None,
+        },
+        {
+            "target": "cpi", "contestant": "naive", "window": "clean",
+            "n": 118, "mae": 0.2025, "rmse": 0.2499, "coverage_90": 0.9359,
+            "dm_vs_naive_p": None,
+        },
+        {
+            "target": "cpi", "contestant": "ar", "window": "all",
+            "n": 99, "mae": 0.1432, "rmse": 0.1798, "coverage_90": 0.9322,
+            "dm_vs_naive_p": 0.0,
+        },
+        {
+            "target": "cpi", "contestant": "ar", "window": "clean",
+            "n": 99, "mae": 0.1432, "rmse": 0.1798, "coverage_90": 0.9322,
+            "dm_vs_naive_p": 0.0,
+        },
+        {
+            "target": "cpi", "contestant": "ridge", "window": "all",
+            "n": 98, "mae": 0.1415, "rmse": 0.1779, "coverage_90": 0.931,
+            "dm_vs_naive_p": 0.0,
+        },
+        {
+            "target": "cpi", "contestant": "ridge", "window": "clean",
+            "n": 98, "mae": 0.1415, "rmse": 0.1779, "coverage_90": 0.931,
+            "dm_vs_naive_p": 0.0,
+        },
+        {
+            "target": "cpi", "contestant": "factor_ridge", "window": "all",
+            "n": 98, "mae": 0.1424, "rmse": 0.1784, "coverage_90": 0.9138,
+            "dm_vs_naive_p": 0.0,
+        },
+        {
+            "target": "cpi", "contestant": "factor_ridge", "window": "clean",
+            "n": 98, "mae": 0.1424, "rmse": 0.1784, "coverage_90": 0.9138,
+            "dm_vs_naive_p": 0.0,
+        },
+        {
+            "target": "cpi", "contestant": "lasso", "window": "all",
+            "n": 98, "mae": 0.1415, "rmse": 0.1792, "coverage_90": 0.931,
+            "dm_vs_naive_p": 0.0,
+        },
+        {
+            "target": "cpi", "contestant": "lasso", "window": "clean",
+            "n": 98, "mae": 0.1415, "rmse": 0.1792, "coverage_90": 0.931,
+            "dm_vs_naive_p": 0.0,
+        },
+    ]
+    observations = monthly_series("CPIAUCSL", random_walk(120))
+    payload = export.build_arena(observations, None, date(2010, 6, 1))
+    scores = payload["scores"]
+    expected_keys = [
+        "target", "contestant", "window", "n", "mae", "rmse", "coverage_90", "dm_vs_naive_p",
+        "n_intervals", "coverage_90_lo", "coverage_90_hi",
+        "pinball_05", "pinball_50", "pinball_95", "aci_n", "aci_coverage_90",
+    ]
+    assert len(scores) == len(expected_existing)
+    for row, baseline in zip(scores, expected_existing, strict=True):
+        assert list(row.keys()) == expected_keys
+        for key, val in baseline.items():
+            assert row[key] == val
+        assert isinstance(row["n_intervals"], int) and row["n_intervals"] > 0
+        cov_lo = float(row["coverage_90_lo"])
+        cov_mid = float(row["coverage_90"])
+        cov_hi = float(row["coverage_90_hi"])
+        assert 0.0 <= cov_lo <= cov_mid <= cov_hi <= 1.0
+        assert float(row["pinball_05"]) >= 0.0
+        assert float(row["pinball_50"]) >= 0.0
+        assert float(row["pinball_95"]) >= 0.0
+        assert row["aci_n"] == int(row["n"]) - 40
+        assert 0.0 <= float(row["aci_coverage_90"]) <= 1.0
+
+    nested = payload["nested_tests"]
+    assert [(r["target"], r["restricted"], r["larger"], r["window"]) for r in nested] == [
+        ("cpi", "naive", "ar", "all"),
+        ("cpi", "naive", "ar", "clean"),
+        ("cpi", "ar", "ridge", "all"),
+        ("cpi", "ar", "ridge", "clean"),
+    ]
+    for entry in nested:
+        assert list(entry.keys()) == [
+            "target", "restricted", "larger", "window", "n", "statistic", "p_value",
+        ]
+        assert isinstance(entry["n"], int) and entry["n"] >= 3
+        assert 0.0 <= float(entry["p_value"]) <= 1.0
+
+
+def test_build_arena_sets_null_interval_and_aci_fields_when_history_is_short() -> None:
+    observations = monthly_series("CPIAUCSL", random_walk(21))
+    payload = export.build_arena(observations, None, date(2002, 6, 1))
+    assert payload["scores"]
+    for row in payload["scores"]:
+        assert row["n_intervals"] == 0
+        assert row["coverage_90_lo"] is None
+        assert row["coverage_90_hi"] is None
+        assert row["pinball_05"] is None
+        assert row["pinball_50"] is None
+        assert row["pinball_95"] is None
+        assert row["aci_n"] == 0
+        assert row["aci_coverage_90"] is None
+    assert payload["nested_tests"] == []

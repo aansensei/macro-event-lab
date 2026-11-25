@@ -3,6 +3,8 @@ from __future__ import annotations
 import math
 
 import pytest
+from hypothesis import given
+from hypothesis import strategies as st
 
 from macro_event_lab.arena import metrics
 
@@ -71,3 +73,110 @@ def test_dm_test_returns_none_for_identical_or_short_series() -> None:
     assert metrics.dm_test([1.0, 2.0], [2.0, 1.0]) is None
     with pytest.raises(ValueError):
         metrics.dm_test(LOSS1, LOSS2, horizon=0)
+
+
+def test_pinball_loss_at_three_levels() -> None:
+    actuals = [1.0, 3.0]
+    quantiles = [2.0, 1.0]
+    assert metrics.pinball_loss(actuals, quantiles, 0.05) == pytest.approx((0.95 + 0.10) / 2)
+    assert metrics.pinball_loss(actuals, quantiles, 0.5) == pytest.approx((0.50 + 1.00) / 2)
+    assert metrics.pinball_loss(actuals, quantiles, 0.95) == pytest.approx((0.05 + 1.90) / 2)
+
+
+@given(
+    pairs=st.lists(
+        st.tuples(
+            st.floats(min_value=-1e4, max_value=1e4, allow_nan=False, allow_infinity=False),
+            st.floats(min_value=-1e4, max_value=1e4, allow_nan=False, allow_infinity=False),
+        ),
+        min_size=1,
+        max_size=40,
+    ),
+    tau=st.sampled_from([0.05, 0.5, 0.95]),
+)
+def test_pinball_loss_is_never_negative(
+    pairs: list[tuple[float, float]], tau: float,
+) -> None:
+    actuals = [y for y, _ in pairs]
+    quantiles = [q for _, q in pairs]
+    loss = metrics.pinball_loss(actuals, quantiles, tau)
+    assert loss is not None
+    assert loss >= 0.0
+
+
+def test_wilson_interval_boundaries() -> None:
+    z = 1.959964
+    low_zero, high_zero = metrics.wilson_interval(0, 10)
+    assert low_zero == 0.0
+    assert high_zero == pytest.approx((z * z) / (10 + z * z), abs=1e-12)
+
+    low_all, high_all = metrics.wilson_interval(10, 10)
+    assert low_all == pytest.approx(10 / (10 + z * z), abs=1e-12)
+    assert high_all == 1.0
+
+    with pytest.raises(ValueError):
+        metrics.wilson_interval(0, 0)
+
+
+@given(trials=st.integers(min_value=1, max_value=500), data=st.data())
+def test_wilson_interval_contains_share_and_stays_within_unit_interval(
+    trials: int, data: st.DataObject,
+) -> None:
+    successes = data.draw(st.integers(min_value=0, max_value=trials))
+    low, high = metrics.wilson_interval(successes, trials)
+    share = successes / trials
+    assert 0.0 <= low <= share <= high <= 1.0
+
+
+def test_clark_west_test_hand_computed() -> None:
+    # t=0: (2-1)^2 - ((2-2)^2 - (1-2)^2) = 1 - (0 - 1) = 2
+    # t=1: (4-2)^2 - ((4-3)^2 - (2-3)^2) = 4 - (1 - 1) = 4
+    # t=2: (1-2)^2 - ((1-1)^2 - (2-1)^2) = 1 - (0 - 1) = 2
+    # t=3: (3-1)^2 - ((3-2)^2 - (1-2)^2) = 4 - (1 - 1) = 4
+    # mean = (2 + 4 + 2 + 4) / 4 = 3.0; var = (1 + 1 + 1 + 1) / 4 = 1.0
+    # statistic = 3.0 / sqrt(1.0 / 4) = 6.0; df = 3
+    actuals = [2.0, 4.0, 1.0, 3.0]
+    restricted = [1.0, 2.0, 2.0, 1.0]
+    larger = [2.0, 3.0, 1.0, 2.0]
+    result = metrics.clark_west_test(restricted, larger, actuals)
+    assert result is not None
+    assert result["n"] == 4
+    assert result["statistic"] == pytest.approx(6.0, abs=1e-12)
+    assert result["p_value"] == pytest.approx(1.0 - metrics.student_t_cdf(6.0, 3), abs=1e-12)
+    assert 0.004 < float(result["p_value"]) < 0.005
+
+
+def test_clark_west_test_edge_cases() -> None:
+    assert metrics.clark_west_test([1.0, 2.0], [1.5, 2.5], [1.0, 2.0]) is None
+    assert metrics.clark_west_test([1.0, 1.0, 1.0], [1.0, 1.0, 1.0], [2.0, 3.0, 4.0]) is None
+    with pytest.raises(ValueError):
+        metrics.clark_west_test([1.0, 2.0], [1.0], [1.0, 2.0])
+
+
+@given(
+    pairs=st.lists(
+        st.tuples(
+            st.floats(min_value=-1e3, max_value=1e3, allow_nan=False, allow_infinity=False),
+            st.floats(min_value=-1e3, max_value=1e3, allow_nan=False, allow_infinity=False),
+        ),
+        min_size=3,
+        max_size=30,
+    ),
+)
+def test_clark_west_identical_forecasts_return_none(
+    pairs: list[tuple[float, float]],
+) -> None:
+    forecasts = [f for f, _ in pairs]
+    actuals = [y for _, y in pairs]
+    assert metrics.clark_west_test(forecasts, forecasts, actuals) is None
+
+
+def test_inside_counts_an_actual_on_the_edge_despite_floating_point_noise() -> None:
+    # 0.2 - 0.7 is -0.49999999999999994 in floating point, one step above the actual -0.5
+    low = 0.2 - 0.7
+    assert low > -0.5
+    assert metrics.inside(-0.5, low, 0.9)
+    assert metrics.inside(0.9, low, 0.2 + 0.7)
+    assert not metrics.inside(-0.5001, low, 0.9)
+    assert not metrics.inside(0.9001, low, 0.9)
+    assert metrics.coverage([-0.5, 2.0], [low, 0.0], [0.9, 1.0]) == 0.5

@@ -159,8 +159,18 @@ def test_write_open_data_parquet_returns_three_paths_and_schemas(tmp_path: Path)
         "rmse": pl.Float64,
         "coverage_90": pl.Float64,
         "dm_vs_naive_p": pl.Float64,
+        "n_intervals": pl.Int64,
+        "coverage_90_lo": pl.Float64,
+        "coverage_90_hi": pl.Float64,
+        "pinball_05": pl.Float64,
+        "pinball_50": pl.Float64,
+        "pinball_95": pl.Float64,
+        "aci_n": pl.Int64,
+        "aci_coverage_90": pl.Float64,
     }
     assert s_df["n"].dtype == pl.Int64
+    assert s_df["n_intervals"].dtype == pl.Int64
+    assert s_df["aci_n"].dtype == pl.Int64
 
     r_df = pl.read_parquet(revisions_p)
     assert dict(r_df.schema) == {
@@ -233,7 +243,17 @@ def test_parquet_matches_csv_rows_cells_nulls_and_zstd(tmp_path: Path) -> None:
         assert row_pq["contestant"] == row_csv["contestant"]
         assert row_pq["window"] == row_csv["window"]
         assert row_pq["n"] == int(row_csv["n"])
-        for col in ("mae", "rmse", "coverage_90", "dm_vs_naive_p"):
+        for col in ("n_intervals", "aci_n"):
+            if row_csv[col] == "":
+                assert row_pq[col] is None
+            else:
+                assert row_pq[col] == int(row_csv[col])
+        for col in (
+            "mae", "rmse", "coverage_90", "dm_vs_naive_p",
+            "coverage_90_lo", "coverage_90_hi",
+            "pinball_05", "pinball_50", "pinball_95",
+            "aci_coverage_90",
+        ):
             if row_csv[col] == "":
                 assert row_pq[col] is None
             else:
@@ -267,3 +287,32 @@ def test_write_open_data_parquet_handles_empty_tables(tmp_path: Path) -> None:
     assert pl.read_parquet(forecasts_p).height == 0
     assert pl.read_parquet(scores_p).height == 0
     assert pl.read_parquet(revisions_p).height == 0
+
+
+def test_write_open_data_parquet_preserves_new_score_columns(tmp_path: Path) -> None:
+    out = tmp_path / "with_scores"
+    arena = _sample_arena()
+    arena["scores"][0].update({
+        "n_intervals": 8,
+        "coverage_90_lo": 0.65,
+        "coverage_90_hi": 0.99,
+        "pinball_05": 0.01,
+        "pinball_50": 0.07,
+        "pinball_95": 0.02,
+        "aci_n": 10,
+        "aci_coverage_90": 0.9,
+    })
+    _write_inputs(out, arena, _sample_revisions())
+    _forecasts_p, scores_p, _revisions_p = write_open_data_parquet(out)
+    rows = pl.read_parquet(scores_p).to_dicts()
+    assert rows[0]["n_intervals"] == 8
+    assert rows[0]["coverage_90_lo"] == 0.65
+    assert rows[0]["coverage_90_hi"] == 0.99
+    assert rows[0]["pinball_05"] == 0.01
+    assert rows[0]["pinball_50"] == 0.07
+    assert rows[0]["pinball_95"] == 0.02
+    assert rows[0]["aci_n"] == 10
+    assert rows[0]["aci_coverage_90"] == 0.9
+    assert rows[1]["n_intervals"] is None
+    assert rows[1]["aci_n"] is None
+    assert rows[1]["pinball_05"] is None

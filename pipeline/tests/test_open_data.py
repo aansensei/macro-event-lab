@@ -150,6 +150,14 @@ def test_headers_row_order_and_counts() -> None:
         "rmse",
         "coverage_90",
         "dm_vs_naive_p",
+        "n_intervals",
+        "coverage_90_lo",
+        "coverage_90_hi",
+        "pinball_05",
+        "pinball_50",
+        "pinball_95",
+        "aci_n",
+        "aci_coverage_90",
     ]
     assert len(score_rows) == 3
     assert [(r[0], r[1], r[2]) for r in score_rows[1:]] == [
@@ -311,3 +319,62 @@ def test_round_trip_dict_reader_matches_source_numbers(tmp_path: Path) -> None:
             assert row["next_print"] == ""
         else:
             assert float(row["next_print"]) == src["next"]
+
+
+def test_score_new_columns_export_and_missing_values() -> None:
+    arena = {
+        "contestants": [{"id": "ar", "label": "AR", "kind": "classical"}],
+        "forecasts": [],
+        "scores": [
+            {
+                "target": "cpi",
+                "contestant": "ar",
+                "window": "all",
+                "n": 50,
+                "mae": 0.15,
+                "rmse": 0.21,
+                "coverage_90": 0.9,
+                "dm_vs_naive_p": 0.04,
+                "n_intervals": 10,
+                "coverage_90_lo": 0.5958,
+                "coverage_90_hi": 0.9821,
+                "pinball_05": 0.02,
+                "pinball_50": 0.075,
+                "pinball_95": 0.021,
+                "aci_n": 10,
+                "aci_coverage_90": 0.8,
+            },
+            {
+                "target": "gdp",
+                "contestant": "ar",
+                "window": "all",
+                "n": 12,
+                "mae": 0.5,
+                "rmse": 0.6,
+                "coverage_90": None,
+                "dm_vs_naive_p": None,
+                "n_intervals": 0,
+                "coverage_90_lo": None,
+                "coverage_90_hi": None,
+                "pinball_05": None,
+                "pinball_50": None,
+                "pinball_95": None,
+                "aci_n": 0,
+                "aci_coverage_90": None,
+            },
+        ],
+    }
+    rows = list(csv.DictReader(io.StringIO(arena_scores_csv(arena))))
+    assert rows[0]["n_intervals"] == "10"
+    assert rows[0]["coverage_90_lo"] == "0.5958"
+    assert rows[0]["coverage_90_hi"] == "0.9821"
+    assert rows[0]["pinball_05"] == "0.02"
+    assert rows[0]["pinball_50"] == "0.075"
+    assert rows[0]["pinball_95"] == "0.021"
+    assert rows[0]["aci_n"] == "10"
+    assert rows[0]["aci_coverage_90"] == "0.8"
+    assert rows[1]["n_intervals"] == "0"
+    assert rows[1]["coverage_90_lo"] == ""
+    assert rows[1]["pinball_05"] == ""
+    assert rows[1]["aci_n"] == "0"
+    assert rows[1]["aci_coverage_90"] == ""

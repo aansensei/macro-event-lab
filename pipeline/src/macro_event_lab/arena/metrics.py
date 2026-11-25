@@ -24,13 +24,23 @@ def pinball_loss(actuals: Sequence[float], quantiles: Sequence[float], tau: floa
     return total / len(actuals)
 
 
+# published numbers move in steps of 0.1, so an actual often sits exactly on an interval edge and
+# floating point noise of about 1e-16 must not decide whether it counts as inside
+EDGE_TOLERANCE = 1e-9
+
+
+def inside(actual: float, low: float, high: float) -> bool:
+    """Whether the actual is in the closed interval, edges included up to floating point noise."""
+    return low - EDGE_TOLERANCE <= actual <= high + EDGE_TOLERANCE
+
+
 def coverage(
     actuals: Sequence[float], lows: Sequence[float], highs: Sequence[float],
 ) -> float | None:
     """Share of actuals inside the closed interval."""
     if not actuals:
         return None
-    hits = sum(lo <= y <= hi for y, lo, hi in zip(actuals, lows, highs, strict=True))
+    hits = sum(inside(y, lo, hi) for y, lo, hi in zip(actuals, lows, highs, strict=True))
     return hits / len(actuals)
 
 
@@ -42,7 +52,10 @@ def wilson_interval(successes: int, trials: int, z: float = 1.959964) -> tuple[f
     denominator = 1 + z * z / trials
     center = (p + z * z / (2 * trials)) / denominator
     half = z * math.sqrt(p * (1 - p) / trials + z * z / (4 * trials * trials)) / denominator
-    return center - half, center + half
+    # clamp floating point overshoot at the 0 and 1 boundaries so the interval stays in [0, 1]
+    low = 0.0 if successes == 0 else max(0.0, center - half)
+    high = 1.0 if successes == trials else min(1.0, center + half)
+    return low, high
 
 
 def _beta_continued_fraction(a: float, b: float, x: float) -> float:
@@ -124,3 +137,34 @@ def dm_test(
         "n": n, "mean_difference": mean, "statistic": statistic,
         "corrected_statistic": corrected, "p_value": p_value,
     }
+
+
+def clark_west_test(
+    restricted_forecasts: Sequence[float],
+    larger_forecasts: Sequence[float],
+    actuals: Sequence[float],
+) -> dict[str, float | int] | None:
+    """One sided Clark and West adjusted test of equal forecast accuracy for nested models.
+
+    Positive statistics favor the larger model; p_value is the Student t upper tail.
+    """
+    if len(restricted_forecasts) != len(larger_forecasts) or len(restricted_forecasts) != len(
+        actuals
+    ):
+        raise ValueError("forecast and actual series must have the same length")
+    n = len(actuals)
+    if n < 3:
+        return None
+    adjusted: list[float] = []
+    for yhat_r, yhat_l, y in zip(restricted_forecasts, larger_forecasts, actuals, strict=True):
+        err_r = y - yhat_r
+        err_l = y - yhat_l
+        adjusted.append(err_r * err_r - (err_l * err_l - (yhat_r - yhat_l) ** 2))
+    mean_f = sum(adjusted) / n
+    # divide by n to match the sample variance convention of dm_test above
+    variance = sum((val - mean_f) ** 2 for val in adjusted) / n
+    if variance <= 1e-15:
+        return None
+    statistic = mean_f / math.sqrt(variance / n)
+    p_value = 1.0 - student_t_cdf(statistic, n - 1)
+    return {"statistic": statistic, "p_value": p_value, "n": n}

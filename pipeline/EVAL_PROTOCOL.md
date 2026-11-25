@@ -121,3 +121,17 @@ These sentences describe what the code does. They change no forecast and no rule
 These sentences describe what the code does. They change no forecast and no rule above the marker line.
 
 - Every lag from 1 to 4 is fitted on the same rows, all rows except the first 4 observations, and the lag is chosen by the Bayesian information criterion on that common sample. The forecast uses the coefficients of the chosen lag from that fit. The model is not refitted on more rows after the lag is chosen. A second implementation written only from the earlier text refitted on all rows of the chosen lag and differed from the published forecasts, which is how this was found.
+
+### 2026-11-24, the remaining scores are now reported
+
+These sentences describe what the code does. They change no forecast and no rule above the marker line. They replace the earlier note that listed these scores as not yet reported.
+
+- Each score row now also carries the number of forecasts that have an interval, the 95 percent Wilson interval of the coverage, the pinball loss at the quantile levels 0.05, 0.5 and 0.95 (the lower bound, the point forecast and the upper bound of the 90 percent interval stand for the three quantiles, over the forecasts that have an interval), and the coverage of adaptive conformal intervals. The Wilson interval is clamped to the range 0 to 1 at the edges.
+- Adaptive conformal inference starts at a miscoverage of 0.1, moves it by 0.01 times the gap between the target miss rate and the observed miss, and takes the half width from the last 40 absolute errors that come before the error being scored in period order. Unlike the published split conformal interval, this sensitivity check does not wait for each earlier error to have been released, so it is a description of how the rule behaves on this sample, not a forecast anyone could have made. It is never shown as the headline interval.
+- The Clark and West adjusted test compares `ar` with `naive` and `ridge` with `ar` for every target where both forecast, over the periods both forecast. The statistic divides the mean of the adjusted loss difference by its standard error computed with divisor n, and the p value is one sided from a Student t distribution with n minus 1 degrees of freedom: a small value means the larger model forecasts better than chance explains.
+
+### 2026-11-24, an actual on the edge of an interval counts as inside
+
+This sentence describes what the code does. It changes no forecast and no rule above the marker line.
+
+- Published numbers move in steps of 0.1 and interval half widths are differences of such numbers, so an actual often sits exactly on an interval edge. An actual on the edge counts as covered. Edges are compared with a tolerance of 1e-9 so that floating point noise of the order of 1e-16 does not decide the outcome. Before this was added, one forecast in the inflation record of the naive forecast (September 2006, the actual of minus 0.5 against a lower edge computed as minus 0.49999999999999994) was counted as a miss, which moved that coverage by one forecast. The same tolerance is used by the adaptive conformal sensitivity check.

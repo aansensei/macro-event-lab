@@ -35,6 +35,14 @@ SCORE_HEADER = [
     "rmse",
     "coverage_90",
     "dm_vs_naive_p",
+    "n_intervals",
+    "coverage_90_lo",
+    "coverage_90_hi",
+    "pinball_05",
+    "pinball_50",
+    "pinball_95",
+    "aci_n",
+    "aci_coverage_90",
 ]
 REVISIONS_HEADER = [
     "series",
@@ -70,6 +78,14 @@ SCORE_SCHEMA: dict[str, pl.DataType] = {
     "rmse": pl.Float64,
     "coverage_90": pl.Float64,
     "dm_vs_naive_p": pl.Float64,
+    "n_intervals": pl.Int64,
+    "coverage_90_lo": pl.Float64,
+    "coverage_90_hi": pl.Float64,
+    "pinball_05": pl.Float64,
+    "pinball_50": pl.Float64,
+    "pinball_95": pl.Float64,
+    "aci_n": pl.Int64,
+    "aci_coverage_90": pl.Float64,
 }
 REVISIONS_SCHEMA: dict[str, pl.DataType] = {
     "series": pl.String,
@@ -160,6 +176,14 @@ def _arena_score_records(arena: dict[str, Any]) -> list[tuple[Any, ...]]:
             score.get("rmse"),
             score.get("coverage_90"),
             score.get("dm_vs_naive_p"),
+            score.get("n_intervals"),
+            score.get("coverage_90_lo"),
+            score.get("coverage_90_hi"),
+            score.get("pinball_05"),
+            score.get("pinball_50"),
+            score.get("pinball_95"),
+            score.get("aci_n"),
+            score.get("aci_coverage_90"),
         ))
     return records
 
@@ -200,14 +224,7 @@ def arena_forecasts_csv(arena: dict[str, Any]) -> str:
 def arena_scores_csv(arena: dict[str, Any]) -> str:
     """Flatten arena score entries into CSV text in file order."""
     rows = [
-        [
-            r[0], r[1], r[2], r[3],
-            _format_number(r[4]),
-            _format_number(r[5]),
-            _format_number(r[6]),
-            _format_number(r[7]),
-            _format_number(r[8]),
-        ]
+        [r[0], r[1], r[2], r[3], *(_format_number(value) for value in r[4:])]
         for r in _arena_score_records(arena)
     ]
     return _render_csv(SCORE_HEADER, rows)
@@ -261,6 +278,14 @@ def write_open_data_parquet(out_dir: Path) -> tuple[Path, Path, Path]:
             _to_float(r[6]),
             _to_float(r[7]),
             _to_float(r[8]),
+            _to_int(r[9]),
+            _to_float(r[10]),
+            _to_float(r[11]),
+            _to_float(r[12]),
+            _to_float(r[13]),
+            _to_float(r[14]),
+            _to_int(r[15]),
+            _to_float(r[16]),
         )
         for r in _arena_score_records(arena)
     ]
