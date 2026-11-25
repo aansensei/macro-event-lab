@@ -16,7 +16,7 @@ from macro_event_lab.arena.export import write_arena
 from macro_event_lab.briefing import write_briefing
 from macro_event_lab.build import build_silver
 from macro_event_lab.config import Paths
-from macro_event_lab.gold import revisions
+from macro_event_lab.first_release import revisions
 from macro_event_lab.nowcast import coefficient_table, live_nowcast, nowcast_rows, walk_forward
 from macro_event_lab.nowcast_export import export_nowcast
 from macro_event_lab.open_data import write_open_data

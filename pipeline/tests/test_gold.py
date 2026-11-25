@@ -708,3 +708,13 @@ def test_forecast_scores_per_event_with_a_naive_benchmark():
     assert 0 < c3["pit"] < 1 and c3["crps"] > 0
     assert out["C1"]["abs_err_naive"] is None  # no earlier print to copy
     assert "C4" not in out
+
+
+def test_first_print_and_revision_code_lives_in_first_release_and_gold_re_exports_it() -> None:
+    from macro_event_lab import first_release, gold
+
+    for name in (
+        "first_prints", "revisions", "units_as_of", "latest_per_release", "in_kalshi_units",
+        "FIRST_PRINT_SERIES", "REVISION_SCHEMA", "REVISIONS_SINCE", "CURRENT",
+    ):
+        assert getattr(gold, name) is getattr(first_release, name)

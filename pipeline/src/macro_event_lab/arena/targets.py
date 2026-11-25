@@ -7,7 +7,7 @@ from zoneinfo import ZoneInfo
 
 import polars as pl
 
-from macro_event_lab.gold import REVISIONS_SINCE, first_prints
+from macro_event_lab.first_release import REVISIONS_SINCE, first_prints
 
 NEW_YORK = ZoneInfo("America/New_York")
 SURVEY_SOURCE_PREFIX = "spf_news_release_date"

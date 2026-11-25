@@ -15,7 +15,7 @@ from datetime import date, timedelta
 import numpy as np
 import polars as pl
 
-from macro_event_lab.gold import first_prints
+from macro_event_lab.first_release import first_prints
 
 # Indicators and how each enters: annualised growth of the quarterly average, or the change
 # in the quarterly average (the unemployment rate is already a percentage)
