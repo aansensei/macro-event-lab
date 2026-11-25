@@ -1,6 +1,7 @@
 import { useEffect, useRef, type ReactNode } from "react";
 
 import type { useNavigation } from "../hooks/useNavigation";
+import { useScrollReveal } from "../hooks/useScrollReveal";
 import { inEdition } from "../lib/edition";
 import { LEARN, PRIMARY } from "../lib/navigation";
 import { BackToTop } from "./BackToTop";
@@ -20,6 +21,7 @@ export function AppShell({ route, navigate, navigationKey, children, eventTitle,
     : route.page === "reactions" ? "Do surprises move interest rates?"
     : label;
 
+  useScrollReveal(mainRef);
   useEffect(() => { document.title = `${title} | Macro Event Lab`; }, [title]);
   useEffect(() => {
     if (navigationKey > 0) mainRef.current?.focus({ preventScroll: true });
