@@ -5,7 +5,7 @@ import { arenaFixture } from "./arenaFixture";
 
 it("accepts nullable data, real zeros and independent empty sections", () => {
   expect(parseArena(arenaFixture)).toEqual(arenaFixture);
-  expect(parseArena({ ...arenaFixture, targets: [], contestants: [], forecasts: [], scores: [], leakage: [], live: [] }).targets).toEqual([]);
+  expect(parseArena({ ...arenaFixture, targets: [], contestants: [], forecasts: [], scores: [], leakage: [], live: [], nested_tests: [] }).targets).toEqual([]);
   expect(parseArena(arenaFixture).forecasts[0]?.actual).toBe(0);
 });
 
@@ -64,8 +64,53 @@ it("validates live references and dates", () => {
   expect(() => parseArena({ ...arenaFixture, live: [{ ...live, values: { unknown: 1 } }] })).toThrow();
 });
 
-it.each(["targets", "contestants", "forecasts", "scores", "leakage"] as const)("rejects duplicate %s records", (key) => {
-  expect(() => parseArena({ ...arenaFixture, [key]: [...arenaFixture[key], arenaFixture[key][0]] })).toThrow("duplicate");
+it.each(["targets", "contestants", "forecasts", "scores", "leakage", "nested_tests"] as const)("rejects duplicate %s records", (key) => {
+  const list = arenaFixture[key]!;
+  expect(() => parseArena({ ...arenaFixture, [key]: [...list, list[0]] })).toThrow("duplicate");
+});
+
+it("defaults absent optional score fields to null and absent nested_tests to an empty list", () => {
+  const legacyScores = arenaFixture.scores.map(({ target, contestant, window, n, mae, rmse, coverage_90, dm_vs_naive_p }) => ({
+    target, contestant, window, n, mae, rmse, coverage_90, dm_vs_naive_p,
+  }));
+  const { nested_tests: _removed, ...legacyRoot } = arenaFixture;
+  const parsed = parseArena({ ...legacyRoot, scores: legacyScores });
+  expect(parsed.nested_tests).toEqual([]);
+  expect(parsed.scores[0]).toMatchObject({
+    n_intervals: null, coverage_90_lo: null, coverage_90_hi: null,
+    pinball_05: null, pinball_50: null, pinball_95: null, aci_n: null, aci_coverage_90: null,
+  });
+});
+
+it.each([
+  { n_intervals: -1 }, { n_intervals: 1.5 }, { n_intervals: "40" },
+  { coverage_90_lo: -0.1 }, { coverage_90_hi: 1.1 },
+  { pinball_05: -0.1 }, { pinball_50: "0.2" }, { pinball_95: Infinity },
+  { aci_n: 1.2 }, { aci_coverage_90: NaN },
+])("rejects wrong-typed or out-of-range optional score fields %#", (patch) => {
+  expect(() => parseArena({ ...arenaFixture, scores: [{ ...arenaFixture.scores[0], ...patch }] })).toThrow();
+});
+
+it.each([
+  null, "invalid", [null],
+  [{ ...arenaFixture.nested_tests![0], target: "unknown" }],
+  [{ ...arenaFixture.nested_tests![0], restricted: "missing" }],
+  [{ ...arenaFixture.nested_tests![0], larger: "missing" }],
+  [{ ...arenaFixture.nested_tests![0], window: "other" }],
+  [{ ...arenaFixture.nested_tests![0], n: -1 }],
+  [{ ...arenaFixture.nested_tests![0], n: 1.5 }],
+  [{ ...arenaFixture.nested_tests![0], statistic: "1.2" }],
+  [{ ...arenaFixture.nested_tests![0], p_value: 1.5 }],
+])("rejects malformed nested_tests %#", (nested_tests) => {
+  expect(() => parseArena({ ...arenaFixture, nested_tests })).toThrow();
+});
+
+it("accepts nullable statistics and p values in nested_tests", () => {
+  const parsed = parseArena({
+    ...arenaFixture,
+    nested_tests: [{ target: "gdp", restricted: "naive", larger: "fixture-b", window: "all", n: 2, statistic: null, p_value: null }],
+  });
+  expect(parsed.nested_tests[0]).toMatchObject({ statistic: null, p_value: null });
 });
 
 it("orders a copied history without changing the input", () => {

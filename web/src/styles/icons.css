@@ -7,13 +7,13 @@
 @media (max-width: 479px) { .theme-btn { min-width: 36px; padding: 0; } }
 
 /* disclosure rows share one chevron that turns when the row opens, in place of the browser triangle and the plus and minus signs */
-details.how-to-read > summary, .faq-list > details > summary, .arena-leakage > summary,
+details.how-to-read > summary, .faq-list > details > summary, .arena-leakage > summary, .arena-details > summary,
 .model-data > summary, .guide-tools > summary, .event-example-note > summary {
   list-style: none; display: flex; align-items: center; gap: 8px;
 }
 details.how-to-read > summary::-webkit-details-marker, .faq-list > details > summary::-webkit-details-marker,
-.arena-leakage > summary::-webkit-details-marker { display: none; }
-details.how-to-read > summary::before, .faq-list > details > summary::before, .arena-leakage > summary::before,
+.arena-leakage > summary::-webkit-details-marker, .arena-details > summary::-webkit-details-marker { display: none; }
+details.how-to-read > summary::before, .faq-list > details > summary::before, .arena-leakage > summary::before, .arena-details > summary::before,
 .model-data > summary::before, .model-data[open] > summary::before,
 .guide-tools > summary::before, .guide-tools[open] > summary::before,
 .event-example-note > summary::before, .event-example-note[open] > summary::before {

@@ -25,7 +25,8 @@ it("shows supplied records, a single chart contestant and a collapsed counts-onl
   await act(async () => root.render(createElement(Arena)));
   expect(host.querySelectorAll("h1")).toHaveLength(1);
   expect(host.querySelectorAll('[role="radio"][tabindex="0"]')).toHaveLength(1);
-  expect(host.querySelectorAll(".arena-table tbody tr")).toHaveLength(4);
+  expect(host.querySelectorAll(".arena-table tbody tr")).toHaveLength(9);
+  expect(host.querySelector(".arena-section .arena-table")?.querySelectorAll("tbody tr")).toHaveLength(3);
   expect(host.querySelector(".arena-leakage")?.hasAttribute("open")).toBe(false);
   expect(host.querySelector(".arena-leakage")?.textContent).toContain("does not specify their target and measurement units");
   expect(host.querySelector(".arena-audit-table")?.textContent).not.toMatch(/RMSE/);
@@ -134,4 +135,63 @@ it("handles an empty contract and an unresolved request without fake data", asyn
   await act(async () => root.render(createElement(Arena)));
   expect(host.querySelector('[role="status"]')?.textContent).toBe("Loading forecast arena data.");
   expect(host.textContent).not.toContain("Fixture");
+});
+
+it("renders coverage intervals, closed More scores and Nested model tests sections, and Not available cells", async () => {
+  await act(async () => root.render(createElement(Arena)));
+  const leaderboardText = host.querySelector(".arena-section .arena-table")?.textContent ?? "";
+  expect(leaderboardText).toContain("95% interval 9% to 91%, 2 forecasts");
+  expect(leaderboardText).toContain("95% interval 21% to 100%, 1 forecast");
+
+  const details = Array.from(host.querySelectorAll<HTMLDetailsElement>(".arena-section details.arena-details"));
+  expect(details).toHaveLength(2);
+  expect(details[0]?.hasAttribute("open")).toBe(false);
+  expect(details[1]?.hasAttribute("open")).toBe(false);
+  expect(details[0]?.querySelector("summary")?.textContent).toBe("More scores: pinball loss and adaptive coverage");
+  expect(details[1]?.querySelector("summary")?.textContent).toBe("Nested model tests (Clark and West)");
+
+  const moreText = details[0]?.textContent ?? "";
+  expect(moreText).toContain("Pinball 5%");
+  expect(moreText).toContain("Adaptive coverage");
+  expect(moreText).toContain("Forecasts scored");
+  expect(moreText).toContain("0.15");
+  expect(moreText).toContain("Not available");
+  expect(moreText).toContain("A few dozen forecasts cannot separate close scores.");
+
+  const nestedText = details[1]?.textContent ?? "";
+  expect(nestedText).toContain("Fixture A");
+  expect(nestedText).toContain("Fixture B");
+  expect(nestedText).toContain("1.45");
+  expect(nestedText).toContain("0.142");
+  expect(nestedText).toContain("2 tests are shown in this table. No correction for several comparisons is applied.");
+});
+
+it("omits coverage interval note, More scores and Nested model tests when those fields are absent", async () => {
+  const legacy = structuredClone(arenaFixture);
+  legacy.scores = legacy.scores.map(({ target, contestant, window, n, mae, rmse, coverage_90, dm_vs_naive_p }) => ({
+    target, contestant, window, n, mae, rmse, coverage_90, dm_vs_naive_p,
+  }));
+  legacy.nested_tests = [];
+  vi.mocked(loadArena).mockResolvedValueOnce(legacy);
+  await act(async () => root.render(createElement(Arena)));
+  expect(host.textContent).not.toContain("95% interval");
+  expect(host.textContent).not.toContain("More scores: pinball loss and adaptive coverage");
+  expect(host.textContent).not.toContain("Nested model tests (Clark and West)");
+});
+
+it("renders Nested model tests without More scores when only nested pairs exist, and shows Not available for null stats", async () => {
+  const partial = structuredClone(arenaFixture);
+  partial.scores = partial.scores.map(({ target, contestant, window, n, mae, rmse, coverage_90, dm_vs_naive_p }) => ({
+    target, contestant, window, n, mae, rmse, coverage_90, dm_vs_naive_p,
+  }));
+  partial.nested_tests = [
+    { target: "gdp", restricted: "naive", larger: "fixture-b", window: "all", n: 2, statistic: null, p_value: null },
+  ];
+  vi.mocked(loadArena).mockResolvedValueOnce(partial);
+  await act(async () => root.render(createElement(Arena)));
+  expect(host.textContent).not.toContain("More scores: pinball loss and adaptive coverage");
+  const details = host.querySelectorAll<HTMLDetailsElement>(".arena-section details.arena-details");
+  expect(details).toHaveLength(1);
+  expect(details[0]?.textContent).toContain("1 tests are shown in this table. No correction for several comparisons is applied.");
+  expect(details[0]?.querySelector("table")?.textContent).toContain("Not available");
 });

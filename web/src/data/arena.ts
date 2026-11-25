@@ -13,6 +13,18 @@ export interface ArenaForecast {
 export interface ArenaScore {
   target: TargetId; contestant: string; window: ArenaWindow; n: number;
   mae: number | null; rmse: number | null; coverage_90: number | null; dm_vs_naive_p: number | null;
+  n_intervals?: number | null; coverage_90_lo?: number | null; coverage_90_hi?: number | null;
+  pinball_05?: number | null; pinball_50?: number | null; pinball_95?: number | null;
+  aci_n?: number | null; aci_coverage_90?: number | null;
+}
+export interface NestedTest {
+  target: TargetId; restricted: string; larger: string; window: ArenaWindow;
+  n: number; statistic: number | null; p_value: number | null;
+}
+export interface ParsedArenaScore extends ArenaScore {
+  n_intervals: number | null; coverage_90_lo: number | null; coverage_90_hi: number | null;
+  pinball_05: number | null; pinball_50: number | null; pinball_95: number | null;
+  aci_n: number | null; aci_coverage_90: number | null;
 }
 export interface LeakageRow {
   contestant: string; cutoff_rule: "published" | "weights_release_date" | "none"; cutoff: string | null;
@@ -22,6 +34,11 @@ export interface LiveForecastRow { target: TargetId; period: string; as_of: stri
 export interface Arena {
   schema_version: 1; information_date: string; targets: ArenaTarget[]; contestants: Contestant[];
   forecasts: ArenaForecast[]; scores: ArenaScore[]; leakage: LeakageRow[]; live: LiveForecastRow[];
+  nested_tests?: NestedTest[];
+}
+export interface ParsedArena extends Arena {
+  scores: ParsedArenaScore[];
+  nested_tests: NestedTest[];
 }
 
 function nullableNumber(value: unknown, where: string, maximum = Infinity, minimum = -Infinity): number | null {
@@ -32,7 +49,15 @@ function nullableNumber(value: unknown, where: string, maximum = Infinity, minim
   return value;
 }
 
-export function parseArena(value: unknown): Arena {
+function optionalNullableNumber(value: unknown, where: string, maximum = Infinity, minimum = -Infinity): number | null {
+  return value === undefined ? null : nullableNumber(value, where, maximum, minimum);
+}
+
+function optionalNullableCount(value: unknown, where: string): number | null {
+  return value === undefined || value === null ? null : countValue(value, where);
+}
+
+export function parseArena(value: unknown): ParsedArena {
   const root = objectValue(value, "Arena");
   if (root.schema_version !== 1) throw new Error("Unsupported arena data version. This page reads version 1.");
   const informationDate = dateValue(root.information_date, "Information date");
@@ -94,13 +119,34 @@ export function parseArena(value: unknown): Arena {
       made_on: originValue(forecast.made_on), actual: nullableNumber(forecast.actual, "First print"),
       values: forecastValues(forecast.values), intervals };
   });
-  const scores = arrayValue(root.scores, "Scores").map((raw): ArenaScore => {
+  const scores = arrayValue(root.scores, "Scores").map((raw): ParsedArenaScore => {
     const score = objectValue(raw, "Score");
     if (score.window !== "all" && score.window !== "clean") throw new Error("Unknown evaluation window.");
     return { target: targetReference(score.target), contestant: contestantReference(score.contestant), window: score.window,
       n: countValue(score.n, "Scored period count"), mae: nullableNumber(score.mae, "MAE", Infinity, 0),
       rmse: nullableNumber(score.rmse, "RMSE", Infinity, 0), coverage_90: nullableNumber(score.coverage_90, "Coverage", 1, 0),
-      dm_vs_naive_p: nullableNumber(score.dm_vs_naive_p, "P value", 1, 0) };
+      dm_vs_naive_p: nullableNumber(score.dm_vs_naive_p, "P value", 1, 0),
+      n_intervals: optionalNullableCount(score.n_intervals, "Interval count"),
+      coverage_90_lo: optionalNullableNumber(score.coverage_90_lo, "Coverage lower bound", 1, 0),
+      coverage_90_hi: optionalNullableNumber(score.coverage_90_hi, "Coverage upper bound", 1, 0),
+      pinball_05: optionalNullableNumber(score.pinball_05, "Pinball 5% loss", Infinity, 0),
+      pinball_50: optionalNullableNumber(score.pinball_50, "Pinball 50% loss", Infinity, 0),
+      pinball_95: optionalNullableNumber(score.pinball_95, "Pinball 95% loss", Infinity, 0),
+      aci_n: optionalNullableCount(score.aci_n, "Adaptive coverage count"),
+      aci_coverage_90: optionalNullableNumber(score.aci_coverage_90, "Adaptive coverage", 1, 0) };
+  });
+  const nestedTests = root.nested_tests === undefined ? [] : arrayValue(root.nested_tests, "Nested tests").map((raw): NestedTest => {
+    const row = objectValue(raw, "Nested test");
+    if (row.window !== "all" && row.window !== "clean") throw new Error("Unknown evaluation window.");
+    return {
+      target: targetReference(row.target),
+      restricted: contestantReference(row.restricted),
+      larger: contestantReference(row.larger),
+      window: row.window,
+      n: countValue(row.n, "Nested test period count"),
+      statistic: nullableNumber(row.statistic, "Nested test statistic"),
+      p_value: nullableNumber(row.p_value, "Nested test p value", 1, 0),
+    };
   });
   const leakage = arrayValue(root.leakage, "Leakage audit").map((raw): LeakageRow => {
     const row = objectValue(raw, "Audit row");
@@ -117,10 +163,11 @@ export function parseArena(value: unknown): Arena {
   });
   uniqueValues(forecasts.map((row) => `${row.target}:${row.period}`), "Forecasts");
   uniqueValues(scores.map((row) => `${row.target}:${row.contestant}:${row.window}`), "Scores");
+  uniqueValues(nestedTests.map((row) => `${row.target}:${row.restricted}:${row.larger}:${row.window}`), "Nested tests");
   uniqueValues(leakage.map((row) => row.contestant), "Audit rows");
   uniqueValues(live.map((row) => `${row.target}:${row.period}:${row.as_of}`), "Live forecasts");
   return { schema_version: 1, information_date: informationDate, targets, contestants,
-    forecasts: forecasts.sort((a, b) => a.period.localeCompare(b.period)), scores, leakage, live };
+    forecasts: forecasts.sort((a, b) => a.period.localeCompare(b.period)), scores, leakage, live, nested_tests: nestedTests };
 }
 
 export async function loadArena(fetchImpl: typeof fetch = fetch): Promise<Arena> {

@@ -5,6 +5,8 @@ import { ArenaIntro } from "../components/ArenaIntro";
 import { ArenaLeaderboard } from "../components/ArenaLeaderboard";
 import { ArenaPending } from "../components/ArenaPending";
 import { LeakageTable } from "../components/LeakageTable";
+import { MoreScoresTable } from "../components/MoreScoresTable";
+import { NestedTestsTable } from "../components/NestedTestsTable";
 import { PageGuide } from "../components/PageGuide";
 import { PlayInvite } from "../components/PlayInvite";
 import { RailPage, type RailSection } from "../components/SectionRail";
@@ -41,6 +43,7 @@ export function Arena() {
   </div>;
   const data = state.data;
   const target = data.targets.find((target) => target.id === targetId) ?? data.targets[0];
+  const rows = target ? leaderboardRows(data, target.id, window) : [];
   const contestant = data.contestants.find((entry) => entry.id === contestantId)
     ?? data.contestants.find((entry) => entry.kind === "classical" || entry.kind === "foundation") ?? data.contestants[0];
   return <RailPage sections={RAIL}><div className="arena-page page-fade">
@@ -57,7 +60,9 @@ export function Arena() {
         <h2 className="t-h3" id="arena-leaderboard">Forecast leaderboard</h2>
         <WindowToggle value={window} onChange={setWindow} />
         {window === "clean" && <p className="muted">Clean periods follow each contestant's training cutoff, or include all periods when it has no cutoff. Period sets can differ and may be short.</p>}
-        <ArenaLeaderboard rows={leaderboardRows(data, target.id, window)} target={target} />
+        <ArenaLeaderboard rows={rows} target={target} />
+        <MoreScoresTable rows={rows} target={target} />
+        <NestedTestsTable tests={data.nested_tests ?? []} contestants={data.contestants} target={target} window={window} />
       </section>
       <section className="arena-section" aria-labelledby="arena-history">
         <h2 className="t-h3" id="arena-history">First published number against forecasts</h2>
