@@ -61,10 +61,15 @@
 .about-rows dd { margin: 0; color: var(--text-muted); line-height: 26px; }
 .glance-rows { margin-top: 28px; }
 .about-note { margin-top: 16px; color: var(--text-muted); }
-.faq-list details { border-top: 1px solid var(--border); padding: 14px 0; }
-.faq-list details:last-child { border-bottom: 1px solid var(--border); }
-.faq-list summary { cursor: pointer; font-weight: 600; list-style-position: inside; }
-.faq-list p { margin: 10px 0 0 0; color: var(--text-muted); line-height: 26px; max-width: 66ch; }
+.faq-list { display: grid; gap: 10px; counter-reset: faq; }
+.faq-list details { counter-increment: faq; border: 1px solid var(--border); border-radius: 12px; background-color: var(--surface); transition: border-color 0.2s ease, box-shadow 0.2s ease; }
+.faq-list details[open] { border-color: var(--border-control); box-shadow: 0 10px 24px -20px rgba(0, 0, 0, 0.5); }
+@media (hover: hover) { .faq-list details:hover { border-color: var(--accent); } }
+.faq-list summary { cursor: pointer; padding: 14px 16px; border-radius: 12px; font-weight: 600; line-height: 24px; gap: 12px; -webkit-user-select: none; user-select: none; }
+.faq-list summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.faq-list summary::after { content: counter(faq, decimal-leading-zero); order: -1; flex: none; font-family: "IBM Plex Mono", ui-monospace, monospace; font-size: 12px; font-weight: 500; letter-spacing: 0.06em; color: var(--accent); }
+.faq-list summary::before { order: 3; margin-left: auto; }
+.faq-list p { margin: 0; padding: 14px 16px 16px 52px; border-top: 1px solid var(--border); color: var(--text-muted); line-height: 26px; max-width: 66ch; }
 /* The disclaimer remains expanded so direct links expose the full notice. */
 .disclaimer { margin-top: 56px; padding: 20px; background-color: var(--surface); border-radius: 8px; scroll-margin-top: 144px; }
 .disclaimer-body p { margin: 12px 0 0 0; font-size: 15px; line-height: 24px; color: var(--text-muted); max-width: 70ch; }
@@ -216,7 +221,7 @@
   .journal-parts dt { padding-top: 4px; }
 }
 /* the built with grid: four cards, each with a tinted icon, a title, a small note and one row per tool with its role */
-.built-with { display: grid; gap: 12px; }
+.built-with { display: grid; gap: 12px; -webkit-user-select: none; user-select: none; }
 .built-card { border: 1px solid var(--border); border-radius: 14px; background-color: var(--surface); overflow: hidden; min-width: 0; transition: transform 0.25s cubic-bezier(0.2, 0.7, 0.2, 1), border-color 0.25s ease, box-shadow 0.25s ease; }
 .built-card-head { display: flex; align-items: center; gap: 10px; padding: 12px 16px; border-bottom: 1px solid var(--border); }
 .built-card-icon { transition: transform 0.25s cubic-bezier(0.2, 0.7, 0.2, 1), background-color 0.25s ease, color 0.25s ease; display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; flex: none; border-radius: 8px; background-color: var(--accent-tint); color: var(--accent); }
@@ -249,4 +254,7 @@
   .built-card:hover { transform: translateY(-3px); border-color: var(--accent); box-shadow: 0 14px 28px -18px rgba(0, 0, 0, 0.45); }
   .built-card:hover .built-card-icon { transform: scale(1.08) rotate(-4deg); background-color: var(--accent); color: var(--bg); }
   .built-card-list li:hover .built-tool { color: var(--accent); }
+}
+@media (max-width: 559px) {
+  .faq-list p { padding-left: 16px; }
 }

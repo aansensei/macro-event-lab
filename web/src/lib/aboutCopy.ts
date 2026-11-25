@@ -130,36 +130,44 @@ const PUBLIC_COPY = {
   ] as [string, string][],
   faq: [
     [
-      "What does \"point in time\" mean here?",
-      "Each forecast may use only information already published at its stated cutoff. Later observations and revisions are excluded.",
+      "How does the design prevent look-ahead bias?",
+      "Each forecast may use only information published by its stated cutoff. As-of joins over ALFRED vintages select the version of every series that was known on that date, so later observations and revisions never enter. The rule is fixed in the protocol and checked by automated tests.",
     ],
     [
-      "Which forecasts are in the arena today?",
-      "A naive baseline, an autoregression, ridge regression, ridge on principal components and LASSO for GDP growth, inflation and payrolls, plus the survey median for GDP growth only. The two foundation models are planned and have not run, so the results are labelled preliminary.",
+      "Which contestants are included, and how are they estimated?",
+      "A naive baseline, an autoregression, ridge regression, ridge on principal components and LASSO for GDP growth, inflation and payrolls, plus the survey median for GDP growth only. Every model is refit at each forecast date on the information available then. Two time series foundation models are planned and have not run.",
     ],
     [
-      "Why compare professional surveys with forecasting methods?",
-      "They offer different ways of forecasting the same economic release. A common information date and first-print outcome make the comparison auditable.",
+      "Against which outcome is a forecast scored, and why not the revised value?",
+      "Against the first published value. A revised figure contains information that did not exist on release day, so scoring against it would reward forecasts for knowing the future. Revisions are measured separately and shown on their own page.",
     ],
     [
-      "Why compare with the first print and not today's number?",
-      "The first print was the number available on release day. Revisions arrive later, so they are shown separately.",
+      "What is the benchmark, and why a naive forecast?",
+      "The naive forecast repeats the previous first print. It needs no estimation, so it is the simplest reference any method must be able to clear before its extra complexity is worth reading.",
     ],
     [
-      "Why does one period matter so much?",
-      "Errors are squared, so one extreme period can supply most of the total. The leaderboard shows each contestant's worst period share so you can see when that happens.",
+      "How are forecast intervals built and their coverage assessed?",
+      "Intervals use a conformal rule on the most recent public absolute errors of each method. Observed coverage is then compared with the nominal level at 50, 80 and 90 percent, with the number of releases behind each share stated.",
     ],
     [
-      "What happens when a release is not published?",
-      "Its first print remains empty. Missing releases are not filled with invented values.",
+      "How is a difference in forecast accuracy tested?",
+      "With a Diebold-Mariano test and a small sample correction on squared errors. When one model nests another, a Clark and West test is reported as well, because the plain test is known to be too cautious for nested pairs.",
     ],
     [
-      "Where do the numbers come from?",
-      "From saved ALFRED vintages, FRED release calendars and the Philadelphia Fed survey, run through the checked pipeline described above.",
+      "Why can a single period dominate the error, and how is that handled?",
+      "Squared errors give extreme periods such as spring 2020 a very large weight. The leaderboard shows each contestant's worst period share, so a reader can see when an average is really one episode.",
     ],
     [
-      "Can I see the values behind a chart?",
-      "Yes. Chart readouts and data tables show the values drawn by each chart.",
+      "Is the sample large enough to rank the contestants?",
+      "Not yet. Evaluation periods are short and consecutive releases are not independent, so the site describes differences and ranks nobody. All results are labelled preliminary until every planned contestant has run.",
+    ],
+    [
+      "How are missing releases and data gaps treated?",
+      "A release that was not published keeps an empty first print. The pipeline never imputes it, so no score rests on an invented value.",
+    ],
+    [
+      "Can the results be reproduced?",
+      "Every source response is saved as a content-addressed file before parsing, and the site data is rebuilt from those files each day. Published forecasts are recorded in a hash-chained ledger, and the claims made on the site can be checked with a single command.",
     ],
     [
       "Is this investment advice?",
