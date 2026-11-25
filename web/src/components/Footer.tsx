@@ -92,6 +92,7 @@ export function Footer({ dataThrough, onNavigate }: Props) {
           <h2 className="footer-head">Project</h2>
           <ul className="footer-list">
             <li><ExternalLink className="footer-link" href={REPO}>Source code</ExternalLink></li>
+            <li><button type="button" className="footer-link" onClick={() => onNavigate("notes")}>Economist's notes</button></li>
             <li><ExternalLink className="footer-link" href="https://aansensei.dev/under-construction.html">Build journal</ExternalLink></li>
             <li><ExternalLink className="footer-link" href={`${REPO}/issues`}>Report an issue</ExternalLink></li>
           </ul>

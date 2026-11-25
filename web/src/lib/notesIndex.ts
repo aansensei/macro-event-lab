@@ -177,6 +177,12 @@ const RAW_NOTES = import.meta.glob("../../../notes/*.md", {
 
 export const NOTES: NoteEntry[] = buildNotesIndex(RAW_NOTES);
 
+// the note written for one scheduled release, found by its target and release date
+export function noteForRelease(target: string, releaseDate: string | null, notes: readonly NoteEntry[] = NOTES): NoteEntry | undefined {
+  if (releaseDate === null) return undefined;
+  return notes.find((entry) => entry.target === target && entry.releaseDate === releaseDate);
+}
+
 export function getNoteBySlug(slug: string, notes: readonly NoteEntry[] = NOTES): NoteEntry | undefined {
   return notes.find((entry) => entry.slug === slug);
 }

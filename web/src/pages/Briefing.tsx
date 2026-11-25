@@ -5,7 +5,8 @@ import { RailPage, type RailSection } from "../components/SectionRail";
 import { BRIEFING_NOT_BUILT, loadBriefing, type BriefingRelease } from "../data/briefing";
 import { useResource } from "../hooks/useResource";
 import { daysUntil, formatReleaseDate, periodTitle } from "../lib/briefingWords";
-import { pageSearch } from "../lib/url";
+import { noteForRelease } from "../lib/notesIndex";
+import { noteSearch, pageSearch } from "../lib/url";
 
 const RAIL: RailSection[] = [
   { id: "briefing-top", label: "Top" },
@@ -28,6 +29,7 @@ function formatNumber(value: number): string {
 
 function ReleaseCard({ release, informationDate }: { release: BriefingRelease; informationDate: string }) {
   const hasSchedule = release.release_date !== null;
+  const note = noteForRelease(release.target, release.release_date);
   return <article className="briefing-card">
     <div className="briefing-card-head">
       <div>
@@ -61,6 +63,9 @@ function ReleaseCard({ release, informationDate }: { release: BriefingRelease; i
         {release.last_first_print === null ? "Not available" : `${formatNumber(release.last_first_print)} (${release.unit})`}
       </strong>
     </p>
+    {note && <p className="briefing-arena-link briefing-note-link">
+      <a href={noteSearch(note.slug)}>Read the economist's note for this release <Icon name="arrow-right" size={16} /></a>
+    </p>}
     <p className="briefing-arena-link">
       <a href={pageSearch("arena")}>Compare past accuracy in the Forecast Arena <Icon name="arrow-right" size={16} /></a>
     </p>

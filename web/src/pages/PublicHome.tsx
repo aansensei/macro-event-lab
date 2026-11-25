@@ -14,7 +14,8 @@ import { useResource } from "../hooks/useResource";
 import { formatReleaseDate, periodTitle } from "../lib/briefingWords";
 import { liveSentence } from "../lib/nowcastWords";
 import { publicFindings } from "../lib/publicFindings";
-import { pageSearch, type Page } from "../lib/url";
+import { noteForRelease } from "../lib/notesIndex";
+import { noteSearch, pageSearch, type Page } from "../lib/url";
 
 const RAIL: RailSection[] = [
   { id: "home-top", label: "Top" },
@@ -43,6 +44,10 @@ export function PublicHome() {
   const status = useResource(loadStatus).state;
   const data = state.kind === "ready" ? state.data : null;
   const upcoming = briefing.kind === "ready" ? briefing.data.releases.slice(0, 2) : [];
+  const upcomingNotes = upcoming.flatMap((release) => {
+    const note = noteForRelease(release.target, release.release_date);
+    return note ? [note] : [];
+  });
   const errors = data && nowcastErrors(data.points);
   return <RailPage sections={RAIL}><div className="public-home page-fade">
     <p className="section-kicker">Macro Event Lab</p>
@@ -90,6 +95,9 @@ export function PublicHome() {
           <Icon name="arrow-right" size={18} className="public-card-arrow" />
         </a>)}
       </div>
+      {upcomingNotes.map((note) => <p key={note.slug} className="public-note-link">
+        <a href={noteSearch(note.slug)}>Read the economist's note on the {note.target === "cpi" ? "inflation" : note.target} release of {formatReleaseDate(note.releaseDate)} <Icon name="arrow-right" size={16} /></a>
+      </p>)}
       <p className="t-micro muted public-start-more">
         <a href={pageSearch("briefing")}>Open the full release briefing and calendar feeds</a>.
       </p>

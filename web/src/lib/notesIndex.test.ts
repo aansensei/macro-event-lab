@@ -8,6 +8,7 @@ import {
   extractSections,
   getNoteBySlug,
   NOTES,
+  noteForRelease,
   noteStatus,
   parseNoteFilename,
 } from "./notesIndex";
@@ -83,5 +84,16 @@ describe("notesIndex", () => {
     expect(note!.target).toBe("payrolls");
     expect(note!.releaseDate).toBe("2026-12-04");
     expect(extractSections(note!.body)).toHaveLength(5);
+  });
+});
+
+describe("noteForRelease", () => {
+  it("finds the note written for a release by target and date and nothing else", () => {
+    const payrolls = NOTES.find((entry) => entry.target === "payrolls");
+    expect(payrolls).toBeDefined();
+    expect(noteForRelease("payrolls", payrolls!.releaseDate)).toBe(payrolls);
+    expect(noteForRelease("cpi", payrolls!.releaseDate)).toBeUndefined();
+    expect(noteForRelease("payrolls", "1999-01-01")).toBeUndefined();
+    expect(noteForRelease("payrolls", null)).toBeUndefined();
   });
 });

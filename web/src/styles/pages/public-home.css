@@ -108,3 +108,7 @@
 .live-proof-value { font-size: 18px; line-height: 26px; font-weight: 600; overflow-wrap: break-word; }
 .live-proof-detail { font-size: 14px; line-height: 21px; color: var(--text-muted); }
 .live-proof-arrow { position: absolute; top: 14px; right: 16px; color: var(--accent); }
+/* a link from the next releases to the economist's note written for one of them */
+.public-note-link { margin: 16px 0 0; }
+.public-note-link a { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; font-weight: 600; }
+.public-note-link svg { color: var(--accent); flex: none; }
