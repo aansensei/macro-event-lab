@@ -26,6 +26,6 @@ it("says that charts are plain SVG, which the dependencies of the website confir
 });
 
 it("uses no dash as punctuation and no outside link", () => {
-  expect(text).not.toMatch(/[–—]/);
+  expect(text).not.toMatch(new RegExp(`[${String.fromCharCode(0x2013)}${String.fromCharCode(0x2014)}]`));
   expect(html).not.toContain("<a ");
 });
