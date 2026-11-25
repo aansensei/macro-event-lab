@@ -19,6 +19,7 @@ from macro_event_lab import (
     pit,
     public_build,
     quality,
+    reactions,
     timemachine,
     verify,
 )
@@ -228,6 +229,11 @@ def cmd_check_freshness(args: argparse.Namespace) -> None:
         raise SystemExit(exit_code)
 
 
+def cmd_reactions(args: argparse.Namespace) -> None:
+    data_dir = args.yields_from or config.get_paths().root
+    reactions.write_reactions(data_dir, args.out)
+
+
 def cmd_verify_ledger(args: argparse.Namespace) -> None:
     rows = ledger.read_ledger(args.file)
     problems = ledger.verify_ledger(rows)
@@ -422,6 +428,18 @@ def main(argv: list[str] | None = None) -> None:
         help="comma-separated series ids (default: GDPC1,CPIAUCSL,PAYEMS)",
     )
     p_tm.set_defaults(func=cmd_timemachine)
+
+    p_reactions = sub.add_parser(
+        "reactions", help="build release-day yield reactions JSON from silver yields and arena.json"
+    )
+    p_reactions.add_argument(
+        "--yields-from",
+        type=Path,
+        required=True,
+        help="data directory containing silver tables and web_public/arena.json",
+    )
+    p_reactions.add_argument("--out", type=Path, required=True, help="output JSON path")
+    p_reactions.set_defaults(func=cmd_reactions)
 
     args = parser.parse_args(argv)
     args.func(args)

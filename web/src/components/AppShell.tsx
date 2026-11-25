@@ -17,6 +17,7 @@ export function AppShell({ route, navigate, navigationKey, children, eventTitle,
     : [...PRIMARY, ...LEARN].find(([page]) => page === route.page)?.[1] ?? (route.page === "journal" ? "Build journal" : "Overview");
   const title = route.page === "events" ? eventTitle ?? label
     : route.page === "notes" ? noteTitle ?? label
+    : route.page === "reactions" ? "Do surprises move interest rates?"
     : label;
 
   useEffect(() => { document.title = `${title} | Macro Event Lab`; }, [title]);

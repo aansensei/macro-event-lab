@@ -48,4 +48,5 @@
   line-height: 25px;
 }
 .rev-note strong { color: var(--text); }
+.rev-reactions-link { margin: 20px 0 0; }
 .scorecard-how { margin-top: 24px; }

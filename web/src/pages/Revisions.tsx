@@ -8,12 +8,14 @@ import { formatIsoDate, pct } from "../lib/format";
 import { periodLabel, printValue, revisionFinding, revisionSize, signedSize } from "../lib/revisionWords";
 import { CountUp } from "../components/CountUp";
 import { ExternalLink } from "../components/ExternalLink";
+import { Icon } from "../components/Icon";
 import { RevisionChart } from "../components/RevisionChart";
 import { Term } from "../components/Term";
 import { PageGuide } from "../components/PageGuide";
 import { RailPage, type RailSection } from "../components/SectionRail";
 import { StoryNext, StoryPath } from "../components/Story";
 import { PUBLIC_EDITION } from "../lib/edition";
+import { pageSearch } from "../lib/url";
 
 const RAIL: RailSection[] = [
   { id: "rev-top", label: "Top" },
@@ -161,6 +163,11 @@ export function Revisions() {
         version of each series.
       </aside>
       <StoryNext current="revisions" />
+      <p className="rev-reactions-link">
+        <a className="about-journal-link" href={pageSearch("reactions")}>
+          See how rates reacted <Icon name="arrow-right" size={16} />
+        </a>
+      </p>
     </div></RailPage>
   );
 }

@@ -26,6 +26,7 @@ it("copies public assets and economic exports while excluding the research archi
   writeFileSync(join(root, "data", "status.json"), '{"schema_version":1,"sources":[]}');
   writeFileSync(join(root, "data", "arena.json"), '{"schema_version":1,"contestants":[]}');
   writeFileSync(join(root, "data", "briefing.json"), '{"schema_version":1,"releases":[]}');
+  writeFileSync(join(root, "data", "reactions.json"), '{"schema_version":1,"rows":[]}');
   writeFileSync(join(root, "data", "calendar.ics"), "BEGIN:VCALENDAR\r\nEND:VCALENDAR\r\n");
   writeFileSync(join(root, "data", "feed.xml"), '<?xml version="1.0" encoding="utf-8"?><feed/>');
   writeFileSync(join(root, "data", "arena_forecasts.parquet"), "PAR1");
@@ -46,6 +47,7 @@ it("copies public assets and economic exports while excluding the research archi
       "data/briefing.json",
       "data/calendar.ics",
       "data/feed.xml",
+      "data/reactions.json",
       "data/revisions.csv",
       "data/revisions.json",
       "data/revisions.parquet",

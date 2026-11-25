@@ -12,6 +12,7 @@ const cases: [string, () => Promise<ComponentType>, boolean][] = [
   ["Status", async () => (await import("./Status")).Status, false],
   ["Data", async () => (await import("./Data")).Data, false],
   ["Briefing", async () => (await import("./Briefing")).Briefing, false],
+  ["Reactions", async () => (await import("./Reactions")).Reactions, false],
   ["Play", async () => (await import("./Play")).Play, false],
   ["Arena", async () => (await import("./Arena")).Arena, false],
   ["DataLineage", async () => (await import("../components/DataLineage")).DataLineage, true],

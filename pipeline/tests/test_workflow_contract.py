@@ -24,6 +24,7 @@ ALLOWED_PUBLIC_DATA_FILES = {
     "arena.json",
     "briefing.json",
     "ledger.json",
+    "reactions.json",
     "calendar.ics",
     "feed.xml",
     "arena_forecasts.parquet",

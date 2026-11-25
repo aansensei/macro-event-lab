@@ -55,6 +55,13 @@ jobs:
                 case "$name" in *.json) jq empty "web/public/data/$name" || { reuse=0; break; } ;; esac
               done
               if [ "$reuse" = 1 ]; then
+                for optional in reactions.json; do
+                  if curl -fsSL --retry 2 -o "web/public/data/$optional" "$SITE/data/$optional"; then
+                    jq empty "web/public/data/$optional" || rm -f "web/public/data/$optional"
+                  else
+                    rm -f "web/public/data/$optional"
+                  fi
+                done
                 full=false
                 echo "This push changed only the site, so the published data was reused." >> "$GITHUB_STEP_SUMMARY"
               else
@@ -79,6 +86,13 @@ jobs:
           set -euo pipefail
           python -m macro_event_lab ingest releases
           python -m macro_event_lab ingest alfred
+          if python -m macro_event_lab ingest yields; then
+            echo "yields_failed=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "Yield download failed; the site is built without updated yields"
+            echo "yields_failed=true" >> "$GITHUB_OUTPUT"
+            echo "Yield download failed in this run; reactions data may be stale or missing." >> "$GITHUB_STEP_SUMMARY"
+          fi
           if python -m macro_event_lab ingest spf; then
             echo "spf_failed=false" >> "$GITHUB_OUTPUT"
           else
@@ -87,6 +101,17 @@ jobs:
             echo "Survey download failed in this run; the survey median is stale." >> "$GITHUB_STEP_SUMMARY"
           fi
           python -m macro_event_lab build-public
+      - name: Build release reactions for the site
+        if: steps.mode.outputs.full == 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          has_yields="$(python -c "import os, polars as pl; p = os.path.join(os.environ['MEL_DATA_DIR'], 'silver', 'alfred_observations.parquet'); print('1' if os.path.exists(p) and pl.read_parquet(p).filter(pl.col('series_id').is_in(['DGS2', 'DGS10'])).height > 0 else '0')")"
+          if [ "$has_yields" = "1" ]; then
+            python -m macro_event_lab reactions --yields-from "$MEL_DATA_DIR" --out "$MEL_DATA_DIR/web_public/reactions.json"
+          else
+            echo "Yield table missing; skipping reactions.json"
+          fi
       - name: Append live forecasts to ledger
         if: steps.mode.outputs.full == 'true'
         shell: bash
@@ -148,6 +173,8 @@ jobs:
         run: |
           mkdir -p web/public/data
           cp "$MEL_DATA_DIR/web_public/revisions.json" "$MEL_DATA_DIR/web_public/nowcast.json" "$MEL_DATA_DIR/web_public/status.json" "$MEL_DATA_DIR/web_public/arena.json" "$MEL_DATA_DIR/web_public/briefing.json" "$MEL_DATA_DIR/web_public/ledger.json" "$MEL_DATA_DIR/web_public/calendar.ics" "$MEL_DATA_DIR/web_public/feed.xml" "$MEL_DATA_DIR/web_public/arena_forecasts.parquet" "$MEL_DATA_DIR/web_public/arena_scores.parquet" "$MEL_DATA_DIR/web_public/revisions.parquet" "$MEL_DATA_DIR/web_public/arena_forecasts.csv" "$MEL_DATA_DIR/web_public/arena_scores.csv" "$MEL_DATA_DIR/web_public/revisions.csv" web/public/data/
+          reactions_file="$MEL_DATA_DIR/web_public/reactions.json"
+          if [ -f "$reactions_file" ]; then cp "$reactions_file" web/public/data/; fi
       - uses: actions/setup-node@v7
         with:
           node-version: "24"
@@ -164,7 +191,7 @@ jobs:
         with:
           path: web/dist
       - name: Close resolved build issue
-        if: success() && steps.fresh.outcome == 'success' && steps.ingest.outputs.spf_failed != 'true'
+        if: success() && steps.fresh.outcome == 'success' && steps.ingest.outputs.spf_failed != 'true' && steps.ingest.outputs.yields_failed != 'true'
         env:
           GH_TOKEN: ${{ github.token }}
           GH_REPO: ${{ github.repository }}
@@ -176,19 +203,23 @@ jobs:
             gh issue close "$issue_number" --repo "$GH_REPO" --comment "Resolved: the latest build is fresh and complete."
           fi
       - name: Alert on daily build problem
-        if: failure() || steps.fresh.outcome == 'failure' || steps.ingest.outputs.spf_failed == 'true'
+        if: failure() || steps.fresh.outcome == 'failure' || steps.ingest.outputs.spf_failed == 'true' || steps.ingest.outputs.yields_failed == 'true'
         env:
           GH_TOKEN: ${{ github.token }}
           GH_REPO: ${{ github.repository }}
           RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
           FRESH_OUTCOME: ${{ steps.fresh.outcome }}
           SPF_FAILED: ${{ steps.ingest.outputs.spf_failed }}
+          YIELDS_FAILED: ${{ steps.ingest.outputs.yields_failed }}
         shell: bash
         run: |
           set -euo pipefail
           body="Daily build problem reported in run: $RUN_URL"
           if [ "$SPF_FAILED" = "true" ]; then
             body="${body}"$'\n\n'"Survey download failed in this run; the survey median is stale."
+          fi
+          if [ "$YIELDS_FAILED" = "true" ]; then
+            body="${body}"$'\n\n'"Yield download failed in this run; reactions data may be stale or missing."
           fi
           report_file="${RUNNER_TEMP:-/tmp}/freshness_report.txt"
           if [ "$FRESH_OUTCOME" = "failure" ] && [ -s "$report_file" ]; then

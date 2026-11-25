@@ -14,6 +14,7 @@ import { Status } from "./pages/Status";
 import { Arena } from "./pages/Arena";
 import { Briefing } from "./pages/Briefing";
 import { Play } from "./pages/Play";
+import { Reactions } from "./pages/Reactions";
 import { Data } from "./pages/Data";
 import { Journal } from "./pages/Journal";
 import { Notes } from "./pages/Notes";
@@ -32,6 +33,7 @@ export function App() {
     {route.page === "status" && <Status />}
     {route.page === "data" && <Data />}
     {route.page === "briefing" && <Briefing />}
+    {route.page === "reactions" && <Reactions />}
     {route.page === "play" && <Play />}
     {route.page === "arena" && <Arena />}
     {route.page === "models" && <Models />}

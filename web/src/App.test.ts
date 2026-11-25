@@ -18,6 +18,7 @@ vi.mock("./pages/Revisions", () => ({ Revisions: () => createElement("h1", null,
 vi.mock("./pages/Models", () => ({ Models: () => createElement("h1", null, "Models page") }));
 vi.mock("./pages/Method", () => ({ Method: () => createElement("h1", null, "Method page") }));
 vi.mock("./pages/Glossary", () => ({ Glossary: () => createElement("h1", null, "Glossary page") }));
+vi.mock("./pages/Reactions", () => ({ Reactions: () => createElement("h1", null, "Reactions page") }));
 vi.mock("./components/EventList", () => ({
   EventList: ({ events, filter, onFilter, onSelect }: ComponentProps<typeof EventList>) =>
     createElement("aside", null,
@@ -78,10 +79,12 @@ it("opens Overview without requesting an Events manifest", async () => {
   expect(loadManifest).not.toHaveBeenCalled();
 });
 
-it.each(["overview", "events", "compare", "scorecard", "revisions", "models", "method", "glossary", "about"])(
+it.each(["overview", "events", "compare", "scorecard", "revisions", "models", "method", "glossary", "about", "reactions"])(
   "sets a descriptive browser title for %s", async (page) => {
     await render(`?page=${page}`);
-    const label = page === "events" ? scored.title : page[0]!.toUpperCase() + page.slice(1);
+    const label = page === "events" ? scored.title
+      : page === "reactions" ? "Do surprises move interest rates?"
+      : page[0]!.toUpperCase() + page.slice(1);
     expect(document.title).toBe(`${label} | Macro Event Lab`);
   },
 );

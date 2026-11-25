@@ -114,6 +114,17 @@ def test_ingest_step_records_spf_failure_and_keeps_building() -> None:
     assert "python -m macro_event_lab build-public" in ingest_step
 
 
+def test_ingest_step_records_yields_failure_and_keeps_building() -> None:
+    text = WORKFLOW_PATH.read_text(encoding="utf-8")
+    steps = _split_steps(_extract_job_block(text, "build"))
+    ingest_step = _find_step(steps, "Download ALFRED vintages and release dates, then rebuild")
+
+    assert "python -m macro_event_lab ingest yields" in ingest_step
+    assert "yields_failed=true" in ingest_step
+    assert "yields_failed=false" in ingest_step
+    assert "yield" in ingest_step.lower()
+
+
 def test_alert_and_close_conditions_check_spf_failed_output() -> None:
     text = WORKFLOW_PATH.read_text(encoding="utf-8")
     steps = _split_steps(_extract_job_block(text, "build"))
@@ -123,14 +134,18 @@ def test_alert_and_close_conditions_check_spf_failed_output() -> None:
     assert "failure()" in alert_if
     assert "steps.fresh.outcome == 'failure'" in alert_if
     assert "steps.ingest.outputs.spf_failed == 'true'" in alert_if
+    assert "steps.ingest.outputs.yields_failed == 'true'" in alert_if
     assert "steps.ingest.outputs.spf_failed" in alert_step
+    assert "steps.ingest.outputs.yields_failed" in alert_step
     assert "survey" in alert_step.lower()
+    assert "yield" in alert_step.lower()
 
     close_step = _find_step(steps, "Close resolved build issue")
     close_if = _extract_if_line(close_step)
     assert "success()" in close_if
     assert "steps.fresh.outcome == 'success'" in close_if
     assert "steps.ingest.outputs.spf_failed != 'true'" in close_if
+    assert "steps.ingest.outputs.yields_failed != 'true'" in close_if
 
 
 def test_only_allowlisted_public_files_are_copied_to_site() -> None:
@@ -141,7 +156,7 @@ def test_only_allowlisted_public_files_are_copied_to_site() -> None:
     assert "*" not in copy_step
     assert "?" not in copy_step
     copied = set(re.findall(r"\$MEL_DATA_DIR/web_public/([^\s\"']+)", copy_step))
-    allowed = set(public_build.PUBLIC_FILES) | {"ledger.json"}
+    allowed = set(public_build.PUBLIC_FILES) | {"ledger.json", "reactions.json"}
     assert copied
     assert copied <= allowed
     if PUBLIC_ASSETS_PATH.is_file():
@@ -179,10 +194,23 @@ def test_a_push_that_changes_only_the_site_reuses_the_published_data() -> None:
     assert 'echo "full=$full" >> "$GITHUB_OUTPUT"' in mode_step
     # the files fetched from the published site are exactly the public data allowlist
     fetched = set(re.search(r"for name in ([^;]+); do", mode_step).group(1).split())
+    optional_match = re.search(r"for optional in ([^;]+); do", mode_step)
+    optional_fetched = set(optional_match.group(1).split()) if optional_match else set()
     assert fetched <= _public_assets_allowlist()
+    assert optional_fetched == {"reactions.json"}
+    assert optional_fetched <= _public_assets_allowlist()
     copy_step = _find_step(steps, "Copy only the public files into the site")
     copied = set(re.findall(r"web_public/([A-Za-z0-9_.]+)", copy_step))
-    assert fetched == copied
+    assert (fetched | optional_fetched) == copied
+
+
+def test_reactions_step_builds_when_yield_table_exists() -> None:
+    text = WORKFLOW_PATH.read_text(encoding="utf-8")
+    steps = _split_steps(_extract_job_block(text, "build"))
+    reactions_step = _find_step(steps, "Build release reactions for the site")
+    assert "if: steps.mode.outputs.full == 'true'" in reactions_step
+    assert "macro_event_lab reactions --yields-from" in reactions_step
+    assert "$MEL_DATA_DIR/web_public/reactions.json" in reactions_step
 
 
 def test_every_heavy_step_runs_only_on_a_full_rebuild() -> None:
@@ -190,6 +218,7 @@ def test_every_heavy_step_runs_only_on_a_full_rebuild() -> None:
     steps = _split_steps(_extract_job_block(text, "build"))
     for name in (
         "Download ALFRED vintages and release dates, then rebuild",
+        "Build release reactions for the site",
         "Append live forecasts to ledger",
         "Verify and push forecast ledger",
         "Summarize the forecast ledger for the site",
