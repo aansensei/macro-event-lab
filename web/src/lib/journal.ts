@@ -90,3 +90,64 @@ export const JOURNAL: JournalEntry[] = [
     ],
   },
 ];
+
+export interface Trouble {
+  id: string;
+  title: string;
+  broke: string;
+  cost: string;
+  fix: string;
+}
+
+// things that went wrong, each with what broke, what it cost and how it was fixed; all of them happened in this repository
+export const TROUBLES: Trouble[] = [
+  {
+    id: "erased-readme",
+    title: "The README that vanished mid sentence",
+    broke: "A write to the README opened the file for writing before reading it, and the front page of the project became an empty file.",
+    cost: "Ten seconds of pure panic, plus a paragraph and a table row written minutes earlier that were not in any commit yet.",
+    fix: "The last commit still had the file, so it came back in one command. The two missing pieces were written again. The rule since then: read first, then write.",
+  },
+  {
+    id: "diary-in-public",
+    title: "The private diary that lived in a public repository",
+    broke: "A private notes file had been committed to the public repository, so every old version of it stayed readable in the history.",
+    cost: "Deleting the file would have hidden nothing. Anyone could still open an earlier commit.",
+    fix: "The history was rewritten and force pushed once, with explicit permission, then checked on a fresh clone. The file is now ignored by git and stays on one machine.",
+  },
+  {
+    id: "number-disagreed",
+    title: "A number that disagreed with itself",
+    broke: "For one early inflation month the real code and the second implementation gave different forecasts.",
+    cost: "An afternoon of suspecting both of them and the data, in no particular order.",
+    fix: "The real code had been run on a newer data download. Running it again on the older data reproduced the second implementation exactly. The model was fine, the snapshot was not the same.",
+  },
+  {
+    id: "wrong-hand-count",
+    title: "Two hand counts that were wrong while the code was right",
+    broke: "Two acceptance tests expected totals that were off by a few rows, so correct code failed them.",
+    cost: "A red test run that looked like a bug and was not.",
+    fix: "Both counts were redone by hand, twice, and the tests corrected. The rule: when a test and the code disagree, decide which of the two the written contract supports, and say why.",
+  },
+  {
+    id: "edit-push-nothing",
+    title: "Edit, push, refresh, nothing",
+    broke: "A change was pushed and the live site looked exactly the same.",
+    cost: "The very real temptation to start debugging code that was working. The real causes were a build of about ten minutes and a ten minute cache on top of it.",
+    fix: "The workflow now reuses the published data when a push changes only the site, so a change to the pages deploys in under a minute. A push that touches the pipeline still rebuilds everything.",
+  },
+  {
+    id: "claim-in-container",
+    title: "A claim that could not run in its own container",
+    broke: "The container check failed on a new claim about the daily workflow.",
+    cost: "A red build for a claim that was true.",
+    fix: "The claim reads the workflow file, and the container image did not contain it. The file is now copied into the image. A check that cannot run where it is meant to run is not a check yet.",
+  },
+  {
+    id: "stray-script",
+    title: "A stray script on the front doorstep",
+    broke: "A patch left a leftover comparison script in the root of the repository.",
+    cost: "Nothing, because it was found before the commit. Otherwise it would have been public by dinner.",
+    fix: "It was deleted. Files are now staged one path at a time, never with a blanket add.",
+  },
+];

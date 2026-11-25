@@ -1,13 +1,14 @@
 import { RailPage, type RailSection } from "../components/SectionRail";
-import { JOURNAL } from "../lib/journal";
+import { JOURNAL, TROUBLES } from "../lib/journal";
 import { pageSearch } from "../lib/url";
 
 const RAIL: RailSection[] = [
   { id: "journal-top", label: "Top" },
   ...JOURNAL.map((entry) => ({ id: `journal-${entry.id}`, label: entry.title.length > 34 ? `${entry.title.slice(0, 32)}...` : entry.title })),
+  { id: "journal-troubles", label: "Things that went wrong" },
 ];
 
-// the build journal: a short list of moments from the build that show how the project was checked and changed
+// the build journal: moments from the build, then the things that went wrong with what they cost and how they were fixed
 export function Journal() {
   return <RailPage sections={RAIL}><div className="journal page-fade">
     <p className="section-kicker">Build journal</p>
@@ -23,6 +24,24 @@ export function Journal() {
         {entry.paragraphs.map((text) => <p key={text}>{text}</p>)}
       </li>)}
     </ol>
+
+    <section className="journal-troubles" aria-labelledby="journal-troubles">
+      <h2 className="t-h2" id="journal-troubles">Things that went wrong</h2>
+      <p className="muted journal-troubles-lead">
+        The honest part. Each one says what broke, what it cost, and how it was fixed.
+      </p>
+      <ol className="journal-list">
+        {TROUBLES.map((item) => <li key={item.id} className="journal-entry journal-trouble" id={`trouble-${item.id}`}>
+          <h3 className="t-h3">{item.title}</h3>
+          <dl className="journal-parts">
+            <div><dt>What broke</dt><dd>{item.broke}</dd></div>
+            <div><dt>What it cost</dt><dd>{item.cost}</dd></div>
+            <div><dt>How it was fixed</dt><dd>{item.fix}</dd></div>
+          </dl>
+        </li>)}
+      </ol>
+    </section>
+
     <p className="t-micro muted"><a href={`${pageSearch("about")}#about-author`}>Back to the author</a></p>
   </div></RailPage>;
 }

@@ -200,3 +200,16 @@
 .journal-entry h2 { margin: 4px 0 8px; }
 .journal-entry p { margin: 8px 0 0; line-height: 26px; color: var(--text-muted); }
 .journal-entry .journal-month { margin: 0; color: var(--accent); }
+/* the troubles list: what broke, what it cost and how it was fixed, as three short rows per card */
+.journal-troubles { margin-top: 48px; }
+.journal-troubles-lead { max-width: 62ch; margin: 8px 0 0; }
+.journal-trouble { border-left-color: var(--surprise-up); }
+.journal-trouble h3 { margin: 0 0 10px; }
+.journal-parts { margin: 0; display: grid; gap: 10px; }
+.journal-parts > div { display: grid; gap: 2px; }
+.journal-parts dt { font-family: "IBM Plex Mono", ui-monospace, monospace; font-size: 12px; line-height: 18px; letter-spacing: 0.05em; text-transform: uppercase; color: var(--accent); }
+.journal-parts dd { margin: 0; color: var(--text-muted); line-height: 26px; }
+@media (min-width: 640px) {
+  .journal-parts > div { grid-template-columns: 150px minmax(0, 1fr); gap: 16px; }
+  .journal-parts dt { padding-top: 4px; }
+}
