@@ -116,7 +116,7 @@ from either quarterly level series.
 
 ## Check the claims yourself
 
-Every factual and numerical claim made by this repository and the public site is catalogued in [`CLAIMS.md`](CLAIMS.md). Anyone can clone the repository and verify every claim locally from public data and the code in this repository.
+Every factual and numerical claim made by this repository and the public site is catalogued in [`CLAIMS.md`](CLAIMS.md). Anyone can clone the repository and verify every claim and the recorded forecast ledger locally from public data and the code in this repository.
 
 ```bash
 git clone https://github.com/aansensei/macro-event-lab.git
@@ -125,6 +125,7 @@ python -m venv .venv
 source .venv/bin/activate
 pip install -e "./pipeline[dev]"
 python -m macro_event_lab verify
+python -m macro_event_lab verify-ledger
 ```
 
 On Windows PowerShell:
@@ -136,6 +137,7 @@ python -m venv .venv
 .\.venv\Scripts\Activate.ps1
 pip install -e ".\pipeline[dev]"
 python -m macro_event_lab verify
+python -m macro_event_lab verify-ledger
 ```
 
 ## Verify in a container
