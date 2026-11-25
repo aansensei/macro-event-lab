@@ -8,9 +8,10 @@ WORKDIR /app
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
 
-# Copy pipeline package and public claims catalogue
+# Copy pipeline package, public claims catalogue and the daily workflow that one claim reads
 COPY pipeline /app/pipeline
 COPY CLAIMS.md /app/CLAIMS.md
+COPY .github/workflows/pages.yml /app/.github/workflows/pages.yml
 
 # Install package with developer and test dependencies and configure non root user
 RUN pip install --no-cache-dir -e "./pipeline[dev]" \
