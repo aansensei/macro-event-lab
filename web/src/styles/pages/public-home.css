@@ -66,7 +66,9 @@
 .release-step h3 { margin: 4px 0 8px; }
 .release-big { font-size: 24px; line-height: 30px; font-weight: 600; margin: 0 0 4px; overflow-wrap: anywhere; }
 .release-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; font-size: 14px; line-height: 20px; }
-.release-list li { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 2px 12px; }
+/* every row keeps its label on the left and its figure on the right; a long label wraps in its own column */
+.release-list li { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: baseline; gap: 2px 12px; }
+.release-list li > .num { text-align: right; white-space: nowrap; }
 .release-list li > span:first-child { color: var(--text-muted); }
 /* the numbered three step path on the public home */
 .public-start { margin-top: 40px; }
