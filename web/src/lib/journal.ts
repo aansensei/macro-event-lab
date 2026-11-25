@@ -119,13 +119,6 @@ export const TROUBLES: Trouble[] = [
     fix: "The last commit still had the file, so it came back in one command. The two missing pieces were written again. The rule since then: read first, then write.",
   },
   {
-    id: "diary-in-public",
-    title: "The private diary that lived in a public repository",
-    broke: "A private notes file had been committed to the public repository, so every old version of it stayed readable in the history.",
-    cost: "Deleting the file would have hidden nothing. Anyone could still open an earlier commit.",
-    fix: "The history was rewritten and force pushed once, with explicit permission, then checked on a fresh clone. The file is now ignored by git and stays on one machine.",
-  },
-  {
     id: "number-disagreed",
     title: "A number that disagreed with itself",
     broke: "For one early inflation month the real code and the second implementation gave different forecasts.",
