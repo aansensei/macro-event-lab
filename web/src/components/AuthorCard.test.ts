@@ -35,3 +35,9 @@ it("contains no dash used as punctuation in its text", () => {
   const text = html.replace(/<[^>]+>/g, " ");
   expect(text).not.toMatch(/[\u2013\u2014]/);
 });
+
+it("labels each link with a short name and keeps the handle as its tooltip", () => {
+  for (const label of ["Portfolio", "LinkedIn", "GitHub", "Email", "Source code"]) expect(html).toMatch(new RegExp(`</svg>${label}(<span|</a>)`));
+  expect(html).toContain('title="cnguyen49@wisc.edu"');
+  expect(html).toContain('title="aansensei.dev"');
+});
