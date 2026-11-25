@@ -10,7 +10,7 @@ describe("the build journal", () => {
     expect(JOURNAL.length).toBeGreaterThanOrEqual(5);
     expect(new Set(JOURNAL.map((entry) => entry.id)).size).toBe(JOURNAL.length);
     for (const entry of JOURNAL) {
-      expect(entry.month).toMatch(/^[A-Z][a-z]+ \d{4}$/);
+      expect(entry.month).toMatch(/^([A-Z][a-z]+ \d{4}|The beginning)$/);
       expect(entry.title.length).toBeGreaterThan(10);
       expect(entry.paragraphs.length).toBeGreaterThan(0);
     }

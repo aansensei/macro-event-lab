@@ -8,6 +8,16 @@ export interface JournalEntry {
 // notable moments of the build, each a fact the repository can back up; no figure here comes from market data
 export const JOURNAL: JournalEntry[] = [
   {
+    id: "the-idea",
+    month: "The beginning",
+    title: "4:30 in the afternoon, Engineering Hall, and an idea walks in",
+    paragraphs: [
+      "It was half past four in the main lecture room of Engineering Hall, the hour when the clock moves slower than the data. Then an idea walked in without knocking and took the seat next to me.",
+      "It went like this. Every economic number is published once and then quietly edited for years. So if you want to know who predicted a number best, which version of the number do you grade them on? And if you ask a forecaster about 2012, shouldn't you give them the numbers of 2012, not today's polished ones?",
+      "That is a very serious question to have in a lecture room at 4:30, and it has refused to leave since. Everything else on this site is what happens when you take it seriously: a time machine for data, a diary of forecasts that nobody can edit, and tests that argue with each other.",
+    ],
+  },
+  {
     id: "slow-arena",
     month: "November 2026",
     title: "The monthly models were too slow, and the reason was economic",
