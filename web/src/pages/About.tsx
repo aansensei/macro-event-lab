@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 
 import { AuthorCard } from "../components/AuthorCard";
+import { BuiltWith } from "../components/BuiltWith";
 import { ExternalLink } from "../components/ExternalLink";
 import { Icon } from "../components/Icon";
 import { SectionRail, type RailSection } from "../components/SectionRail";
@@ -16,6 +17,7 @@ const RAIL: RailSection[] = [
   { id: "about-why", label: "Why this way" },
   { id: "about-stack", label: "How it is built" },
   { id: "about-author", label: "Author" },
+  { id: "about-built-with", label: "Built with" },
   { id: "about-faq", label: "FAQ" },
   { id: "disclaimer", label: "Disclaimer" },
 ];
@@ -96,6 +98,11 @@ export function About() {
         <p className="about-note">
           Found a mistake or have a question? Open an issue on <ExternalLink href={`${REPO}/issues`}>GitHub</ExternalLink>.
         </p>
+      </section>
+
+      <section className="about-section" aria-labelledby="about-built-with">
+        <h2 className="t-h2" id="about-built-with">Built with</h2>
+        <BuiltWith />
       </section>
 
       <section className="about-section" aria-labelledby="about-faq">
