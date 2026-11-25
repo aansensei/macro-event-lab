@@ -4,8 +4,8 @@ import { pageSearch } from "../lib/url";
 
 const RAIL: RailSection[] = [
   { id: "journal-top", label: "Top" },
-  ...JOURNAL.map((entry) => ({ id: `journal-${entry.id}`, label: entry.title.length > 34 ? `${entry.title.slice(0, 32)}...` : entry.title })),
-  { id: "journal-troubles", label: "Things that went wrong" },
+  ...JOURNAL.map((entry) => ({ id: `journal-${entry.id}`, label: entry.rail })),
+  { id: "journal-troubles", label: "What went wrong" },
 ];
 
 // the build journal: moments from the build, then the things that went wrong with what they cost and how they were fixed

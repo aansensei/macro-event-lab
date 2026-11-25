@@ -12,6 +12,8 @@ describe("the build journal", () => {
     for (const entry of JOURNAL) {
       expect(entry.month).toMatch(/^([A-Z][a-z]+ \d{4}|The beginning)$/);
       expect(entry.title.length).toBeGreaterThan(10);
+      expect(entry.rail.length).toBeGreaterThan(2);
+      expect(entry.rail.length).toBeLessThanOrEqual(20);
       expect(entry.paragraphs.length).toBeGreaterThan(0);
     }
   });

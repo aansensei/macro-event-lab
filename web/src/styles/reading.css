@@ -84,6 +84,9 @@ h1[id], h2[id], h3[id], header[id], aside[id], details[id] { scroll-margin-top: 
   font-size: 13px;
   line-height: 18px;
   white-space: nowrap;
+  max-width: 120px;
+  overflow: hidden;
+  text-overflow: ellipsis;
   opacity: 0;
   transform: translateX(-4px);
   transition: opacity 0.2s ease, transform 0.2s ease, color 0.2s ease;

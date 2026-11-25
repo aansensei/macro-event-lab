@@ -1,5 +1,6 @@
 export interface JournalEntry {
   id: string;
+  rail: string;
   month: string;
   title: string;
   paragraphs: string[];
@@ -9,6 +10,7 @@ export interface JournalEntry {
 export const JOURNAL: JournalEntry[] = [
   {
     id: "the-idea",
+    rail: "The idea",
     month: "The beginning",
     title: "4:30 in the afternoon, Engineering Hall, and an idea walks in",
     paragraphs: [
@@ -19,6 +21,7 @@ export const JOURNAL: JournalEntry[] = [
   },
   {
     id: "slow-arena",
+    rail: "Slow models",
     month: "November 2026",
     title: "The monthly models were too slow, and the reason was economic",
     paragraphs: [
@@ -28,6 +31,7 @@ export const JOURNAL: JournalEntry[] = [
   },
   {
     id: "second-implementation",
+    rail: "A second copy",
     month: "November 2026",
     title: "A second implementation found a rule the documents did not state",
     paragraphs: [
@@ -37,6 +41,7 @@ export const JOURNAL: JournalEntry[] = [
   },
   {
     id: "floating-point-edge",
+    rail: "Rounding accident",
     month: "November 2026",
     title: "An independent recomputation caught a rounding accident",
     paragraphs: [
@@ -46,6 +51,7 @@ export const JOURNAL: JournalEntry[] = [
   },
   {
     id: "mutations",
+    rail: "Deliberate bugs",
     month: "November 2026",
     title: "Eight deliberate bugs, three caught",
     paragraphs: [
@@ -55,6 +61,7 @@ export const JOURNAL: JournalEntry[] = [
   },
   {
     id: "outside-review",
+    rail: "Outside review",
     month: "November 2026",
     title: "An outside review found real mistakes",
     paragraphs: [
@@ -64,6 +71,7 @@ export const JOURNAL: JournalEntry[] = [
   },
   {
     id: "ledger",
+    rail: "The ledger",
     month: "November 2026",
     title: "Forecasts are written down before the numbers come out",
     paragraphs: [
@@ -73,6 +81,7 @@ export const JOURNAL: JournalEntry[] = [
   },
   {
     id: "navigation",
+    rail: "Too many pages",
     month: "November 2026",
     title: "Too many pages made the site harder to use",
     paragraphs: [
@@ -82,6 +91,7 @@ export const JOURNAL: JournalEntry[] = [
   },
   {
     id: "plain-result",
+    rail: "A plain result",
     month: "November 2026",
     title: "A plain result that was left in",
     paragraphs: [

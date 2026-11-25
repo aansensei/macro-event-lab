@@ -5,12 +5,11 @@ import { expect, it, vi } from "vitest";
 import { Footer } from "./Footer";
 import { About } from "../pages/About";
 
-it("opens the existing construction page for the journal without exposing its Markdown file", () => {
+it("opens the build journal page of the site from the project column and never exposes the private notes file", () => {
   const html = renderToStaticMarkup(createElement(Footer, { dataThrough: null, onNavigate: vi.fn() }));
-  const journal = html.match(/<a[^>]*>Build journal[\s\S]*?<\/a>/)?.[0];
-  expect(journal).toContain('href="https://aansensei.dev/under-construction.html"');
-  expect(journal).toContain('target="_blank"');
-  expect(journal).toContain('rel="noopener noreferrer"');
+  const journal = html.match(/<button[^>]*>Build journal<\/button>/)?.[0];
+  expect(journal).toBeDefined();
+  expect(html).not.toContain("under-construction");
   expect(html).not.toContain("JOURNEY.md");
 });
 
