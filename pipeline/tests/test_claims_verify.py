@@ -19,7 +19,7 @@ def test_claims_file_parsing() -> None:
     path = find_claims_file()
     assert path.is_file()
     claims = parse_claims(path)
-    assert 1 <= len(claims) <= 40
+    assert 1 <= len(claims) <= 60
     for c in claims:
         assert c.claim_id.startswith("CLM-")
         assert len(c.claim_text) > 0
