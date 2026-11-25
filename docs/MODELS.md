@@ -40,7 +40,7 @@ lambda chosen from 0.01, 0.1, 1, 3, 10, 30, 100, 300, 1000
 by an inner walk forward evaluation over the last 8 training rows
 ```
 
-Features. For `gdp`: the quarterly growth (or change, for the unemployment rate) of payroll employment, industrial production, real personal consumption, real retail sales, housing starts and the unemployment rate, plus the previous quarter's GDP growth. For `cpi` and `payrolls`: the last three first published values of the target and the same indicators at monthly frequency. For `payrolls` the employment indicator is left out because it is almost the same column as the lagged first prints. A feature not yet published on the forecast date takes the mean of the training rows.
+Features. For `gdp`: the quarterly growth (or change, for the unemployment rate) of payroll employment, industrial production, real personal consumption, real retail sales, housing starts and the unemployment rate, plus the previous quarter's GDP growth. For `cpi` and `payrolls`: the last three first published values of the target and the same indicators at monthly frequency. For `payrolls` the employment indicator is left out because it is almost the same column as the lagged first prints. A feature not yet published on the forecast date takes the mean of the training rows. For the monthly targets an indicator with no value yet for the month before the target month takes the value of the month before that, and only when neither exists is it treated as missing.
 
 ### Ridge on principal components (factor ridge)
 

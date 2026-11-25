@@ -139,7 +139,7 @@ describe("play", () => {
   });
 
   it("summarizes results with different round counts per contestant and handles empty input", () => {
-    expect(summarize([])).toEqual({ rounds: 0, yourMeanAbsError: null, entries: [] });
+    expect(summarize([])).toEqual({ rounds: 0, closerThanAll: 0, entries: [] });
 
     const r1 = scoreRound({
       target: "gdp",
@@ -168,14 +168,25 @@ describe("play", () => {
 
     const summary = summarize([r1, r2]);
     expect(summary.rounds).toBe(2);
-    expect(summary.yourMeanAbsError).toBeCloseTo(0.5);
-    expect(summary.entries).toHaveLength(2);
-    expect(summary.entries[0]!.id).toBe("naive");
-    expect(summary.entries[0]!.meanAbsError).toBeCloseTo(2.0);
-    expect(summary.entries[0]!.youWon).toBe(true);
-    expect(summary.entries[1]!.id).toBe("spf");
-    expect(summary.entries[1]!.meanAbsError).toBeCloseTo(0.25);
-    expect(summary.entries[1]!.youWon).toBe(false);
+    expect(summary.closerThanAll).toBe(1);
+    expect(summary.entries).toEqual([
+      { id: "naive", label: "Naive", rounds: 2, youCloser: 2, youWon: true },
+      { id: "spf", label: "SPF", rounds: 1, youCloser: 0, youWon: false },
+    ]);
+  });
+
+  it("counts rounds instead of averaging errors that are in different units", () => {
+    const gdp = scoreRound({
+      target: "gdp", period: "2024-01-01", madeOn: "2024-02-15", unit: "%", history: [],
+      forecasts: [{ id: "naive", label: "Naive", value: 1.0 }], actual: 2.0,
+    }, 1.9);
+    const payrolls = scoreRound({
+      target: "payrolls", period: "2024-02-01", madeOn: "2024-03-01", unit: "thousand jobs", history: [],
+      forecasts: [{ id: "naive", label: "Naive", value: 150000 }], actual: 200000,
+    }, 120000);
+    const summary = summarize([gdp, payrolls]);
+    expect(summary.entries).toEqual([{ id: "naive", label: "Naive", rounds: 2, youCloser: 1, youWon: false }]);
+    expect(summary).not.toHaveProperty("yourMeanAbsError");
   });
 
   it("saves and loads progress and survives throwing or invalid storage", () => {

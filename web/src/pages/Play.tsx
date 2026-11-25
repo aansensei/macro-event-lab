@@ -173,24 +173,24 @@ export function Play() {
         : isFinished ? <div className="play-card" id="play-round">
           <h2 className="t-h3">Game summary</h2>
           <p>You played {summary.rounds} rounds. A game this short is mostly luck.</p>
-          <p className="num">Your mean absolute error: {summary.yourMeanAbsError === null ? "Not available" : formatNumber(summary.yourMeanAbsError)}</p>
+          <p className="num">You were closer than every contestant in {summary.closerThanAll} of {summary.rounds} rounds.</p>
           <div className="play-table-wrap">
             <table className="play-table">
               <thead>
                 <tr>
                   <th scope="col">Contestant</th>
-                  <th scope="col">Mean absolute error</th>
+                  <th scope="col">Rounds you were closer</th>
                   <th scope="col">Comparison</th>
                 </tr>
               </thead>
               <tbody>
                 {summary.entries.map((entry) => <tr key={entry.id}>
                   <th scope="row">{entry.label}</th>
-                  <td data-label="Mean absolute error">{formatNumber(entry.meanAbsError)}</td>
+                  <td data-label="Rounds you were closer">{entry.youCloser} of {entry.rounds}</td>
                   <td data-label="Comparison">
                     <span className={`play-mark ${entry.youWon ? "play-mark-beat" : "play-mark-miss"}`}>
                       <Icon name={entry.youWon ? "circle-check" : "circle-x"} size={16} />
-                      <span>{entry.youWon ? "Lower error than contestant" : "Higher or equal error"}</span>
+                      <span>{entry.youWon ? "Closer in most rounds" : "Not closer in most rounds"}</span>
                     </span>
                   </td>
                 </tr>)}

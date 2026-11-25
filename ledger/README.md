@@ -33,6 +33,10 @@ python -m macro_event_lab verify-ledger --file ledger/forecast_ledger.jsonl
 
 The command exits 0 and prints `OK: <N> rows` when every genesis condition, `entry_hash`, `sequence` increment, `prev_hash` link and non-decreasing `recorded_at_utc` timestamp holds. It prints `PROBLEM` lines and exits 1 if any check fails.
 
+## One row per forecast
+
+A forecast is recorded once for each target, reference period and contestant, the first time the daily build produces it. Later builds for the same period do not add rows, so a row shows the first forecast the project made for that period, not the latest one.
+
 ## What a row proves
 
 A row is only proof of what forecast value was recorded and when that commit was pushed to the public repository. Nothing in the ledger evaluates accuracy, and nothing in it ranks a contestant.

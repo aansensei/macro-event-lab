@@ -103,3 +103,15 @@ These sentences state values the code already used when the first results were p
 ### 2026-11-24, monthly indicators exclude the target's own series
 
 For the `payrolls` target the indicator `PAYEMS` is not used, because the same series enters the model through the lagged first prints and the two columns are almost identical, which makes the penalized fits ill conditioned and very slow. The `cpi` target keeps all six indicators. No payrolls forecast from `ridge`, `factor_ridge` or `lasso` had been published before this rule.
+
+### 2026-11-24, further implementation choices and the status of the reporting items
+
+These sentences describe what the code does. They change no forecast and no rule above the marker line.
+
+- First prints are rounded to the precision at which the statistical agencies publish them: CPI and GDP growth to 0.1, payrolls to thousands of jobs. The lagged first prints used as features are the same rounded numbers.
+- The two spring 2020 quarters stay in every fit of every arena contestant. The GDP nowcast page leaves them out only when it draws the uncertainty of its coefficients, not when it fits them.
+- The origin of a GDP forecast is the news release date of the survey for that quarter, so the monthly indicators of the quarter can cover one month or less.
+- For the monthly targets, an indicator that has no value yet for the month before the target month at the origin takes the value of the month before that. When neither exists the feature is missing and takes the training mean.
+- The mean used for a missing feature, and the penalty grid of the LASSO, are computed on the whole training window known at the origin, including the 8 rows of the inner evaluation, so the grid uses their answers. Penalties, lags and factor counts are still chosen only by fits that use rows earlier than the row they predict, and nothing after the origin enters. Changing this would change forecasts already recorded in the ledger, so it is kept and stated as a limitation.
+- Reported on the Arena page now: root mean squared error, mean absolute error, coverage of the 90 percent interval, the Diebold and Mariano test and the number of tests shown in each table. A percent difference to `naive` compares both errors over the periods the contestant forecast.
+- Not yet reported, although section 6, 7 and 8 name them: pinball loss, the Wilson interval for coverage, adaptive conformal inference and the Clark and West test.

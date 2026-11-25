@@ -84,7 +84,8 @@ def test_quarterly_origin_uses_the_survey_news_release_date_only() -> None:
         },
     )
     origins = build_origins(first_print_targets(obs), survey).filter(pl.col("target") == "gdp")
-    assert origins.height == 0 or set(origins["period"]) <= {date(2001, 1, 1)}
+    assert origins["period"].to_list() == [date(2001, 1, 1)]
+    assert origins["made_on"].to_list() == [date(2001, 2, 20)]
 
 
 @given(st.integers(min_value=0, max_value=20), st.integers(min_value=0, max_value=20))

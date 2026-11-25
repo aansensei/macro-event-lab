@@ -122,3 +122,22 @@ describe("rmseWithoutYear", () => {
     expect(leaderboardRows(arena, "gdp", "clean").every((row) => row.rmseWithout2020 === null)).toBe(true);
   });
 });
+
+it("compares a contestant with the naive forecast over the periods the contestant forecast", () => {
+  const data = structuredClone(arenaFixture);
+  const gdp = data.forecasts.filter((row) => row.target === "gdp");
+  const first = gdp[0]!;
+  // the contestant skips the first period, where the naive forecast misses by a large amount
+  for (const row of gdp) {
+    row.actual = 1;
+    row.values = { ...row.values, naive: 1, "fixture-b": 1 };
+  }
+  first.values = { ...first.values, naive: 11, "fixture-b": null };
+  const periods = gdp.filter((row) => row !== first && row.actual !== null);
+  expect(periods.length).toBeGreaterThan(0);
+  for (const row of periods) row.values = { ...row.values, naive: 2, "fixture-b": 1.5 };
+  const row = leaderboardRows(data, "gdp", "all").find((entry) => entry.contestant === "fixture-b")!;
+  // 1.5 against 2 gives half a point of error against one point, so it is 50 percent lower than naive,
+  // and the naive miss in the skipped period does not count
+  expect(row.relative).toBeCloseTo(-50, 6);
+});

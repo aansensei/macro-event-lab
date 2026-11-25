@@ -315,15 +315,15 @@ describe("scoreRound", () => {
 });
 
 describe("summarize", () => {
-  it("returns null mean and empty entries when given no results", () => {
+  it("returns no rounds and empty entries when given no results", () => {
     expect(summarize([])).toEqual({
       rounds: 0,
-      yourMeanAbsError: null,
+      closerThanAll: 0,
       entries: [],
     });
   });
 
-  it("computes contestant means over their own rounds and compares against your error on those same rounds", () => {
+  it("counts, for each contestant, the rounds you were closer out of the rounds it played", () => {
     const r0 = {
       guess: 2.5,
       actual: 3.0,
@@ -356,21 +356,21 @@ describe("summarize", () => {
     };
 
     const summary = summarize([r0, r1, r2]);
-    // Your overall mean: (0.5 + 4.0 + 1.5) / 3 = 2.0.
-    // Alpha over r0, r1, r2: mean (0.5 + 4.0 + 3.0) / 3 = 2.5 vs yours 2.0 gives youWon true.
-    // Beta over r0, r1: mean (0.25 + 1.75) / 2 = 1.0 vs yours (0.5 + 4.0) / 2 = 2.25 gives youWon false.
-    // Gamma over r0 only: mean 1.0 vs yours 0.5 (even though your overall mean is 2.0) gives youWon true.
+    // Alpha played 3 rounds and you were closer in 1 (r2), so you were not closer in most.
+    // Beta played 2 rounds and you were closer in 0.
+    // Gamma played 1 round and you were closer in it.
+    // You beat every contestant of a round only in r2, where Alpha was the only contestant.
     expect(summary.rounds).toBe(3);
-    expect(summary.yourMeanAbsError).toBe(2.0);
+    expect(summary.closerThanAll).toBe(1);
     expect(summary.entries).toEqual([
-      { id: "a", label: "Alpha", meanAbsError: 2.5, youWon: true },
-      { id: "b", label: "Beta", meanAbsError: 1.0, youWon: false },
-      { id: "c", label: "Gamma", meanAbsError: 1.0, youWon: true },
+      { id: "a", label: "Alpha", rounds: 3, youCloser: 1, youWon: false },
+      { id: "b", label: "Beta", rounds: 2, youCloser: 0, youWon: false },
+      { id: "c", label: "Gamma", rounds: 1, youCloser: 1, youWon: true },
     ]);
 
-    // Tie in mean error gives youWon false.
-    const tiedSummary = summarize([r0]);
-    expect(tiedSummary.entries.find((e) => e.id === "a")?.youWon).toBe(false);
+    // Exactly half of the rounds is not most of them.
+    const half = summarize([r1, r2]);
+    expect(half.entries.find((e) => e.id === "a")).toMatchObject({ rounds: 2, youCloser: 1, youWon: false });
   });
 });
 

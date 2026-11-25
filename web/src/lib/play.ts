@@ -101,35 +101,30 @@ export function scoreRound(round: PlayRound, guess: number) {
   return { guess, actual: round.actual, absError, rank, entries };
 }
 
+// a game mixes targets with different units, so the summary counts rounds instead of averaging errors
 export function summarize(results: ReturnType<typeof scoreRound>[]) {
-  if (results.length === 0) {
-    return { rounds: 0, yourMeanAbsError: null, entries: [] };
-  }
-  const yourMeanAbsError = results.reduce((sum, result) => sum + result.absError, 0) / results.length;
-  const byId = new Map<string, { id: string; label: string; contestantSum: number; yourSum: number; count: number }>();
+  const byId = new Map<string, { id: string; label: string; closer: number; count: number }>();
+  let closerThanAll = 0;
   for (const result of results) {
+    if (result.entries.length > 0 && result.entries.every((entry) => entry.youBeat)) closerThanAll += 1;
     for (const entry of result.entries) {
       let stats = byId.get(entry.id);
       if (!stats) {
-        stats = { id: entry.id, label: entry.label, contestantSum: 0, yourSum: 0, count: 0 };
+        stats = { id: entry.id, label: entry.label, closer: 0, count: 0 };
         byId.set(entry.id, stats);
       }
-      stats.contestantSum += entry.absError;
-      stats.yourSum += result.absError;
+      stats.closer += entry.youBeat ? 1 : 0;
       stats.count += 1;
     }
   }
-  const entries = [...byId.values()].map((stats) => {
-    const meanAbsError = stats.contestantSum / stats.count;
-    const yourMeanOnSame = stats.yourSum / stats.count;
-    return {
-      id: stats.id,
-      label: stats.label,
-      meanAbsError,
-      youWon: yourMeanOnSame < meanAbsError,
-    };
-  });
-  return { rounds: results.length, yourMeanAbsError, entries };
+  const entries = [...byId.values()].map((stats) => ({
+    id: stats.id,
+    label: stats.label,
+    rounds: stats.count,
+    youCloser: stats.closer,
+    youWon: stats.closer * 2 > stats.count,
+  }));
+  return { rounds: results.length, closerThanAll, entries };
 }
 
 function isValidStoredResult(item: unknown): item is ReturnType<typeof scoreRound> {

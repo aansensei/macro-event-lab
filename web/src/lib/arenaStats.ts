@@ -10,18 +10,36 @@ export interface LeaderboardRow extends ArenaScore {
   relativeWithout2020: number | null;
 }
 
-// root mean squared error over the periods that do not start in the given year, or null with none left
-export function rmseWithoutYear(arena: Arena, target: TargetId, contestant: string, year: number): number | null {
+// the periods in which a contestant made a forecast that has been scored, as period start dates
+function scoredPeriods(arena: Arena, target: TargetId, contestant: string): Set<string> {
+  const periods = new Set<string>();
+  for (const row of arena.forecasts) {
+    const value = row.values[contestant];
+    if (row.target === target && row.actual !== null && value !== null && value !== undefined) periods.add(row.period);
+  }
+  return periods;
+}
+
+// root mean squared error over the given periods, leaving out those that start in `skipYear`, or null with none left
+export function rmseOverPeriods(
+  arena: Arena, target: TargetId, contestant: string, periods: Set<string>, skipYear?: number,
+): number | null {
   let sum = 0;
   let count = 0;
   for (const row of arena.forecasts) {
     const value = row.values[contestant];
     if (row.target !== target || row.actual === null || value === null || value === undefined) continue;
-    if (row.period.startsWith(`${year}-`)) continue;
+    if (!periods.has(row.period)) continue;
+    if (skipYear !== undefined && row.period.startsWith(`${skipYear}-`)) continue;
     sum += (row.actual - value) ** 2;
     count += 1;
   }
   return count > 0 ? Math.sqrt(sum / count) : null;
+}
+
+// root mean squared error over the periods that do not start in the given year, or null with none left
+export function rmseWithoutYear(arena: Arena, target: TargetId, contestant: string, year: number): number | null {
+  return rmseOverPeriods(arena, target, contestant, scoredPeriods(arena, target, contestant), year);
 }
 
 export function worstPeriodShare(arena: Arena, target: TargetId, contestant: string): number | null {
@@ -45,18 +63,21 @@ export function relativeToNaive(rmse: number | null, naiveRmse: number | null): 
 
 export function leaderboardRows(arena: Arena, target: TargetId, window: ArenaWindow): LeaderboardRow[] {
   const scores = arena.scores.filter((score) => score.target === target && score.window === window);
-  const naive = scores.find((score) => score.contestant === "naive")?.rmse ?? null;
+  const naiveScore = scores.find((score) => score.contestant === "naive")?.rmse ?? null;
   const ordered = [...scores].sort((a, b) => (a.rmse ?? Infinity) - (b.rmse ?? Infinity)
     || a.contestant.localeCompare(b.contestant));
-  const withoutNaive = window === "all" ? rmseWithoutYear(arena, target, "naive", 2020) : null;
   let rank = 0;
   return ordered.map((score, index) => {
-    const without = window === "all" ? rmseWithoutYear(arena, target, score.contestant, 2020) : null;
+    // every comparison with the naive forecast uses only the periods this contestant forecast
+    const periods = scoredPeriods(arena, target, score.contestant);
+    const naiveSame = window === "all" ? rmseOverPeriods(arena, target, "naive", periods) : naiveScore;
+    const without = window === "all" ? rmseOverPeriods(arena, target, score.contestant, periods, 2020) : null;
+    const naiveWithout = window === "all" ? rmseOverPeriods(arena, target, "naive", periods, 2020) : null;
     if (score.rmse !== null && (index === 0 || score.rmse !== ordered[index - 1]?.rmse)) rank = index + 1;
     return { ...score, contestantInfo: arena.contestants.find((entry) => entry.id === score.contestant)!,
-      rank: score.rmse === null ? null : rank, relative: relativeToNaive(score.rmse, naive),
+      rank: score.rmse === null ? null : rank, relative: relativeToNaive(score.rmse, naiveSame),
       worstShare: worstPeriodShare(arena, target, score.contestant),
-      rmseWithout2020: without, relativeWithout2020: relativeToNaive(without, withoutNaive) };
+      rmseWithout2020: without, relativeWithout2020: relativeToNaive(without, naiveWithout) };
   });
 }
 
