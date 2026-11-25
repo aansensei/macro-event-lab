@@ -136,3 +136,9 @@ html.mobile-menu-open { overflow: hidden; }
 @media (min-width: 800px) {
   .mobile-menu-btn, .mobile-menu-layer { display: none; }
 }
+
+/* between 800px and 860px the six tabs and the theme switch need tighter spacing to stay on one row */
+@media (min-width: 800px) and (max-width: 859px) {
+  .header-inner { column-gap: 12px; }
+  .nav-btn { padding: 6px 5px; }
+}

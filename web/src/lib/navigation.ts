@@ -8,8 +8,8 @@ type Entry = [Page, string];
 export function navigationFor(isPublic: boolean): { primary: Entry[]; learn: Entry[] } {
   if (isPublic) {
     return {
-      primary: [["overview", "Home"], ["revisions", "Revisions"], ["arena", "Arena"], ["models", "GDP nowcast"], ["about", "About"]],
-      learn: [["method", "Method"], ["status", "Data status"], ["data", "Open data"], ["briefing", "Next releases"], ["play", "Beat the forecasters"], ["glossary", "Glossary"]],
+      primary: [["overview", "Home"], ["revisions", "Revisions"], ["arena", "Arena"], ["play", "Play"], ["models", "GDP nowcast"], ["about", "About"]],
+      learn: [["method", "Method"], ["status", "Data status"], ["data", "Open data"], ["briefing", "Next releases"], ["glossary", "Glossary"]],
     };
   }
   return {
