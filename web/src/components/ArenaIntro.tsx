@@ -13,7 +13,7 @@ export function ArenaIntro({ informationDate, contestantIds, perTarget = [] }: P
     <h1 className="t-h1">How do forecasts compare with first-published numbers?</h1>
     <p className="about-lead">Forecasts are evaluated against each economic number as first published. The tables report forecast errors, available uncertainty intervals and the number of periods evaluated.</p>
     {isPreliminary && <p className="state-banner" role="note">
-      Preliminary results. {contestantIds.length} of the {PLANNED_CONTESTANTS} planned contestants have run for at least one target, and a second implementation that reproduced the numbers is not yet published. Read them as a first look, not as a final ranking.
+      Preliminary results. {contestantIds.length} of the {PLANNED_CONTESTANTS} planned contestants have run for at least one target, and the models are also checked against a second implementation on test data. Read them as a first look, not as a final ranking.
       {perTarget.length > 0 && <> Contestants with a score so far: {perTarget.map((t) => `${t.label} ${t.count}`).join(", ")}.</>}
     </p>}
     <p className="muted">Information cutoff: <time dateTime={informationDate}>{informationDate}</time>.</p>

@@ -121,7 +121,7 @@ const PUBLIC_COPY = {
     ],
     [
       "Quality",
-      "pytest with Hypothesis property tests, ruff, data quality checks, a second implementation of each contestant that reproduced the published numbers (not yet in the repository) and continuous integration on GitHub Actions.",
+      "pytest with Hypothesis property tests, ruff, data quality checks, a second implementation of the five models that agrees with the production code on test data, and continuous integration on GitHub Actions.",
     ],
     [
       "Website",
