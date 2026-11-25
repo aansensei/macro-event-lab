@@ -158,6 +158,8 @@ def test_headers_row_order_and_counts() -> None:
         "pinball_95",
         "aci_n",
         "aci_coverage_90",
+        "crps",
+        "crps_n",
     ]
     assert len(score_rows) == 3
     assert [(r[0], r[1], r[2]) for r in score_rows[1:]] == [
@@ -343,6 +345,8 @@ def test_score_new_columns_export_and_missing_values() -> None:
                 "pinball_95": 0.021,
                 "aci_n": 10,
                 "aci_coverage_90": 0.8,
+                "crps": 0.112,
+                "crps_n": 10,
             },
             {
                 "target": "gdp",
@@ -361,6 +365,8 @@ def test_score_new_columns_export_and_missing_values() -> None:
                 "pinball_95": None,
                 "aci_n": 0,
                 "aci_coverage_90": None,
+                "crps": None,
+                "crps_n": None,
             },
         ],
     }
@@ -373,8 +379,12 @@ def test_score_new_columns_export_and_missing_values() -> None:
     assert rows[0]["pinball_95"] == "0.021"
     assert rows[0]["aci_n"] == "10"
     assert rows[0]["aci_coverage_90"] == "0.8"
+    assert rows[0]["crps"] == "0.112"
+    assert rows[0]["crps_n"] == "10"
     assert rows[1]["n_intervals"] == "0"
     assert rows[1]["coverage_90_lo"] == ""
     assert rows[1]["pinball_05"] == ""
     assert rows[1]["aci_n"] == "0"
     assert rows[1]["aci_coverage_90"] == ""
+    assert rows[1]["crps"] == ""
+    assert rows[1]["crps_n"] == ""

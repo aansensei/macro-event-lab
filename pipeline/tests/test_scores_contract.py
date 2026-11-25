@@ -10,7 +10,7 @@ import numpy as np
 import polars as pl
 import pytest
 
-from macro_event_lab.arena import conformal, export, harness, metrics
+from macro_event_lab.arena import calibration, conformal, export, harness, metrics
 from macro_event_lab.arena.targets import add_months
 from macro_event_lab.open_data import (
     SCORE_HEADER,
@@ -48,6 +48,8 @@ NEW_SCORE_KEYS = [
     "pinball_95",
     "aci_n",
     "aci_coverage_90",
+    "crps",
+    "crps_n",
 ]
 
 EXPECTED_SCORE_KEYS = EXISTING_SCORE_KEYS + NEW_SCORE_KEYS
@@ -70,6 +72,8 @@ EXPECTED_CSV_HEADER = [
     "pinball_95",
     "aci_n",
     "aci_coverage_90",
+    "crps",
+    "crps_n",
 ]
 
 FIXED_FIXTURE_BASELINE = [
@@ -239,6 +243,17 @@ def test_scores_values_rounding_and_null_rules() -> None:
     assert naive_row["aci_n"] == aci["n"]
     assert naive_row["aci_coverage_90"] == round(aci["coverage"], 4)
 
+    naive_rows = naive_df.to_dicts()
+    crps_scores = []
+    for idx, r in enumerate(naive_rows):
+        res = calibration._public_residuals(naive_rows, idx)
+        if len(res) >= conformal.WINDOW:
+            samples = [float(r["value"]) + err for err in res[-conformal.WINDOW:]]
+            crps_scores.append(metrics.crps_sample(samples, float(r["actual"])))
+    assert type(naive_row["crps_n"]) is int
+    assert naive_row["crps_n"] == len(crps_scores)
+    assert naive_row["crps"] == round(sum(crps_scores) / len(crps_scores), 4)
+
     float_keys = (
         "coverage_90_lo",
         "coverage_90_hi",
@@ -246,6 +261,7 @@ def test_scores_values_rounding_and_null_rules() -> None:
         "pinball_50",
         "pinball_95",
         "aci_coverage_90",
+        "crps",
     )
     for key in float_keys:
         val = naive_row[key]
@@ -264,6 +280,8 @@ def test_scores_values_rounding_and_null_rules() -> None:
     assert ar_row["aci_n"] == 0
     assert type(ar_row["aci_n"]) is int
     assert ar_row["aci_coverage_90"] is None
+    assert ar_row["crps"] is None
+    assert ar_row["crps_n"] is None
 
 
 def test_existing_score_fields_unchanged_against_fixed_fixture() -> None:
@@ -283,6 +301,7 @@ def test_arena_scores_csv_and_parquet_new_columns_and_types(tmp_path: Path) -> N
     assert SCORE_SCHEMA["n"] == pl.Int64
     assert SCORE_SCHEMA["n_intervals"] == pl.Int64
     assert SCORE_SCHEMA["aci_n"] == pl.Int64
+    assert SCORE_SCHEMA["crps_n"] == pl.Int64
     for col in (
         "coverage_90_lo",
         "coverage_90_hi",
@@ -290,6 +309,7 @@ def test_arena_scores_csv_and_parquet_new_columns_and_types(tmp_path: Path) -> N
         "pinball_50",
         "pinball_95",
         "aci_coverage_90",
+        "crps",
     ):
         assert SCORE_SCHEMA[col] == pl.Float64
 
@@ -318,6 +338,8 @@ def test_arena_scores_csv_and_parquet_new_columns_and_types(tmp_path: Path) -> N
                 "pinball_95": 0.0398,
                 "aci_n": 5,
                 "aci_coverage_90": 0.8,
+                "crps": 0.1625,
+                "crps_n": 5,
             },
             {
                 "target": "cpi",
@@ -336,6 +358,8 @@ def test_arena_scores_csv_and_parquet_new_columns_and_types(tmp_path: Path) -> N
                 "pinball_95": None,
                 "aci_n": 0,
                 "aci_coverage_90": None,
+                "crps": None,
+                "crps_n": None,
             },
         ],
     }
@@ -360,6 +384,8 @@ def test_arena_scores_csv_and_parquet_new_columns_and_types(tmp_path: Path) -> N
         "0.0398",
         "5",
         "0.8",
+        "0.1625",
+        "5",
     ]
     assert csv_rows[2] == [
         "cpi",
@@ -379,6 +405,8 @@ def test_arena_scores_csv_and_parquet_new_columns_and_types(tmp_path: Path) -> N
         "",
         "0",
         "",
+        "",
+        "",
     ]
 
     out = tmp_path / "public"
@@ -393,10 +421,16 @@ def test_arena_scores_csv_and_parquet_new_columns_and_types(tmp_path: Path) -> N
     assert df.schema["n_intervals"] == pl.Int64
     assert df.schema["aci_n"] == pl.Int64
     assert df.schema["pinball_50"] == pl.Float64
+    assert df.schema["crps"] == pl.Float64
+    assert df.schema["crps_n"] == pl.Int64
     dicts = df.to_dicts()
     assert dicts[0]["n_intervals"] == 5
     assert dicts[0]["pinball_05"] == pytest.approx(0.0412)
+    assert dicts[0]["crps"] == pytest.approx(0.1625)
+    assert dicts[0]["crps_n"] == 5
     assert dicts[1]["n_intervals"] == 0
     assert dicts[1]["coverage_90_lo"] is None
     assert dicts[1]["pinball_50"] is None
     assert dicts[1]["aci_coverage_90"] is None
+    assert dicts[1]["crps"] is None
+    assert dicts[1]["crps_n"] is None

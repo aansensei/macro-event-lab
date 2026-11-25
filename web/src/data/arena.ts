@@ -16,6 +16,7 @@ export interface ArenaScore {
   n_intervals?: number | null; coverage_90_lo?: number | null; coverage_90_hi?: number | null;
   pinball_05?: number | null; pinball_50?: number | null; pinball_95?: number | null;
   aci_n?: number | null; aci_coverage_90?: number | null;
+  crps?: number | null; crps_n?: number | null;
 }
 export interface NestedTest {
   target: TargetId; restricted: string; larger: string; window: ArenaWindow;
@@ -25,6 +26,7 @@ export interface ParsedArenaScore extends ArenaScore {
   n_intervals: number | null; coverage_90_lo: number | null; coverage_90_hi: number | null;
   pinball_05: number | null; pinball_50: number | null; pinball_95: number | null;
   aci_n: number | null; aci_coverage_90: number | null;
+  crps: number | null; crps_n: number | null;
 }
 export interface LeakageRow {
   contestant: string; cutoff_rule: "published" | "weights_release_date" | "none"; cutoff: string | null;
@@ -143,7 +145,9 @@ export function parseArena(value: unknown): ParsedArena {
       pinball_50: optionalNullableNumber(score.pinball_50, "Pinball 50% loss", Infinity, 0),
       pinball_95: optionalNullableNumber(score.pinball_95, "Pinball 95% loss", Infinity, 0),
       aci_n: optionalNullableCount(score.aci_n, "Adaptive coverage count"),
-      aci_coverage_90: optionalNullableNumber(score.aci_coverage_90, "Adaptive coverage", 1, 0) };
+      aci_coverage_90: optionalNullableNumber(score.aci_coverage_90, "Adaptive coverage", 1, 0),
+      crps: optionalNullableNumber(score.crps, "CRPS", Infinity, 0),
+      crps_n: optionalNullableCount(score.crps_n, "CRPS forecast count") };
   });
   const nestedTests = root.nested_tests === undefined ? [] : arrayValue(root.nested_tests, "Nested tests").map((raw): NestedTest => {
     const row = objectValue(raw, "Nested test");

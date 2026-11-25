@@ -167,10 +167,13 @@ def test_write_open_data_parquet_returns_three_paths_and_schemas(tmp_path: Path)
         "pinball_95": pl.Float64,
         "aci_n": pl.Int64,
         "aci_coverage_90": pl.Float64,
+        "crps": pl.Float64,
+        "crps_n": pl.Int64,
     }
     assert s_df["n"].dtype == pl.Int64
     assert s_df["n_intervals"].dtype == pl.Int64
     assert s_df["aci_n"].dtype == pl.Int64
+    assert s_df["crps_n"].dtype == pl.Int64
 
     r_df = pl.read_parquet(revisions_p)
     assert dict(r_df.schema) == {
@@ -243,7 +246,7 @@ def test_parquet_matches_csv_rows_cells_nulls_and_zstd(tmp_path: Path) -> None:
         assert row_pq["contestant"] == row_csv["contestant"]
         assert row_pq["window"] == row_csv["window"]
         assert row_pq["n"] == int(row_csv["n"])
-        for col in ("n_intervals", "aci_n"):
+        for col in ("n_intervals", "aci_n", "crps_n"):
             if row_csv[col] == "":
                 assert row_pq[col] is None
             else:
@@ -252,7 +255,7 @@ def test_parquet_matches_csv_rows_cells_nulls_and_zstd(tmp_path: Path) -> None:
             "mae", "rmse", "coverage_90", "dm_vs_naive_p",
             "coverage_90_lo", "coverage_90_hi",
             "pinball_05", "pinball_50", "pinball_95",
-            "aci_coverage_90",
+            "aci_coverage_90", "crps",
         ):
             if row_csv[col] == "":
                 assert row_pq[col] is None
@@ -301,6 +304,8 @@ def test_write_open_data_parquet_preserves_new_score_columns(tmp_path: Path) -> 
         "pinball_95": 0.02,
         "aci_n": 10,
         "aci_coverage_90": 0.9,
+        "crps": 0.14,
+        "crps_n": 8,
     })
     _write_inputs(out, arena, _sample_revisions())
     _forecasts_p, scores_p, _revisions_p = write_open_data_parquet(out)
@@ -313,6 +318,10 @@ def test_write_open_data_parquet_preserves_new_score_columns(tmp_path: Path) -> 
     assert rows[0]["pinball_95"] == 0.02
     assert rows[0]["aci_n"] == 10
     assert rows[0]["aci_coverage_90"] == 0.9
+    assert rows[0]["crps"] == 0.14
+    assert rows[0]["crps_n"] == 8
     assert rows[1]["n_intervals"] is None
     assert rows[1]["aci_n"] is None
     assert rows[1]["pinball_05"] is None
+    assert rows[1]["crps"] is None
+    assert rows[1]["crps_n"] is None

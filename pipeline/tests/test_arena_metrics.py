@@ -180,3 +180,41 @@ def test_inside_counts_an_actual_on_the_edge_despite_floating_point_noise() -> N
     assert not metrics.inside(-0.5001, low, 0.9)
     assert not metrics.inside(0.9001, low, 0.9)
     assert metrics.coverage([-0.5, 2.0], [low, 0.0], [0.9, 1.0]) == 0.5
+
+
+def test_crps_sample_hand_computed_and_empty() -> None:
+    # samples [1.0, 4.0], actual 2.0:
+    # mean(|y_j - a|) = (|1.0 - 2.0| + |4.0 - 2.0|) / 2 = (1.0 + 2.0) / 2 = 1.5
+    # sum_i sum_j |y_i - y_j| = 0 + |1.0 - 4.0| + |4.0 - 1.0| + 0 = 6.0
+    # penalty = (1 / (2 * 2^2)) * 6.0 = 6.0 / 8.0 = 0.75
+    # crps = 1.5 - 0.75 = 0.75
+    assert metrics.crps_sample([1.0, 4.0], 2.0) == pytest.approx(0.75)
+    assert metrics.crps_sample([], 2.0) is None
+
+
+def test_crps_sample_zero_when_repeated_actual() -> None:
+    assert metrics.crps_sample([2.5, 2.5, 2.5], 2.5) == 0.0
+    assert metrics.crps_sample([275000.0] * 40, 275000.0) == 0.0
+
+
+def test_crps_sample_large_sample_matches_pairwise_formula() -> None:
+    samples = [float(i % 7) for i in range(250)]
+    actual = 3.2
+    n = len(samples)
+    term1 = sum(abs(y - actual) for y in samples) / n
+    term2 = sum(abs(a - b) for a in samples for b in samples) / (2 * n * n)
+    assert metrics.crps_sample(samples, actual) == pytest.approx(term1 - term2, abs=1e-12)
+
+
+@given(
+    samples=st.lists(
+        st.floats(min_value=-1e4, max_value=1e4, allow_nan=False, allow_infinity=False),
+        min_size=1,
+        max_size=50,
+    ),
+    actual=st.floats(min_value=-1e4, max_value=1e4, allow_nan=False, allow_infinity=False),
+)
+def test_crps_sample_is_never_negative(samples: list[float], actual: float) -> None:
+    score = metrics.crps_sample(samples, actual)
+    assert score is not None
+    assert score >= 0.0

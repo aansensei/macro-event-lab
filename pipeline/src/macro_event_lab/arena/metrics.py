@@ -24,6 +24,25 @@ def pinball_loss(actuals: Sequence[float], quantiles: Sequence[float], tau: floa
     return total / len(actuals)
 
 
+def crps_sample(samples: Sequence[float], actual: float) -> float | None:
+    """Continuous ranked probability score of an equally weighted sample against one actual."""
+    n = len(samples)
+    if n == 0:
+        return None
+    ordered = sorted(float(y) for y in samples)
+    a = float(actual)
+    term1 = sum(abs(y - a) for y in ordered) / n
+    if ordered[0] == ordered[-1]:
+        return abs(ordered[0] - a)
+    if n <= 200:
+        pair_sum = sum(ordered[j] - ordered[i] for i in range(n) for j in range(i + 1, n))
+        term2 = pair_sum / (n * n)
+    else:
+        median = ordered[n // 2]
+        term2 = sum((2 * k - n + 1) * (y - median) for k, y in enumerate(ordered)) / (n * n)
+    return max(0.0, term1 - term2)
+
+
 # published numbers move in steps of 0.1, so an actual often sits exactly on an interval edge and
 # floating point noise of about 1e-16 must not decide whether it counts as inside
 EDGE_TOLERANCE = 1e-9

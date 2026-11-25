@@ -79,6 +79,7 @@ it("defaults absent optional score fields to null and absent nested_tests to an 
   expect(parsed.scores[0]).toMatchObject({
     n_intervals: null, coverage_90_lo: null, coverage_90_hi: null,
     pinball_05: null, pinball_50: null, pinball_95: null, aci_n: null, aci_coverage_90: null,
+    crps: null, crps_n: null,
   });
 });
 
@@ -87,6 +88,8 @@ it.each([
   { coverage_90_lo: -0.1 }, { coverage_90_hi: 1.1 },
   { pinball_05: -0.1 }, { pinball_50: "0.2" }, { pinball_95: Infinity },
   { aci_n: 1.2 }, { aci_coverage_90: NaN },
+  { crps: -0.1 }, { crps: "0.2" }, { crps: NaN },
+  { crps_n: -1 }, { crps_n: 1.5 }, { crps_n: "40" },
 ])("rejects wrong-typed or out-of-range optional score fields %#", (patch) => {
   expect(() => parseArena({ ...arenaFixture, scores: [{ ...arenaFixture.scores[0], ...patch }] })).toThrow();
 });

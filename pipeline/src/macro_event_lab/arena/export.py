@@ -46,7 +46,20 @@ def _scores(forecasts: pl.DataFrame) -> list[dict[str, object]]:
     }
     for (target, name), group in forecasts.group_by(["target", "contestant"], maintain_order=True):
         ordered = group.sort("period")
-        errors = [r["actual"] - r["value"] for r in ordered.iter_rows(named=True)]
+        ordered_rows = ordered.to_dicts()
+        errors = [r["actual"] - r["value"] for r in ordered_rows]
+        crps_values: list[float] = []
+        for index, row in enumerate(ordered_rows):
+            residuals = calibration._public_residuals(ordered_rows, index)
+            if len(residuals) < conformal.WINDOW:
+                continue
+            point = float(row["value"])
+            samples = [point + err for err in residuals[-conformal.WINDOW:]]
+            score = metrics.crps_sample(samples, float(row["actual"]))
+            if score is not None:
+                crps_values.append(score)
+        crps_n = len(crps_values) if crps_values else None
+        crps = sum(crps_values) / len(crps_values) if crps_values else None
         covered = ordered.drop_nulls(["lo", "hi"])
         n_intervals = covered.height
         if n_intervals > 0:
@@ -73,7 +86,7 @@ def _scores(forecasts: pl.DataFrame) -> list[dict[str, object]]:
         if name != "naive":
             pairs = [
                 ((r["actual"] - r["value"]) ** 2, naive_loss[(target, r["period"])])
-                for r in ordered.iter_rows(named=True)
+                for r in ordered_rows
                 if (target, r["period"]) in naive_loss
             ]
             test = metrics.dm_test([a for a, _ in pairs], [b for _, b in pairs]) if pairs else None
@@ -96,6 +109,8 @@ def _scores(forecasts: pl.DataFrame) -> list[dict[str, object]]:
                 "pinball_95": _round(pinball_95),
                 "aci_n": aci["n"],
                 "aci_coverage_90": _round(None if aci_cov is None else float(aci_cov)),
+                "crps": _round(crps),
+                "crps_n": crps_n,
             })
     return sorted(
         rows,

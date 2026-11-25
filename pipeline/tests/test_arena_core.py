@@ -282,6 +282,7 @@ def test_build_arena_keeps_existing_scores_unchanged_and_adds_new_fields() -> No
         "target", "contestant", "window", "n", "mae", "rmse", "coverage_90", "dm_vs_naive_p",
         "n_intervals", "coverage_90_lo", "coverage_90_hi",
         "pinball_05", "pinball_50", "pinball_95", "aci_n", "aci_coverage_90",
+        "crps", "crps_n",
     ]
     assert len(scores) == len(expected_existing)
     for row, baseline in zip(scores, expected_existing, strict=True):
@@ -298,6 +299,8 @@ def test_build_arena_keeps_existing_scores_unchanged_and_adds_new_fields() -> No
         assert float(row["pinball_95"]) >= 0.0
         assert row["aci_n"] == int(row["n"]) - 40
         assert 0.0 <= float(row["aci_coverage_90"]) <= 1.0
+        assert float(row["crps"]) >= 0.0
+        assert row["crps_n"] == row["n_intervals"]
 
     nested = payload["nested_tests"]
     assert [(r["target"], r["restricted"], r["larger"], r["window"]) for r in nested] == [
@@ -327,4 +330,6 @@ def test_build_arena_sets_null_interval_and_aci_fields_when_history_is_short() -
         assert row["pinball_95"] is None
         assert row["aci_n"] == 0
         assert row["aci_coverage_90"] is None
+        assert row["crps"] is None
+        assert row["crps_n"] is None
     assert payload["nested_tests"] == []

@@ -43,6 +43,8 @@ SCORE_HEADER = [
     "pinball_95",
     "aci_n",
     "aci_coverage_90",
+    "crps",
+    "crps_n",
 ]
 REVISIONS_HEADER = [
     "series",
@@ -86,6 +88,8 @@ SCORE_SCHEMA: dict[str, pl.DataType] = {
     "pinball_95": pl.Float64,
     "aci_n": pl.Int64,
     "aci_coverage_90": pl.Float64,
+    "crps": pl.Float64,
+    "crps_n": pl.Int64,
 }
 REVISIONS_SCHEMA: dict[str, pl.DataType] = {
     "series": pl.String,
@@ -184,6 +188,8 @@ def _arena_score_records(arena: dict[str, Any]) -> list[tuple[Any, ...]]:
             score.get("pinball_95"),
             score.get("aci_n"),
             score.get("aci_coverage_90"),
+            score.get("crps"),
+            score.get("crps_n"),
         ))
     return records
 
@@ -286,6 +292,8 @@ def write_open_data_parquet(out_dir: Path) -> tuple[Path, Path, Path]:
             _to_float(r[14]),
             _to_int(r[15]),
             _to_float(r[16]),
+            _to_float(r[17]),
+            _to_int(r[18]),
         )
         for r in _arena_score_records(arena)
     ]

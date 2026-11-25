@@ -54,8 +54,8 @@ function cellInColumn(table: HTMLTableElement, rowLabel: string, columnHeader: s
   return cell as HTMLElement;
 }
 
-function buildArenaData(options: { includeWilson?: boolean; includeMoreScores?: boolean } = {}): ArenaData {
-  const { includeWilson = true, includeMoreScores = true } = options;
+function buildArenaData(options: { includeWilson?: boolean; includeMoreScores?: boolean; includeCrpsOnly?: boolean } = {}): ArenaData {
+  const { includeWilson = true, includeMoreScores = true, includeCrpsOnly = false } = options;
   return {
     schema_version: 1,
     information_date: "2026-11-20",
@@ -96,6 +96,8 @@ function buildArenaData(options: { includeWilson?: boolean; includeMoreScores?: 
         pinball_95: includeMoreScores ? 0.1789 : null,
         aci_n: includeMoreScores ? 32 : null,
         aci_coverage_90: includeMoreScores ? 0.85 : null,
+        crps: includeMoreScores || includeCrpsOnly ? 0.4123 : null,
+        crps_n: includeMoreScores || includeCrpsOnly ? 40 : null,
       },
       {
         target: "gdp",
@@ -114,6 +116,8 @@ function buildArenaData(options: { includeWilson?: boolean; includeMoreScores?: 
         pinball_95: includeMoreScores ? null : null,
         aci_n: includeMoreScores ? null : null,
         aci_coverage_90: includeMoreScores ? null : null,
+        crps: null,
+        crps_n: null,
       },
       {
         target: "gdp",
@@ -132,6 +136,8 @@ function buildArenaData(options: { includeWilson?: boolean; includeMoreScores?: 
         pinball_95: null,
         aci_n: null,
         aci_coverage_90: null,
+        crps: null,
+        crps_n: null,
       },
       {
         target: "cpi",
@@ -150,6 +156,8 @@ function buildArenaData(options: { includeWilson?: boolean; includeMoreScores?: 
         pinball_95: null,
         aci_n: null,
         aci_coverage_90: null,
+        crps: null,
+        crps_n: null,
       },
     ],
     leakage: [],
@@ -241,31 +249,51 @@ describe("Arena leaderboard Wilson coverage and More scores section", () => {
     const howToReadDetails = howToReadSummary!.closest("details")!;
     const howToReadText = normalizeText(howToReadDetails.textContent);
     expect(howToReadText).toMatch(/pinball/i);
+    expect(howToReadText).toContain("CRPS scores the whole range of a forecast at once, in the unit of the number: a smaller value means the whole range sat closer to what happened.");
     expect(howToReadText).toMatch(/adaptive/i);
     expect(howToReadText).toMatch(/few|dozen|close|separate/i);
 
     const headers = [...moreTable!.querySelectorAll('[role="columnheader"], thead th')].map((h) => normalizeText(h.textContent));
-    expect(headers).toHaveLength(6);
+    expect(headers).toHaveLength(7);
     expect(headers[0]).toBe("Contestant");
     expect(headers[1]).toBe("Pinball 5%");
     expect(headers[2]).toBe("Pinball 50%");
     expect(headers[3]).toBe("Pinball 95%");
     expect(headers[4]).toBe("Adaptive coverage");
     expect(headers[5]).toMatch(/^Forecasts scored/);
+    expect(headers[6]).toBe("CRPS");
 
     expect(normalizeText(cellInColumn(moreTable!, "Fixture A", "Pinball 5%").textContent)).toBe("0.12");
     expect(normalizeText(cellInColumn(moreTable!, "Fixture A", "Pinball 50%").textContent)).toBe("0.35");
     expect(normalizeText(cellInColumn(moreTable!, "Fixture A", "Pinball 95%").textContent)).toBe("0.18");
     expect(normalizeText(cellInColumn(moreTable!, "Fixture A", "Adaptive coverage").textContent)).toMatch(/^(85(\.0)?%|0\.85)$/);
     expect(normalizeText(cellInColumn(moreTable!, "Fixture A", "Forecasts scored").textContent)).toMatch(/^32(\.00)?$/);
+    expect(normalizeText(cellInColumn(moreTable!, "Fixture A", "CRPS").textContent)).toBe("0.41");
 
     expect(normalizeText(cellInColumn(moreTable!, "Fixture B", "Pinball 5%").textContent)).toBe("0.05");
     expect(normalizeText(cellInColumn(moreTable!, "Fixture B", "Pinball 50%").textContent)).toBe("0.42");
     expect(normalizeText(cellInColumn(moreTable!, "Fixture B", "Pinball 95%").textContent)).toBe("Not available");
     expect(normalizeText(cellInColumn(moreTable!, "Fixture B", "Adaptive coverage").textContent)).toBe("Not available");
     expect(normalizeText(cellInColumn(moreTable!, "Fixture B", "Forecasts scored").textContent)).toBe("Not available");
+    expect(normalizeText(cellInColumn(moreTable!, "Fixture B", "CRPS").textContent)).toBe("Not available");
 
     expect(normalizeText(cellInColumn(moreTable!, "Fixture C", "Pinball 5%").textContent)).toBe("Not available");
+    expect(normalizeText(cellInColumn(moreTable!, "Fixture C", "CRPS").textContent)).toBe("Not available");
+  });
+
+  it("renders More scores when only CRPS is present and never adds CRPS to the leaderboard", async () => {
+    vi.mocked(loadArena).mockResolvedValueOnce(buildArenaData({ includeWilson: true, includeMoreScores: false, includeCrpsOnly: true }));
+    await act(async () => root.render(createElement(Arena)));
+
+    const leaderboard = findTableWithHeaders(["RMSE", "90% coverage"])!;
+    const leaderboardHeaders = [...leaderboard.querySelectorAll('[role="columnheader"], thead th')].map((h) => normalizeText(h.textContent));
+    expect(leaderboardHeaders).not.toContain("CRPS");
+
+    const moreDetails = findDetailsBySummary("More scores: pinball loss and adaptive coverage");
+    expect(moreDetails).not.toBeNull();
+    const moreTable = [...moreDetails!.querySelectorAll<HTMLTableElement>('[role="table"], table')][0]!;
+    expect(normalizeText(cellInColumn(moreTable, "Fixture A", "CRPS").textContent)).toBe("0.41");
+    expect(normalizeText(cellInColumn(moreTable, "Fixture B", "CRPS").textContent)).toBe("Not available");
   });
 
   it("does not render More scores when the selected target has no pinball or adaptive coverage fields", async () => {
