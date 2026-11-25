@@ -23,14 +23,19 @@ it("takes every colour from the site tokens, never a fixed colour", () => {
   expect(html).not.toMatch(/(fill|stroke)="(?!none)[a-z]+"/);
 });
 
-it("draws a shopping basket for an inflation note and bars for the others", () => {
+it("draws a basket for an inflation note, bars for a jobs note and a desk for the index and other notes", () => {
   const cpi = renderToStaticMarkup(createElement(NoteArt, { target: "cpi" }));
   expect(cpi).toContain("art-basket");
   expect(cpi).not.toContain("art-bar");
   expect(cpi).not.toMatch(/(fill|stroke)="#/);
-  for (const target of ["payrolls", "gdp", undefined]) {
+  const payrolls = renderToStaticMarkup(createElement(NoteArt, { target: "payrolls" }));
+  expect(payrolls).toContain("art-bar");
+  expect(payrolls).not.toContain("art-sheet");
+  for (const target of ["gdp", undefined]) {
     const html = renderToStaticMarkup(createElement(NoteArt, { target }));
-    expect(html).toContain("art-bar");
-    expect(html).not.toContain("art-basket");
+    expect(html).toContain("art-sheet");
+    expect(html).not.toContain("art-bar");
+    expect(html).not.toContain("art-tag");
+    expect(html).not.toMatch(/(fill|stroke)="#/);
   }
 });

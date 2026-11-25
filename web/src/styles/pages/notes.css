@@ -300,3 +300,7 @@
 .note-art-svg .art-item-rose { fill: var(--surprise-down); stroke: var(--text); stroke-width: 2; }
 .note-art-svg .art-item-paper { fill: var(--bg); stroke: var(--text); stroke-width: 2; stroke-linejoin: round; }
 .note-art-svg .art-tag { fill: var(--bg); stroke: var(--text); stroke-width: 2; stroke-linejoin: round; }
+/* the desk scene of the index: a calendar, a sealed envelope and a notepad */
+.note-art-svg .art-sheet { fill: var(--bg); stroke: var(--text); stroke-width: 2; stroke-linejoin: round; }
+.note-art-svg .art-head { fill: var(--accent); stroke: var(--text); stroke-width: 2; stroke-linejoin: round; }
+.note-art-svg .art-dot { fill: var(--border-control); }

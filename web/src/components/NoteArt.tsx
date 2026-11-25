@@ -1,11 +1,11 @@
-// an editorial illustration for the notes, drawn with the site colours: bars of first prints for most notes and a
-// shopping basket for the inflation notes, each with a pencil editing one figure and a figure with a magnifying
-// glass studying the one that has not been published yet
+// an editorial illustration for the notes, drawn with the site colours: bars of first prints for the jobs notes, a
+// shopping basket for the inflation notes and a calendar, a sealed envelope and a notepad for the index and any other
+// note; each has a pencil and a figure with a magnifying glass studying what has not been published yet
 export function NoteArt({ caption, target }: { caption?: string; target?: string }) {
   return (
     <figure className="note-art">
       <svg viewBox="0 0 800 290" className="note-art-svg" aria-hidden="true" focusable="false">
-        {target === "cpi" ? <BasketScene /> : <BarsScene />}
+        {target === "cpi" ? <BasketScene /> : target === "payrolls" ? <BarsScene /> : <DeskScene />}
       </svg>
       {caption ? <figcaption className="note-art-caption mono">{caption}</figcaption> : null}
     </figure>
@@ -96,6 +96,58 @@ function BasketScene() {
         <path className="art-line" d="M22 20c0-10 22-10 22 0 0 8-11 9-11 17m0 8v2" />
       </g>
       <g className="art-person" transform="translate(716 0)">
+        <circle className="art-skin" cx="0" cy="206" r="9" />
+        <path className="art-line" d="M0 215v22M0 237l-8 13M0 237l8 13M0 222l-18-6" />
+        <circle className="art-lens" cx="-30" cy="211" r="12" />
+        <path className="art-line" d="M-22 220l-4 5" />
+      </g>
+    </>
+  );
+}
+
+function DeskScene() {
+  return (
+    <>
+      <line className="art-ground" x1="30" y1="250" x2="770" y2="250" />
+
+      <g transform="translate(70 62)">
+        <rect className="art-sheet" x="0" y="0" width="210" height="188" rx="10" />
+        <path className="art-head" d="M0 38V10a10 10 0 0 1 10-10h190a10 10 0 0 1 10 10v28z" />
+        <path className="art-line" d="M50 -8v18M160 -8v18" />
+        <circle className="art-dot" cx="38" cy="78" r="5" />
+        <circle className="art-dot" cx="82" cy="78" r="5" />
+        <circle className="art-dot" cx="126" cy="78" r="5" />
+        <circle className="art-dot" cx="170" cy="78" r="5" />
+        <circle className="art-dot" cx="38" cy="118" r="5" />
+        <circle className="art-dot" cx="82" cy="118" r="5" />
+        <circle className="art-dot" cx="126" cy="118" r="5" />
+        <circle className="art-dot" cx="170" cy="118" r="5" />
+        <circle className="art-dot" cx="38" cy="158" r="5" />
+        <circle className="art-dot" cx="82" cy="158" r="5" />
+        <circle className="art-ghost" cx="126" cy="118" r="17" />
+      </g>
+
+      <g transform="translate(330 150)">
+        <rect className="art-sheet" x="0" y="0" width="160" height="100" rx="8" />
+        <path className="art-line" d="M4 6l76 50 76-50" />
+        <circle className="art-basket" cx="80" cy="56" r="14" />
+        <path className="art-line" d="M80 50v7M80 62v1" />
+      </g>
+
+      <g transform="translate(556 150)">
+        <rect className="art-sheet" x="0" y="0" width="134" height="100" rx="6" />
+        <path className="art-line" d="M16 26h72M16 46h96M16 66h60" />
+      </g>
+
+      <g transform="translate(486 58) rotate(24)">
+        <rect className="art-eraser" x="0" y="0" width="30" height="22" rx="4" />
+        <rect className="art-pencil" x="30" y="0" width="140" height="22" />
+        <path className="art-pencil-line" d="M30 7h140M30 15h140" />
+        <path className="art-wood" d="M170 0l34 11-34 11z" />
+        <path className="art-lead" d="M194 8l10 3-10 3z" />
+      </g>
+
+      <g className="art-person" transform="translate(738 0)">
         <circle className="art-skin" cx="0" cy="206" r="9" />
         <path className="art-line" d="M0 215v22M0 237l-8 13M0 237l8 13M0 222l-18-6" />
         <circle className="art-lens" cx="-30" cy="211" r="12" />
