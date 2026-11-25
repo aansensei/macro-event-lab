@@ -167,3 +167,37 @@ def test_no_step_prints_a_secret_and_contents_write_is_only_on_build() -> None:
     assert not re.search(r"(?m)^\s*contents:\s*write\b", top_level)
     assert re.search(r"(?m)^\s*contents:\s*write\b", build_block)
     assert not re.search(r"(?m)^\s*contents:\s*write\b", deploy_block)
+
+
+def test_a_push_that_changes_only_the_site_reuses_the_published_data() -> None:
+    text = WORKFLOW_PATH.read_text(encoding="utf-8")
+    steps = _split_steps(_extract_job_block(text, "build"))
+    mode_step = _find_step(steps, "Choose a full rebuild or reuse the published data")
+    assert re.search(r"(?m)^\s*id:\s*mode\s*$", mode_step)
+    # a change under the pipeline, the workflows, the ledger or the container rebuilds everything
+    assert r"^(pipeline/|\.github/|ledger/|Dockerfile)" in mode_step
+    assert 'echo "full=$full" >> "$GITHUB_OUTPUT"' in mode_step
+    # the files fetched from the published site are exactly the public data allowlist
+    fetched = set(re.search(r"for name in ([^;]+); do", mode_step).group(1).split())
+    assert fetched <= _public_assets_allowlist()
+    copy_step = _find_step(steps, "Copy only the public files into the site")
+    copied = set(re.findall(r"web_public/([A-Za-z0-9_.]+)", copy_step))
+    assert fetched == copied
+
+
+def test_every_heavy_step_runs_only_on_a_full_rebuild() -> None:
+    text = WORKFLOW_PATH.read_text(encoding="utf-8")
+    steps = _split_steps(_extract_job_block(text, "build"))
+    for name in (
+        "Download ALFRED vintages and release dates, then rebuild",
+        "Append live forecasts to ledger",
+        "Verify and push forecast ledger",
+        "Summarize the forecast ledger for the site",
+        "Check source freshness",
+        "Copy only the public files into the site",
+    ):
+        assert "if: steps.mode.outputs.full == 'true'" in _find_step(steps, name), name
+    # the site build and the deploy always run
+    for step in steps:
+        if "npm run build" in step or "upload-pages-artifact" in step:
+            assert "steps.mode.outputs.full" not in step
