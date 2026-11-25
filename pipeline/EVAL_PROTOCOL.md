@@ -135,3 +135,10 @@ These sentences describe what the code does. They change no forecast and no rule
 This sentence describes what the code does. It changes no forecast and no rule above the marker line.
 
 - Published numbers move in steps of 0.1 and interval half widths are differences of such numbers, so an actual often sits exactly on an interval edge. An actual on the edge counts as covered. Edges are compared with a tolerance of 1e-9 so that floating point noise of the order of 1e-16 does not decide the outcome. Before this was added, one forecast in the inflation record of the naive forecast (September 2006, the actual of minus 0.5 against a lower edge computed as minus 0.49999999999999994) was counted as a miss, which moved that coverage by one forecast. The same tolerance is used by the adaptive conformal sensitivity check.
+
+### 2026-11-25, calibration levels and predictive quantiles
+
+These sentences describe what the code does. They change no forecast and no rule above the marker line.
+
+- The Arena page also reports how often the actual fell inside intervals of 50, 80 and 90 percent, with a 95 percent Wilson interval of that share. Each interval is built exactly like the published 90 percent one: from the last 40 errors that were public at the origin, at the position `ceil((n + 1) * level)` of the sorted absolute errors. Only origins with 40 public errors count, and an actual on the edge of an interval counts as inside.
+- For the next scheduled release, each contestant with at least 40 public errors gets 19 predictive quantiles, at probabilities 0.05 to 0.95 in steps of 0.05. Each is the point forecast plus the quantile of the last 40 public errors, with linear interpolation between neighbouring sorted errors. The chance of ending above a level is read from these quantiles by linear interpolation of the distribution, and a level outside their range is reported only as over 95 percent or under 5 percent. These figures are estimates from past errors, not market prices, and they are never shown as the headline forecast.

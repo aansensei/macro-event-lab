@@ -8,7 +8,7 @@ from pathlib import Path
 
 import polars as pl
 
-from macro_event_lab.arena import conformal, contestants, metrics
+from macro_event_lab.arena import calibration, conformal, contestants, metrics
 from macro_event_lab.arena.harness import (
     origin_forecasts,
     run_walk_forward,
@@ -142,9 +142,33 @@ def _nested_tests(forecasts: pl.DataFrame) -> list[dict[str, object]]:
     return rows
 
 
+def _calibration(forecasts: pl.DataFrame) -> list[dict[str, object]]:
+    rows = calibration.calibration_rows(forecasts)
+    keys = ("coverage", "coverage_lo", "coverage_hi")
+    return [{**row, **{key: _round(row[key]) for key in keys}} for row in rows]  # type: ignore[arg-type]
+
+
+def _live_quantiles(
+    forecasts: pl.DataFrame | None, target: str, raw: dict[str, float | None], as_of: date,
+) -> dict[str, list[float | None]]:
+    """Predictive quantiles of each contestant with enough past errors, rounded like the rest."""
+    if forecasts is None:
+        return {}
+    out: dict[str, list[float | None]] = {}
+    for name in ORDER:
+        point = raw.get(name)
+        if point is None:
+            continue
+        residuals = calibration.live_residuals(forecasts, target, name, as_of)
+        values = calibration.predictive_quantiles(point, residuals)
+        if values is not None:
+            out[name] = [_round(v) for v in values]
+    return out
+
+
 def _live(
     observations: pl.DataFrame, targets: pl.DataFrame, origins: pl.DataFrame,
-    survey: pl.DataFrame | None, information_date: date,
+    survey: pl.DataFrame | None, information_date: date, forecasts: pl.DataFrame | None = None,
 ) -> list[dict[str, object]]:
     rows: list[dict[str, object]] = []
     for target, (_ticker, _label, _unit, frequency) in TARGETS.items():
@@ -169,10 +193,14 @@ def _live(
         )
         values = {name: _round(raw[name]) for name in ORDER if raw.get(name) is not None}
         if values:
-            rows.append({
+            entry: dict[str, object] = {
                 "target": target, "period": period.isoformat(),
                 "as_of": information_date.isoformat(), "values": values,
-            })
+            }
+            quantiles = _live_quantiles(forecasts, target, raw, information_date)
+            if quantiles:
+                entry["quantiles"] = quantiles
+            rows.append(entry)
     return rows
 
 
@@ -212,7 +240,8 @@ def build_arena(
         "scores": _scores(forecasts),
         "nested_tests": _nested_tests(forecasts),
         "leakage": [],
-        "live": _live(observations, targets, origins, survey, information_date),
+        "calibration": _calibration(forecasts),
+        "live": _live(observations, targets, origins, survey, information_date, forecasts),
     }
 
 

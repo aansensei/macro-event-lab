@@ -126,7 +126,8 @@ def test_live_ignores_vintages_published_after_information_date(
     targets = first_print_targets(changed)
     origins = build_origins(targets, survey)
     after_live = export._live(changed, targets, origins, survey, AS_OF)
-    assert before["live"] == after_live
+    without_quantiles = [{k: v for k, v in r.items() if k != "quantiles"} for r in before["live"]]
+    assert without_quantiles == after_live
 
 
 def test_live_values_key_order_matches_contestants_order(
