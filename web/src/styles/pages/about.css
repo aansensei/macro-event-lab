@@ -118,7 +118,7 @@
 .dossier-photo {
   width: 132px;
   height: 132px;
-  border-radius: 18px;
+  border-radius: 50%;
   object-fit: cover;
   border: 2px solid var(--accent);
   padding: 4px;
