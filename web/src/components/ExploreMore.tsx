@@ -3,9 +3,9 @@ import { Icon } from "./Icon";
 
 const ITEMS: readonly [Page, string, string][] = [
   [
-    "play",
-    "Beat the forecasters",
-    "Forecast a past release yourself and compare your miss with the contestants.",
+    "notes",
+    "Economist's notes",
+    "A prediction and its reasoning, written before each release and never edited afterwards.",
   ],
   [
     "data",

@@ -39,9 +39,9 @@ describe("ExploreMore", () => {
 
     const expected = [
       {
-        href: "?page=play",
-        title: "Beat the forecasters",
-        text: "Forecast a past release yourself and compare your miss with the contestants.",
+        href: "?page=notes",
+        title: "Economist's notes",
+        text: "A prediction and its reasoning, written before each release and never edited afterwards.",
       },
       {
         href: "?page=data",

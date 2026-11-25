@@ -9,9 +9,9 @@ it("renders the Explore more heading and the three destination links", () => {
   expect(html).toContain(">Explore more</h2>");
   const links = [...html.matchAll(/<a[^>]*href="([^"]+)"[^>]*>([\s\S]*?)<\/a>/g)];
   expect(links).toHaveLength(3);
-  expect(links.map((m) => m[1])).toEqual(["?page=play", "?page=data", "?page=method"]);
-  expect(links[0]![2]).toContain("Beat the forecasters");
-  expect(links[0]![2]).toContain("Forecast a past release yourself and compare your miss with the contestants.");
+  expect(links.map((m) => m[1])).toEqual(["?page=notes", "?page=data", "?page=method"]);
+  expect(links[0]![2]).toContain("Economist&#x27;s notes");
+  expect(links[0]![2]).toContain("A prediction and its reasoning, written before each release and never edited afterwards.");
   expect(links[1]![2]).toContain("Open data");
   expect(links[1]![2]).toContain("The tables as Parquet and CSV files, and a query you can run on them.");
   expect(links[2]![2]).toContain("Method");

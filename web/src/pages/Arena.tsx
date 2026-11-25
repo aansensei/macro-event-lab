@@ -9,6 +9,7 @@ import { MoreScoresTable } from "../components/MoreScoresTable";
 import { NestedTestsTable } from "../components/NestedTestsTable";
 import { PageGuide } from "../components/PageGuide";
 import { CoverageCalibration } from "../components/CoverageCalibration";
+import { NotesInvite } from "../components/NotesInvite";
 import { PlayInvite } from "../components/PlayInvite";
 import { RailPage, type RailSection } from "../components/SectionRail";
 import { StoryNext, StoryPath } from "../components/Story";
@@ -55,6 +56,7 @@ export function Arena() {
       lookAt="The leaderboard first (a lower RMSE means closer), then the history chart for one contestant, then the worst period share."
       limit="Which method is best. The results are preliminary, the periods are few, and one extreme period can drive an average." />
     <PlayInvite />
+    <NotesInvite />
     {!target ? <p className="state-banner">No economic targets are available yet.</p> : <>
       <TargetSwitch targets={data.targets} selected={target.id} onChange={setTarget} />
       <section className="arena-section" aria-labelledby="arena-leaderboard">
