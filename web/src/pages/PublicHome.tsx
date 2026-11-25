@@ -1,3 +1,4 @@
+import { ExploreMore } from "../components/ExploreMore";
 import { ExternalLink } from "../components/ExternalLink";
 import { Icon } from "../components/Icon";
 import { ReleaseFile } from "../components/ReleaseFile";
@@ -17,6 +18,7 @@ const RAIL: RailSection[] = [
   { id: "release-file-title", label: "The release file" },
   { id: "start-here", label: "Start here" },
   { id: "home-next-releases", label: "Next releases" },
+  { id: "explore-more", label: "Explore more" },
   { id: "public-findings-title", label: "The wider record" },
 ];
 
@@ -66,15 +68,6 @@ export function PublicHome() {
       </p>
     </section>
 
-    <section className="public-play" aria-labelledby="public-play-title">
-      <a className="public-play-card" href={pageSearch("play")}>
-        <span className="live-kicker">Interactive round</span>
-        <h2 className="public-card-title t-h3" id="public-play-title">Try it: beat the forecasters</h2>
-        <span className="public-card-question">Enter your own forecast using only the history known before each past release and compare your miss with the contestants.</span>
-        <Icon name="arrow-right" size={18} className="public-card-arrow" />
-      </a>
-    </section>
-
     {upcoming.length > 0 && <section className="public-next-releases" aria-labelledby="home-next-releases">
       <h2 className="t-h2" id="home-next-releases">Next releases</h2>
       <div className="public-release-cards">
@@ -90,6 +83,8 @@ export function PublicHome() {
         <a href={pageSearch("briefing")}>Open the full release briefing and calendar feeds</a>.
       </p>
     </section>}
+
+    <ExploreMore />
 
     {(arena.kind === "ready" || revisions.kind === "ready") && <section className="public-findings" aria-labelledby="public-findings-title">
       <p className="section-kicker">The wider record</p>

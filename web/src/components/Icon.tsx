@@ -2,7 +2,7 @@ import type { ReactNode } from "react";
 
 export type IconName =
   | "sun" | "moon" | "monitor" | "chevron-down" | "arrow-up" | "arrow-right" | "arrow-up-right"
-  | "check" | "circle-check" | "circle-alert" | "circle-x" | "list" | "x";
+  | "check" | "circle-check" | "circle-alert" | "circle-x" | "list" | "x" | "menu";
 
 const SHAPES: Record<IconName, ReactNode> = {
   sun: <><circle cx="12" cy="12" r="4" /><path d="M12 2.5v2M12 19.5v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2.5 12h2M19.5 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4" /></>,
@@ -15,6 +15,7 @@ const SHAPES: Record<IconName, ReactNode> = {
   check: <path d="m5 12.5 4.5 4.5L19 7.5" />,
   list: <path d="M4 6.5h16M4 12h10.5M4 17.5H18" />,
   x: <path d="M6 6l12 12M18 6 6 18" />,
+  menu: <path d="M4 9h16M4 15h16" />,
   "circle-check": <><circle cx="12" cy="12" r="9" /><path d="m8 12.5 2.8 2.8L16 9.7" /></>,
   "circle-alert": <><circle cx="12" cy="12" r="9" /><path d="M12 7.5v5M12 16.2h.01" /></>,
   "circle-x": <><circle cx="12" cy="12" r="9" /><path d="m9.2 9.2 5.6 5.6m0-5.6-5.6 5.6" /></>,

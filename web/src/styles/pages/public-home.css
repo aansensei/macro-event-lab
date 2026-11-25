@@ -89,3 +89,9 @@
   .public-release-cards { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 .public-release-cards .public-card { padding-top: 16px; }
+.public-explore { margin-top: 40px; }
+.public-explore-cards { list-style: none; margin: 18px 0 0 0; padding: 0; display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px; }
+@media (min-width: 720px) {
+  .public-explore-cards { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+.public-explore-cards .public-card { padding-top: 16px; padding-right: 42px; }
