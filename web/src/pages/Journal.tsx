@@ -42,6 +42,10 @@ export function Journal() {
       </ol>
     </section>
 
-    <p className="t-micro muted"><a href={`${pageSearch("about")}#about-author`}>Back to the author</a></p>
+    <p className="t-micro muted">
+      <a href={`${pageSearch("about")}#about-author`}>Back to the author</a>
+      {" · "}
+      <a href={pageSearch("notes")}>Read the economist's notes</a>
+    </p>
   </div></RailPage>;
 }

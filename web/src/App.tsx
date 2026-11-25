@@ -2,6 +2,7 @@ import { AppShell } from "./components/AppShell";
 import { PublicNotice } from "./components/PublicNotice";
 import { useNavigation } from "./hooks/useNavigation";
 import { inEdition } from "./lib/edition";
+import { getNoteBySlug } from "./lib/notesIndex";
 import { About } from "./pages/About";
 import { Glossary } from "./pages/Glossary";
 import { MarketPages } from "./pages/marketPages";
@@ -15,13 +16,16 @@ import { Briefing } from "./pages/Briefing";
 import { Play } from "./pages/Play";
 import { Data } from "./pages/Data";
 import { Journal } from "./pages/Journal";
+import { Notes } from "./pages/Notes";
 
 export function App() {
   const navigation = useNavigation();
   const { route } = navigation;
   if (import.meta.env.VITE_EDITION !== "public") return <MarketPages {...navigation} />;
 
-  return <AppShell {...navigation}>
+  const noteTitle = route.page === "notes" && route.note ? getNoteBySlug(route.note)?.title : undefined;
+
+  return <AppShell {...navigation} noteTitle={noteTitle}>
     {!inEdition(route.page) && <PublicNotice />}
     {route.page === "overview" && <PublicHome />}
     {route.page === "revisions" && <Revisions />}
@@ -35,5 +39,6 @@ export function App() {
     {route.page === "glossary" && <Glossary />}
     {route.page === "about" && <About />}
     {route.page === "journal" && <Journal />}
+    {route.page === "notes" && <Notes slug={route.note ?? null} onSelectNote={navigation.openNote} />}
   </AppShell>;
 }

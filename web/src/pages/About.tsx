@@ -83,10 +83,16 @@ export function About() {
       <section className="about-section" aria-labelledby="about-author">
         <h2 className="t-h2" id="about-author">Author</h2>
         <AuthorCard />
-        <a className="about-journal-link" href="?page=journal">
-          <span>Read the build journal</span>
-          <Icon name="arrow-right" size={18} />
-        </a>
+        <div className="about-links">
+          <a className="about-journal-link" href="?page=journal">
+            <span>Read the build journal</span>
+            <Icon name="arrow-right" size={18} />
+          </a>
+          <a className="about-journal-link" href="?page=notes">
+            <span>Read the economist's notes</span>
+            <Icon name="arrow-right" size={18} />
+          </a>
+        </div>
         <p className="about-note">
           Found a mistake or have a question? Open an issue on <ExternalLink href={`${REPO}/issues`}>GitHub</ExternalLink>.
         </p>

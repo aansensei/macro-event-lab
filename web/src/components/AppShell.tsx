@@ -9,12 +9,15 @@ import { Header } from "./Header";
 
 export type AppNavigation = ReturnType<typeof useNavigation>;
 
-export function AppShell({ route, navigate, navigationKey, children, eventTitle, dataThrough = null }:
-  AppNavigation & { children: ReactNode; eventTitle?: string; dataThrough?: string | null }) {
+export function AppShell({ route, navigate, navigationKey, children, eventTitle, noteTitle, dataThrough = null }:
+  AppNavigation & { children: ReactNode; eventTitle?: string; noteTitle?: string; dataThrough?: string | null }) {
   const mainRef = useRef<HTMLElement>(null);
   const label = !inEdition(route.page) ? "Not published yet"
+    : route.page === "notes" ? "Economist's notes"
     : [...PRIMARY, ...LEARN].find(([page]) => page === route.page)?.[1] ?? (route.page === "journal" ? "Build journal" : "Overview");
-  const title = route.page === "events" ? eventTitle ?? label : label;
+  const title = route.page === "events" ? eventTitle ?? label
+    : route.page === "notes" ? noteTitle ?? label
+    : label;
 
   useEffect(() => { document.title = `${title} | Macro Event Lab`; }, [title]);
   useEffect(() => {

@@ -175,7 +175,9 @@
 .dossier-link svg { flex: none; color: var(--accent); }
 .dossier-link:hover { border-color: var(--accent); background-color: var(--accent-tint); text-decoration: none; }
 .dossier-link:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-/* the link from the author section to the build journal */
+/* links from the author section to the build journal and economist's notes */
+.about-links { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 16px; }
+.about-links .about-journal-link { margin-top: 0; }
 .about-journal-link {
   display: inline-flex;
   align-items: center;

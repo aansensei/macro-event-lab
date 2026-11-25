@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 
-import { pageSearch, parseUrlState, type Page } from "../lib/url";
+import { noteSearch, pageSearch, parseUrlState, type Page } from "../lib/url";
 
 export function useNavigation() {
   const [route, setRoute] = useState(() => parseUrlState(window.location.search));
@@ -23,5 +23,13 @@ export function useNavigation() {
     window.scrollTo(0, 0);
   }
 
-  return { route, navigate, navigationKey };
+  function openNote(slug: string | null) {
+    const search = slug ? noteSearch(slug) : pageSearch("notes");
+    window.history.pushState(null, "", search);
+    setRoute(parseUrlState(search));
+    setNavigationKey((key) => key + 1);
+    window.scrollTo(0, 0);
+  }
+
+  return { route, navigate, openNote, navigationKey };
 }

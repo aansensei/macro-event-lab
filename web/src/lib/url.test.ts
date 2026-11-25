@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { pageSearch, parseUrlState, urlSearch } from "./url";
+import { noteSearch, pageSearch, parseUrlState, urlSearch } from "./url";
 
 describe("url state", () => {
   it("shares each reveal state and leaves legacy full-result links unchanged", () => {
@@ -29,7 +29,29 @@ describe("url state", () => {
     expect(parseUrlState(pageSearch("data")).page).toBe("data");
     expect(parseUrlState(pageSearch("briefing")).page).toBe("briefing");
     expect(parseUrlState(pageSearch("play")).page).toBe("play");
+    expect(parseUrlState(pageSearch("notes")).page).toBe("notes");
     expect(parseUrlState("?page=unknown").page).toBe("overview");
+  });
+
+  it("round trips a note slug on the notes page and rejects malformed slugs", () => {
+    expect(noteSearch("2026-12-04_payrolls_november")).toBe("?page=notes&note=2026-12-04_payrolls_november");
+    expect(parseUrlState(noteSearch("2026-12-04_payrolls_november"))).toEqual({
+      page: "notes",
+      event: null,
+      h: null,
+      note: "2026-12-04_payrolls_november",
+    });
+    expect(parseUrlState("?note=2026-12-04_payrolls_november")).toEqual({
+      page: "notes",
+      event: null,
+      h: null,
+      note: "2026-12-04_payrolls_november",
+    });
+    expect(parseUrlState("?page=notes&note=../secret")).toEqual({
+      page: "notes",
+      event: null,
+      h: null,
+    });
   });
 
   it("keeps direct Events, Models and Overview routes", () => {
